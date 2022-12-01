@@ -1,8 +1,8 @@
 use crate::{
     system::{init_render_system, run_frame_system},
-    PiAsyncRuntime, PiRenderTargets, PiRenderWindows, PiSingleTaskRunner, PiTextureViews,
+    PiAsyncRuntime, PiRenderWindows, PiSingleTaskRunner,
 };
-use bevy::prelude::{CoreStage, SystemStage, App, Plugin, StageLabel};
+use bevy::prelude::{App, CoreStage, Plugin, StageLabel, SystemStage};
 use pi_async::prelude::{
     AsyncRuntimeBuilder, MultiTaskRuntime, SingleTaskRunner, SingleTaskRuntime,
 };
@@ -35,8 +35,6 @@ impl Plugin for PiRenderPlugin {
 
         app.insert_resource(PiSingleTaskRunner(runner))
             .insert_resource(PiAsyncRuntime(rt))
-            .insert_resource(PiRenderTargets::default())
-            .insert_resource(PiTextureViews::default())
             .insert_resource(PiRenderWindows::default())
             .add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel());
     }

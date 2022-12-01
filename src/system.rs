@@ -9,6 +9,7 @@ use pi_render::{
     components::view::render_window::{prepare_windows, RenderWindows},
     rhi::texture::ScreenTexture,
 };
+use pi_share::{Share, ShareCell};
 
 /// ================ System ================
 
@@ -28,21 +29,23 @@ pub(crate) fn init_render_system<A: AsyncRuntime>(
     options: Res<PiRenderOptions>,
 ) {
     let window = window.0.clone();
-    let options = options.0.clone();
+    let options = options.0.as_ref().clone();
 
-    let runner = runner.0.as_mut();
     let (instance, _, device, queue, adapter_info) = poll_future(
         &rt.0,
-        runner,
+        runner.0.as_mut(),
         pi_render::rhi::setup_render_context(options, window),
     );
 
     let rg = RenderGraph::new(device.clone(), queue.clone());
-    commands.insert_resource(PiRenderGraph(rg));
-    commands.insert_resource(PiRenderInstance(instance));
+
+    // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
+
+    commands.insert_resource(PiRenderGraph(Share::new(ShareCell::new(rg))));
+    commands.insert_resource(PiRenderInstance(Share::new(instance)));
     commands.insert_resource(PiRenderDevice(device));
     commands.insert_resource(PiRenderQueue(queue));
-    commands.insert_resource(PiAdapterInfo(adapter_info));
+    commands.insert_resource(PiAdapterInfo(Share::new(adapter_info)));
 }
 
 // 帧推 渲染 System
@@ -58,25 +61,43 @@ pub(crate) fn run_frame_system<A: AsyncRuntime>(
     instance: Res<PiRenderInstance>,
     device: Res<PiRenderDevice>,
 
-    mut windows: ResMut<PiRenderWindows>,
-    mut view: ResMut<PiScreenTexture>,
+    windows: Res<PiRenderWindows>,
+    view: Res<PiScreenTexture>,
 
-    mut rg: ResMut<PiRenderGraph>,
+    rg: Res<PiRenderGraph>,
 ) {
-    // let future = async move {
-    //     // ============ 1. 获取 窗口 可用纹理 ============
-    //     prepare_windows(&device.0, &instance.0, &mut windows.0, &mut view.0).unwrap();
+    let rt_clone = rt.0.clone();
 
-    //     // ============ 2. 执行渲染图 ============
-    //     rg.0.build().unwrap();
-    //     rg.0.run(&rt.0).await.unwrap();
+    let instance = instance.0.clone();
+    let device = device.0.clone();
+    let rg = rg.0.clone();
 
-    //     // ============ 3. 呈现，SwapBuffer ============
-    //     present_windows(&windows.0, view.0.as_mut().unwrap());
-    // };
+    let windows = windows.0.clone();
+    let view = view.0.clone();
 
-    // let runner = runner.0.as_mut();
-    // poll_future(&rt.0, runner, future);
+    let future = async move {
+        // ============ 1. 获取 窗口 可用纹理 ============
+        prepare_windows(
+            &device,
+            instance.as_ref(),
+            &mut windows.as_ref().borrow_mut(),
+            &mut view.as_ref().borrow_mut(),
+        )
+        .unwrap();
+
+        // ============ 2. 执行渲染图 ============
+        let mut rg = rg.as_ref().borrow_mut();
+        rg.build().unwrap();
+        rg.run(&rt_clone).await.unwrap();
+
+        // ============ 3. 呈现，SwapBuffer ============
+        present_windows(
+            &windows.as_ref().borrow(),
+            view.as_ref().borrow_mut().as_mut().unwrap(),
+        );
+    };
+
+    poll_future(&rt.0, runner.0.as_mut(), future);
 }
 
 fn present_windows(windows: &RenderWindows, screen_texture: &mut ScreenTexture) {
