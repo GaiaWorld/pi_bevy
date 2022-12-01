@@ -114,7 +114,7 @@ impl RenderGraph {
 
     /// 执行 渲染
     #[inline]
-    pub async fn run<A: 'static + AsyncRuntime + Send>(
+    pub async fn run<A: AsyncRuntime>(
         &mut self,
         rt: &A,
     ) -> Result<(), GraphError> {

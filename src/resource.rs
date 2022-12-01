@@ -1,11 +1,20 @@
-use bevy::prelude::*;
+use bevy::prelude::Resource;
 use pi_async::rt::AsyncRuntime;
+use pi_share::Share;
 
-/// ================ 资源 ================
+/// ================ 单例 ================
+
+// winit 窗口
+#[derive(Resource)]
+pub struct PiWinitWindow(pub Share<winit::window::Window>);
 
 /// 异步 运行时
+/// A 的 类型 见 plugin 模块
+///   + wasm 环境 是 SingleTaskRuntime
+///   + 否则 是 MultiTaskRuntime
+///
 #[derive(Resource)]
-pub struct PiAsyncRuntime<A: 'static + AsyncRuntime + Send>(pub A);
+pub struct PiAsyncRuntime<A: AsyncRuntime>(pub A);
 
 /// 渲染 Instance，等价于 wgpu::Instance
 #[derive(Resource)]
@@ -42,3 +51,11 @@ pub struct PiRenderTargets(pub pi_render::components::view::target::RenderTarget
 /// 渲染窗口
 #[derive(Default, Resource)]
 pub struct PiRenderWindows(pub pi_render::components::view::render_window::RenderWindows);
+
+/// 交换链对应的屏幕纹理
+#[derive(Default, Resource)]
+pub struct PiScreenTexture(pub Option<pi_render::rhi::texture::ScreenTexture>);
+
+/// 用于 wasm 的 单线程 Runner
+#[derive(Resource)]
+pub(crate) struct PiSingleTaskRunner(pub Option<pi_async::prelude::SingleTaskRunner<()>>);

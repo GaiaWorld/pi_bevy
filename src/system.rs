@@ -1,85 +1,90 @@
-use bevy::prelude::*;
+use crate::{
+    graph::graph::RenderGraph, util::poll_future, PiAdapterInfo, PiAsyncRuntime, PiRenderDevice,
+    PiRenderGraph, PiRenderInstance, PiRenderOptions, PiRenderQueue, PiRenderWindows,
+    PiScreenTexture, PiSingleTaskRunner, PiWinitWindow,
+};
+use bevy::prelude::{Commands, Res, ResMut};
 use pi_async::rt::AsyncRuntime;
-
-use crate::{PiAsyncRuntime, PiRenderOptions};
+use pi_render::{
+    components::view::render_window::{prepare_windows, RenderWindows},
+    rhi::texture::ScreenTexture,
+};
 
 /// ================ System ================
 
-// 初始化
-pub(crate) fn init_render_system<A: 'static + AsyncRuntime + Send>(
-    commands: Commands,
-    // runner: ResMut<Option<PiAsyncRunner<A>>>,
+// 初始化 渲染环境 的 System
+//
+// A 的 类型 见 plugin 模块
+//   + wasm 环境 是 SingleTaskRuntime
+//   + 否则 是 MultiTaskRuntime
+//
+pub(crate) fn init_render_system<A: AsyncRuntime>(
+    mut commands: Commands,
+
     rt: Res<PiAsyncRuntime<A>>,
-    // window: Res<PiWindows>,
+    mut runner: ResMut<PiSingleTaskRunner>,
+
+    window: Res<PiWinitWindow>,
     options: Res<PiRenderOptions>,
 ) {
-    // // 目的：让目前函数 能等待 rt 任务 完成
-    // let is_finish = Share::new(AtomicBool::new(false));
-    // let is_finish_clone = is_finish.clone();
-    
-    // rt.0.spawn(rt.0.alloc(), async move {
-    //     let (instance, options, device, queue, adapter_info) =
-    //         pi_render::rhi::setup_render_context(options.0.clone(), window.0.clone()).await;
+    let window = window.0.clone();
+    let options = options.0.clone();
 
-    //     commands.insert_resource(PiRenderInstance(instance));
-    //     commands.insert_resource(PiRenderDevice(device));
-    //     commands.insert_resource(PiRenderQueue(queue));
-    //     commands.insert_resource(PiAdapterInfo(adapter_info));
-        
-    //     is_finish_clone.as_ref().store(true, std::sync::atomic::Ordering::SeqCst);
-    // });
-    
-    // while is_finish.load(std::sync::atomic::Ordering::SeqCst) {
-    //     if let Some(r) = runner.get() {
-    //         // 单线程运行时 才会到这里
-    //         while r.run() > 0 {}
-    //     }
-    // }
+    let runner = runner.0.as_mut();
+    let (instance, _, device, queue, adapter_info) = poll_future(
+        &rt.0,
+        runner,
+        pi_render::rhi::setup_render_context(options, window),
+    );
+
+    let rg = RenderGraph::new(device.clone(), queue.clone());
+    commands.insert_resource(PiRenderGraph(rg));
+    commands.insert_resource(PiRenderInstance(instance));
+    commands.insert_resource(PiRenderDevice(device));
+    commands.insert_resource(PiRenderQueue(queue));
+    commands.insert_resource(PiAdapterInfo(adapter_info));
 }
 
-// 针对 代码
-pub(crate) fn run_frame_system<A: 'static + AsyncRuntime + Send>(
+// 帧推 渲染 System
+//
+// A 的 类型 见 plugin 模块
+//   + wasm 环境 是 SingleTaskRuntime
+//   + 否则 是 MultiTaskRuntime
+//
+pub(crate) fn run_frame_system<A: AsyncRuntime>(
+    rt: Res<PiAsyncRuntime<A>>,
+    mut runner: ResMut<PiSingleTaskRunner>,
+
+    instance: Res<PiRenderInstance>,
+    device: Res<PiRenderDevice>,
+
+    mut windows: ResMut<PiRenderWindows>,
+    mut view: ResMut<PiScreenTexture>,
+
+    mut rg: ResMut<PiRenderGraph>,
 ) {
+    // let future = async move {
+    //     // ============ 1. 获取 窗口 可用纹理 ============
+    //     prepare_windows(&device.0, &instance.0, &mut windows.0, &mut view.0).unwrap();
+
+    //     // ============ 2. 执行渲染图 ============
+    //     rg.0.build().unwrap();
+    //     rg.0.run(&rt.0).await.unwrap();
+
+    //     // ============ 3. 呈现，SwapBuffer ============
+    //     present_windows(&windows.0, view.0.as_mut().unwrap());
+    // };
+
+    // let runner = runner.0.as_mut();
+    // poll_future(&rt.0, runner, future);
 }
 
+fn present_windows(windows: &RenderWindows, screen_texture: &mut ScreenTexture) {
+    for (_, _window) in windows.iter() {
+        if let Some(view) = screen_texture.take_surface_texture() {
+            view.present();
+        }
+    }
 
-// // Build RenderGraph
-// // 注：System 的返回值 一定要 std::io::Result 才是 异步类型
-// async fn build_graph<A>() -> std::io::Result<()>
-// where
-//     A: 'static + AsyncRuntime + Send,
-// {
-//     let rg = world.get_resource_mut::<RenderGraph>().unwrap();
-
-//     rg.build().unwrap();
-
-//     Ok(())
-// }
-
-// // 每帧 调用一次，用于 驱动 渲染图
-// // 注：System 的返回值 一定要 std::io::Result 才是 异步类型
-// async fn render_system<A>() -> std::io::Result<()>
-// where
-//     A: AsyncRuntime + Send + 'static,
-// {
-//     let graph = world.get_resource_mut::<RenderGraph>().unwrap();
-
-//     let rt = world.get_resource::<RenderAsyncRuntime<A>>().unwrap();
-//     graph.run(&rt.rt).await.unwrap();
-
-//     let world = world.clone();
-
-//     let screen_texture = world.get_resource_mut::<ScreenTexture>().unwrap();
-//     let windows = world.get_resource::<RenderWindows>().unwrap();
-
-//     // 呈现 所有的 窗口 -- 交换链
-//     for (_, _window) in windows.iter() {
-//         if let Some(view) = screen_texture.take_surface_texture() {
-//             view.present();
-//             trace!("render_system: after surface_texture.present");
-//         }
-//     }
-
-//     Ok(())
-// }
-
+    log::trace!("render_system: after surface_texture.present");
+}

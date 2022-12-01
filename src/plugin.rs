@@ -1,37 +1,57 @@
-use bevy::prelude::*;
-use pi_async::rt::AsyncRuntime;
-
 use crate::{
-    init_render_system, run_frame_system, PiAsyncRuntime, PiRenderTargets, PiRenderWindows,
-    PiTextureViews,
+    system::{init_render_system, run_frame_system},
+    PiAsyncRuntime, PiRenderTargets, PiRenderWindows, PiSingleTaskRunner, PiTextureViews,
+};
+use bevy::prelude::{CoreStage, SystemStage, App, Plugin, StageLabel};
+use pi_async::prelude::{
+    AsyncRuntimeBuilder, MultiTaskRuntime, SingleTaskRunner, SingleTaskRuntime,
 };
 
-// 阶段
+/// ================ 阶段标签 ================
+
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
 pub struct PiRenderStage;
 
 /// ================ 插件 ================
 
-pub struct PiRenderPlugin<A: 'static + AsyncRuntime + Send> {
-    rt: A,
-}
+pub struct PiRenderPlugin;
 
-impl<A: 'static + AsyncRuntime + Send> PiRenderPlugin<A> {
-    pub fn new(rt: A) -> Self {
-        Self { rt }
-    }
-}
-
-impl<A: 'static + AsyncRuntime + Send> PiRenderPlugin<A> {}
-
-impl<A: 'static + AsyncRuntime + Send> Plugin for PiRenderPlugin<A> {
+impl Plugin for PiRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(PiTextureViews::default())
+        #[cfg(target_arch = "wasm32")]
+        let (rt, runner) = {
+            app.add_startup_system(init_render_system::<SingleTaskRuntime>);
+            app.add_system_to_stage(PiRenderStage, run_frame_system::<SingleTaskRuntime>);
+
+            create_single_runtime()
+        };
+        #[cfg(not(target_arch = "wasm32"))]
+        let (rt, runner) = {
+            app.add_startup_system(init_render_system::<MultiTaskRuntime>);
+            app.add_system_to_stage(PiRenderStage, run_frame_system::<MultiTaskRuntime>);
+
+            create_multi_runtime()
+        };
+
+        app.insert_resource(PiSingleTaskRunner(runner))
+            .insert_resource(PiAsyncRuntime(rt))
             .insert_resource(PiRenderTargets::default())
+            .insert_resource(PiTextureViews::default())
             .insert_resource(PiRenderWindows::default())
-            .insert_resource(PiAsyncRuntime(self.rt.clone()))
-            .add_startup_system(init_render_system::<A>)
-            .add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel())
-            .add_system_to_stage(PiRenderStage, run_frame_system::<A>);
+            .add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel());
     }
+}
+
+fn create_single_runtime() -> (SingleTaskRuntime, Option<SingleTaskRunner<()>>) {
+    let mut runner = SingleTaskRunner::default();
+
+    let runtime = runner.startup().unwrap();
+
+    (runtime, Some(runner))
+}
+
+fn create_multi_runtime() -> (MultiTaskRuntime, Option<SingleTaskRunner<()>>) {
+    let rt = AsyncRuntimeBuilder::default_multi_thread(Some("pi_bevy_render"), None, None, None);
+
+    (rt, None)
 }
