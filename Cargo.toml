@@ -9,12 +9,13 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy"]
 
 [dependencies]
-bevy = "0.9" 
+bevy = "0.9"
+log = "0.4"
 thiserror = "1.0"
 derive_deref = "1.1"
 
 wgpu = { version = "0.14", features = ["spirv"] }
-winit = {git = "http://ser.yinengyun.com:10082/tech/winit.git"}
+winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
 
 pi_futures = "0.1"
 pi_async = "0.5"
