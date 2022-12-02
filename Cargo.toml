@@ -12,7 +12,6 @@ keywords = ["pi", "bevy"]
 bevy = "0.9"
 log = "0.4"
 thiserror = "1.0"
-derive_deref = "1.1"
 
 wgpu = { version = "0.14", features = ["spirv"] }
 winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }

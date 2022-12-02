@@ -1,4 +1,4 @@
-use bevy::prelude::Resource;
+use bevy::prelude::{Resource, DerefMut, Deref};
 use pi_async::rt::AsyncRuntime;
 use pi_share::{Share, ShareCell};
 
@@ -13,7 +13,6 @@ pub struct PiWinitWindow(pub Share<winit::window::Window>);
 ///   + wasm 环境 是 SingleTaskRuntime
 ///   + 否则 是 MultiTaskRuntime
 ///
-#[derive(Resource)]
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiAsyncRuntime<A: AsyncRuntime>(pub A);
 
