@@ -22,6 +22,4 @@ pub struct RenderContext {
 
     /// 队列，用于 创建 和 提交 CommandEncoder
     pub queue: RenderQueue,
-
-    // pub world: World,
 }

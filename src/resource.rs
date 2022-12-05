@@ -1,4 +1,4 @@
-use bevy::prelude::{Resource, DerefMut, Deref};
+use bevy::prelude::{Deref, DerefMut, Resource};
 use pi_async::rt::AsyncRuntime;
 use pi_share::{Share, ShareCell};
 
@@ -52,4 +52,6 @@ pub struct PiScreenTexture(pub Share<ShareCell<Option<pi_render::rhi::texture::S
 
 /// 用于 wasm 的 单线程 Runner
 #[derive(Default, Resource, Deref, DerefMut)]
-pub(crate) struct PiSingleTaskRunner(pub Option<pi_async::prelude::SingleTaskRunner<()>>);
+pub(crate) struct PiSingleTaskRunner(
+    pub Share<ShareCell<Option<pi_async::prelude::SingleTaskRunner<()>>>>,
+);

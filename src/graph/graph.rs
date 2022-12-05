@@ -5,20 +5,20 @@ use super::{
     param::{InParam, OutParam},
     GraphError, RenderContext,
 };
+use bevy::prelude::World;
+use pi_async::prelude::AsyncRuntime;
 use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
 };
-use pi_async::prelude::AsyncRuntime;
 use std::borrow::Cow;
 
 /// 渲染图
 pub struct RenderGraph {
-    // world: World,
     device: RenderDevice,
     queue: RenderQueue,
 
-    imp: DependGraph,
+    imp: DependGraph<World>,
 }
 
 /// 渲染图的 拓扑信息 相关 方法
@@ -63,7 +63,6 @@ impl RenderGraph {
         };
 
         let node = NodeImpl::new(node, context);
-
         self.imp.add_node(name, node)
     }
 
@@ -108,16 +107,13 @@ impl RenderGraph {
 /// 渲染图的 执行 相关
 impl RenderGraph {
     #[inline]
-    pub fn build(&mut self) -> Result<(), GraphError> {
-        self.imp.build()
+    pub fn build(&mut self, world: &'static World) -> Result<(), GraphError> {
+        self.imp.build(world)
     }
 
     /// 执行 渲染
     #[inline]
-    pub async fn run<A: AsyncRuntime>(
-        &mut self,
-        rt: &A,
-    ) -> Result<(), GraphError> {
+    pub async fn run<'a, A: AsyncRuntime>(&'a mut self, rt: &'a A) -> Result<(), GraphError> {
         self.imp.run(rt).await
     }
 }

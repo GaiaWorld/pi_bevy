@@ -6,6 +6,7 @@ use bevy::prelude::{App, CoreStage, Plugin, StageLabel, SystemStage};
 use pi_async::prelude::{
     AsyncRuntimeBuilder, MultiTaskRuntime, SingleTaskRunner, SingleTaskRuntime,
 };
+use pi_share::{Share, ShareCell};
 
 /// ================ 阶段标签 ================
 
@@ -33,7 +34,7 @@ impl Plugin for PiRenderPlugin {
             create_multi_runtime()
         };
 
-        app.insert_resource(PiSingleTaskRunner(runner))
+        app.insert_resource(PiSingleTaskRunner(Share::new(ShareCell::new(runner))))
             .insert_resource(PiAsyncRuntime(rt))
             .insert_resource(PiRenderWindows::default())
             .add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel());

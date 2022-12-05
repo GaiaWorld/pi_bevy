@@ -3,8 +3,9 @@ use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
-use pi_render::depend_graph::node::DependNode;
+use bevy::prelude::World;
 use pi_futures::BoxFuture;
+use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareRefCell, ThreadSync};
 use wgpu::CommandEncoder;
 
@@ -22,6 +23,7 @@ pub trait Node: 'static + ThreadSync {
     /// 一般 用于 准备 渲染 资源的 创建
     fn build<'a>(
         &'a mut self,
+        _world: &'a World,
         _context: RenderContext,
         _usage: &'a ParamUsage,
     ) -> Option<BoxFuture<'a, Result<(), String>>> {
@@ -31,6 +33,7 @@ pub trait Node: 'static + ThreadSync {
     /// 执行，每帧会调用一次
     fn run<'a>(
         &'a mut self,
+        _world: &'a World,
         context: RenderContext,
         commands: ShareRefCell<CommandEncoder>,
         input: &'a Self::Input,
@@ -62,24 +65,28 @@ where
     }
 }
 
-impl<I, O, R> DependNode for NodeImpl<I, O, R>
+impl<I, O, R> DependNode<World> for NodeImpl<I, O, R>
 where
     I: InParam + Default,
     O: OutParam + Default + Clone,
     R: Node<Input = I, Output = O>,
 {
     type Input = I;
-
     type Output = O;
 
     #[inline]
-    fn build<'a>(&'a mut self, usage: &'a ParamUsage) -> Option<BoxFuture<'a, Result<(), String>>> {
-        self.node.build(self.context.clone(), usage)
+    fn build<'a>(
+        &'a mut self,
+        world: &'a World,
+        usage: &'a ParamUsage,
+    ) -> Option<BoxFuture<'a, Result<(), String>>> {
+        self.node.build(world, self.context.clone(), usage)
     }
 
     #[inline]
     fn run<'a>(
         &'a mut self,
+        world: &'a World,
         input: &'a Self::Input,
         usage: &'a ParamUsage,
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
@@ -96,7 +103,7 @@ where
 
             let output = self
                 .node
-                .run(context, commands.clone(), input, usage)
+                .run(world, context, commands.clone(), input, usage)
                 .await
                 .unwrap();
 
