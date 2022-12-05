@@ -96,8 +96,8 @@ pub(crate) fn run_frame_system<A: AsyncRuntime>(world: &mut World) {
 
         // ============ 2. 执行渲染图 ============
         let mut rg = rg.as_ref().borrow_mut();
-        rg.build(world).unwrap();
-        rg.run(&rt_clone).await.unwrap();
+        rg.build().unwrap();
+        rg.run(&rt_clone, world).await.unwrap();
 
         // ============ 3. 呈现，SwapBuffer ============
         present_windows(

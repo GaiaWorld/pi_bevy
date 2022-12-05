@@ -107,13 +107,17 @@ impl RenderGraph {
 /// 渲染图的 执行 相关
 impl RenderGraph {
     #[inline]
-    pub fn build(&mut self, world: &'static World) -> Result<(), GraphError> {
-        self.imp.build(world)
+    pub fn build(&mut self) -> Result<(), GraphError> {
+        self.imp.build()
     }
 
     /// 执行 渲染
     #[inline]
-    pub async fn run<'a, A: AsyncRuntime>(&'a mut self, rt: &'a A) -> Result<(), GraphError> {
-        self.imp.run(rt).await
+    pub async fn run<'a, A: AsyncRuntime>(
+        &'a mut self,
+        rt: &'a A,
+        world: &'static World,
+    ) -> Result<(), GraphError> {
+        self.imp.run(rt, world).await
     }
 }
