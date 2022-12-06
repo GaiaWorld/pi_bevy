@@ -3,6 +3,8 @@ use pi_async::rt::AsyncRuntime;
 use pi_share::{Share, ShareCell};
 
 /// ================ 单例 ================
+#[derive(Resource, Deref, DerefMut)]
+pub struct PiSafeAtlasAllocator(pub pi_render::components::view::target_alloc::SafeAtlasAllocator);
 
 // winit 窗口
 #[derive(Resource)]
