@@ -6,7 +6,6 @@ use bevy::prelude::{App, CoreStage, Plugin, StageLabel, SystemStage};
 use pi_async::prelude::{
     AsyncRuntimeBuilder, MultiTaskRuntime, SingleTaskRunner, SingleTaskRuntime,
 };
-use pi_share::{Share, ShareCell};
 
 /// ================ 阶段标签 ================
 
@@ -19,6 +18,8 @@ pub struct PiRenderPlugin;
 
 impl Plugin for PiRenderPlugin {
     fn build(&self, app: &mut App) {
+        app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel());
+
         #[cfg(target_arch = "wasm32")]
         let (rt, runner) = {
             app.add_startup_system(init_render_system::<SingleTaskRuntime>);
@@ -28,16 +29,15 @@ impl Plugin for PiRenderPlugin {
         };
         #[cfg(not(target_arch = "wasm32"))]
         let (rt, runner) = {
-            app.add_startup_system(init_render_system::<MultiTaskRuntime>);
             app.add_system_to_stage(PiRenderStage, run_frame_system::<MultiTaskRuntime>);
+            app.add_startup_system(init_render_system::<MultiTaskRuntime>);
 
             create_multi_runtime()
         };
 
-        app.insert_resource(PiSingleTaskRunner(Share::new(ShareCell::new(runner))))
+        app.insert_resource(PiSingleTaskRunner(runner))
             .insert_resource(PiAsyncRuntime(rt))
-            .insert_resource(PiRenderWindows::default())
-            .add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel());
+            .insert_resource(PiRenderWindows::default());
     }
 }
 

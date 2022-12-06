@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use pi_render_bevy::PiRenderPlugin;
+use pi_bevy_plugin::PiRenderPlugin;
 
 fn main() {
     App::new()

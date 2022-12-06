@@ -4,12 +4,11 @@ use crate::{
     PiScreenTexture, PiSingleTaskRunner, PiWinitWindow,
 };
 use bevy::prelude::{Commands, Res, ResMut, World};
-use pi_async::rt::AsyncRuntime;
+use pi_async::{prelude::SingleTaskRunner, rt::AsyncRuntime};
 use pi_render::{
     components::view::render_window::{prepare_windows, RenderWindows},
     rhi::texture::ScreenTexture,
 };
-use pi_share::{Share, ShareCell};
 
 /// ================ System ================
 
@@ -28,13 +27,11 @@ pub(crate) fn init_render_system<A: AsyncRuntime>(
     window: Res<PiWinitWindow>,
     options: Res<PiRenderOptions>,
 ) {
-    let window = window.0.clone();
-    let options = options.0.as_ref().clone();
-
-    let mut runner = runner.0.as_ref().borrow_mut();
+    let window = window.clone();
+    let options = options.0.clone();
     let (instance, _, device, queue, adapter_info) = poll_future(
         &rt.0,
-        runner.as_mut(),
+        runner.0.as_mut(),
         pi_render::rhi::setup_render_context(options, window),
     );
 
@@ -42,11 +39,11 @@ pub(crate) fn init_render_system<A: AsyncRuntime>(
 
     // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
 
-    commands.insert_resource(PiRenderGraph(Share::new(ShareCell::new(rg))));
-    commands.insert_resource(PiRenderInstance(Share::new(instance)));
+    commands.insert_resource(PiRenderGraph(rg));
+    commands.insert_resource(PiRenderInstance(instance));
     commands.insert_resource(PiRenderDevice(device));
     commands.insert_resource(PiRenderQueue(queue));
-    commands.insert_resource(PiAdapterInfo(Share::new(adapter_info)));
+    commands.insert_resource(PiAdapterInfo(adapter_info));
 }
 
 // 帧推 渲染 System
@@ -57,58 +54,51 @@ pub(crate) fn init_render_system<A: AsyncRuntime>(
 //
 pub(crate) fn run_frame_system<A: AsyncRuntime>(world: &mut World) {
     // 从 world 取 res
-    let (rt, runner, instance, device, rg, windows, view) = {
-        let rt = world.resource::<PiAsyncRuntime<A>>();
-        let instance = world.resource::<PiRenderInstance>();
+    let ptr_world = world as *mut World as usize;
 
-        let device = world.resource::<PiRenderDevice>();
+    let world: &'static World = unsafe { std::mem::transmute(world) };
+    let rt = &world.resource::<PiAsyncRuntime<A>>().0;
+    let instance = &world.resource::<PiRenderInstance>().0;
+    let device = &world.resource::<PiRenderDevice>().0;
 
-        let windows = world.resource::<PiRenderWindows>();
-        let view = world.resource::<PiScreenTexture>();
+    // 跨 异步运行时 的 引用 必须 声明 是 'static 的
+    let view: &'static mut Option<ScreenTexture> = unsafe {
+        // 同一个 world 不能 即 resource 又 resource_mut
+        let w = &mut *(ptr_world as *mut World);
+        let views = &mut w.resource_mut::<PiScreenTexture>().0;
+        std::mem::transmute(views)
+    };
 
-        let rg = world.resource::<PiRenderGraph>();
+    let windows: &'static mut RenderWindows = unsafe {
+        let w = &mut *(ptr_world as *mut World);
+        let windows = &mut w.resource_mut::<PiRenderWindows>().0;
+        std::mem::transmute(windows)
+    };
 
-        // clone，以便于 可以 传到 运行时
-        let runner = world.resource::<PiSingleTaskRunner>();
-
-        (
-            rt.0.clone(),
-            runner.0.clone(),
-            instance.0.clone(),
-            device.0.clone(),
-            rg.0.clone(),
-            windows.0.clone(),
-            view.0.clone(),
-        )
+    let rg: &'static mut RenderGraph = unsafe {
+        let w = &mut *(ptr_world as *mut World);
+        let rg = &mut w.resource_mut::<PiRenderGraph>().0;
+        std::mem::transmute(rg)
     };
 
     let rt_clone = rt.clone();
-    let world: &'static World = unsafe { std::mem::transmute(world) };
     let future = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
-        prepare_windows(
-            &device,
-            instance.as_ref(),
-            &mut windows.as_ref().borrow_mut(),
-            &mut view.as_ref().borrow_mut(),
-        )
-        .unwrap();
+        prepare_windows(device, instance, windows, view).unwrap();
 
         // ============ 2. 执行渲染图 ============
-        let mut rg = rg.as_ref().borrow_mut();
         rg.build().unwrap();
         rg.run(&rt_clone, world).await.unwrap();
 
-        // ============ 3. 呈现，SwapBuffer ============
-        present_windows(
-            &windows.as_ref().borrow(),
-            view.as_ref().borrow_mut().as_mut().unwrap(),
-        );
+        present_windows(windows, view.as_mut().unwrap());
     };
 
-    // 一直堵塞到 shader 完成
-    let mut runner = runner.as_ref().borrow_mut();
-    poll_future(&rt, runner.as_mut(), future);
+    let runner = unsafe {
+        let w = &mut *(ptr_world as *mut World);
+        &mut w.resource_mut::<PiSingleTaskRunner>().0
+    };
+
+    poll_future(rt, runner.as_mut(), future);
 }
 
 fn present_windows(windows: &RenderWindows, screen_texture: &mut ScreenTexture) {
