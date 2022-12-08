@@ -1,0 +1,18 @@
+[package]
+name = "pi_bevy_assert"
+version = "0.1.0"
+authors = ["suncy <@gmail.com>"]
+edition = "2021"
+description = "Renderer for PI Engine"
+repository = "https://github.com/GaiaWorld/pi_bevy_plugin"
+license = "MIT OR Apache-2.0"
+keywords = ["pi", "bevy"]
+
+[dependencies]
+bevy_app = "0.9"
+bevy_ecs = "0.9"
+bevy_derive = "0.9"
+pi_assets = "0.10"
+pi_share = "0.4"
+pi_hash = "0.1"
+serde = { version = "1.0", features = ["derive"], option=true }

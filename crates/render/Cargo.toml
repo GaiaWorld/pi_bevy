@@ -1,0 +1,24 @@
+[package]
+name = "pi_bevy_render_plugin"
+version = "0.1.0"
+authors = ["moyy <myy412001799@gmail.com>"]
+edition = "2021"
+description = "Renderer for PI Engine"
+repository = "https://github.com/GaiaWorld/pi_bevy_plugin"
+license = "MIT OR Apache-2.0"
+keywords = ["pi", "bevy", "plugin"]
+
+[dependencies]
+bevy = "0.9"
+log = "0.4"
+thiserror = "1.0"
+
+wgpu = { version = "0.14", features = ["spirv"] }
+winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
+
+pi_futures = "0.1"
+pi_async = "0.5"
+pi_share = "0.4"
+pi_render = {git = "https://github.com/GaiaWorld/pi_render.git", branch = "bevy"}
+pi_bevy_assert = {path="../assert", version="0.1"}
+pi_assets = "0.10"
