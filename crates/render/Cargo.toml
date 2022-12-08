@@ -9,16 +9,23 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy", "plugin"]
 
 [dependencies]
-bevy = "0.9"
+bevy_app = "0.9"
+bevy_ecs = "0.9"
+bevy_derive = "0.9"
+bevy_window = "0.9"
+raw-window-handle = "0.5"
+
 log = "0.4"
 thiserror = "1.0"
-
 wgpu = { version = "0.14", features = ["spirv"] }
-winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
 
 pi_futures = "0.1"
 pi_async = "0.5"
 pi_share = "0.4"
-pi_render = {git = "https://github.com/GaiaWorld/pi_render.git", branch = "bevy"}
-pi_bevy_assert = {path="../assert", version="0.1"}
+pi_render = { git = "https://github.com/GaiaWorld/pi_render.git", branch = "bevy" }
+pi_bevy_assert = { path = "../assert", version = "0.1" }
 pi_assets = "0.10"
+
+[dev-dependencies]
+bevy_log = "0.9"
+bevy_winit = "0.9"
