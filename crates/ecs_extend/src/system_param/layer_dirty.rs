@@ -113,6 +113,10 @@ impl<'w, 's, F: Dirty> LayerDirty<'w, 's, F> where for<'a, 'b> <<F as Dirty>::Ev
 		}
 		self.is_init = true;
 	}
+
+	pub fn mark(&mut self, entity: Entity) {
+		marked_dirty(entity, entity, &mut self.dirty_mark, &mut self.layer_list, &self.entity_tree);
+	}
 }
 
 pub struct OutDirty<'a>(NextDirty<'a, Entity>, &'a mut DirtyMark);
