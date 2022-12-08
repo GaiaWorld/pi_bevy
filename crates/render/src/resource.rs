@@ -1,12 +1,9 @@
-use bevy::prelude::{Deref, DerefMut, Resource};
-use pi_async::rt::AsyncRuntime;
-use pi_share::Share;
+use crate::render_windows::RenderWindow;
+use bevy_derive::{Deref, DerefMut};
+use bevy_ecs::system::Resource;
+use pi_async::prelude::*;
 
 /// ================ 单例 ================
-
-// winit 窗口
-#[derive(Resource, Deref, DerefMut)]
-pub struct PiWinitWindow(pub Share<winit::window::Window>);
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiSafeAtlasAllocator(pub pi_render::components::view::target_alloc::SafeAtlasAllocator);
@@ -17,18 +14,22 @@ pub struct PiSafeAtlasAllocator(pub pi_render::components::view::target_alloc::S
 ///   + 否则 是 MultiTaskRuntime
 ///
 #[derive(Resource, Deref, DerefMut)]
-pub struct PiAsyncRuntime<A: AsyncRuntime>(pub A);
+pub struct PiRenderWindow(pub RenderWindow);
 
-/// 用于 wasm 的 单线程 Runner
-#[derive(Default, Resource, Deref, DerefMut)]
-pub(crate) struct PiSingleTaskRunner(pub Option<pi_async::prelude::SingleTaskRunner<()>>);
+/// 异步 运行时
+/// A 的 类型 见 plugin 模块
+///   + wasm 环境 是 SingleTaskRuntime
+///   + 否则 是 MultiTaskRuntime
+///
+#[derive(Resource, Deref, DerefMut)]
+pub struct PiAsyncRuntime<A: AsyncRuntime + AsyncRuntimeExt>(pub A);
 
 /// 渲染 Instance，等价于 wgpu::Instance
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiRenderInstance(pub pi_render::rhi::RenderInstance);
 
 /// 渲染 Options，等价于 wgpu::Options
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Resource, Deref, DerefMut, Default)]
 pub struct PiRenderOptions(pub pi_render::rhi::options::RenderOptions);
 
 /// 渲染 设备，等价于 wgpu::RenderDevice
@@ -46,10 +47,6 @@ pub struct PiAdapterInfo(pub pi_render::rhi::AdapterInfo);
 /// 渲染图，等价于 RenderGraph
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiRenderGraph(pub super::graph::graph::RenderGraph);
-
-/// 渲染窗口
-#[derive(Default, Resource, Deref, DerefMut)]
-pub struct PiRenderWindows(pub pi_render::components::view::render_window::RenderWindows);
 
 /// 交换链对应的屏幕纹理
 #[derive(Default, Resource, Deref, DerefMut)]

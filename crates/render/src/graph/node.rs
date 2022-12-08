@@ -3,10 +3,7 @@ use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
-use bevy::{
-    ecs::system::{SystemParam, SystemState},
-    prelude::World,
-};
+use bevy_ecs::{system::{SystemParam, SystemState}, world::World};
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareRefCell, ThreadSync};
