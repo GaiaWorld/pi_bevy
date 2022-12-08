@@ -1,6 +1,6 @@
 use crate::{
     init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
-    PiAsyncRuntime, PiRenderOptions, PiRenderWindow,
+    PiAsyncRuntime, PiRenderOptions, PiRenderWindow, PiScreenTexture,
 };
 use bevy_app::{App, CoreStage, Plugin};
 use bevy_ecs::schedule::{StageLabel, SystemStage};
@@ -31,6 +31,9 @@ pub struct PiRenderPlugin;
 
 impl Plugin for PiRenderPlugin {
     fn build(&self, app: &mut App) {
+        
+        app.insert_resource(PiScreenTexture::default());
+
         if app.world.get_resource::<PiRenderOptions>().is_none() {
             app.insert_resource(PiRenderOptions::default());
         }
