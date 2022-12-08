@@ -5,7 +5,7 @@ use super::{
     param::{InParam, OutParam},
     GraphError, RenderContext,
 };
-use bevy::prelude::World;
+use bevy::{ecs::system::SystemParam, prelude::World};
 use pi_async::prelude::AsyncRuntime;
 use pi_render::{
     depend_graph::graph::DependGraph,
@@ -47,7 +47,7 @@ impl RenderGraph {
 
     /// 添加 名为 name 的 节点
     #[inline]
-    pub fn add_node<I, O, R>(
+    pub fn add_node<I, O, R, P>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         node: R,
@@ -55,14 +55,15 @@ impl RenderGraph {
     where
         I: InParam + Default,
         O: OutParam + Default + Clone,
-        R: Node<Input = I, Output = O>,
+        R: Node<Param = P, Input = I, Output = O>,
+        P: SystemParam + 'static,
     {
         let context = RenderContext {
             device: self.device.clone(),
             queue: self.queue.clone(),
         };
 
-        let node = NodeImpl::new(node, context);
+        let node = NodeImpl::<I, O, R, P>::new(node, context);
         self.imp.add_node(name, node)
     }
 
