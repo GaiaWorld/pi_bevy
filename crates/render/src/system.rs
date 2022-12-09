@@ -1,6 +1,6 @@
 use crate::{
     graph::graph::RenderGraph,
-    render_windows::{prepare_windows, RenderWindow},
+    render_windows::{prepare_window, RenderWindow},
     PiAsyncRuntime, PiRenderDevice, PiRenderGraph, PiRenderInstance, PiRenderWindow,
     PiScreenTexture,
 };
@@ -54,19 +54,20 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     rt.block_on(async move {
         // ============ 1. 获取 窗口 可用纹理 ============
 
-        prepare_windows(window, view, device, instance, width, height).unwrap();
+        prepare_window(window, view, device, instance, width, height).unwrap();
 
         // ============ 2. 执行渲染图 ============
         rg.build().unwrap();
         rg.run(&rt_clone, world).await.unwrap();
 
-        present_windows(view.as_mut().unwrap());
+        present_window(view.as_mut().unwrap());
     }).unwrap();
 }
 
-fn present_windows(screen_texture: &mut ScreenTexture) {
+fn present_window(screen_texture: &mut ScreenTexture) {
     if let Some(view) = screen_texture.take_surface_texture() {
         view.present();
     }
+    
     log::trace!("render_system: after surface_texture.present");
 }

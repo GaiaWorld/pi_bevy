@@ -51,3 +51,24 @@ pub struct PiRenderGraph(pub super::graph::graph::RenderGraph);
 /// 交换链对应的屏幕纹理
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct PiScreenTexture(pub Option<pi_render::rhi::texture::ScreenTexture>);
+
+/// 清屏 参数
+#[derive(Default, Resource, Deref, DerefMut)]
+pub struct PiClearOptions(pub ClearOptions);
+
+#[derive(Clone)]
+pub struct ClearOptions {
+    pub color: wgpu::Color,
+    pub depth: Option<f32>,
+    pub stencil: Option<u32>,
+}
+
+impl Default for ClearOptions {
+    fn default() -> Self {
+        Self {
+            color: wgpu::Color::WHITE,
+            depth: Some(1.0),
+            stencil: None,
+        }
+    }
+}
