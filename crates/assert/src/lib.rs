@@ -17,6 +17,12 @@ impl<A: Asset, G: Garbageer<A>> ShareAssetMgr<A, G> {
 	}
 }
 
+impl<A: Asset, G: Garbageer<A>> Clone for ShareAssetMgr<A, G> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct ShareHomogeneousMgr<A, G: pi_assets::homogeneous::Garbageer<A> = pi_assets::homogeneous::GarbageEmpty>(pub Share<HomogeneousMgr<A, G>>);
@@ -26,6 +32,12 @@ impl<A, G: pi_assets::homogeneous::Garbageer<A>> ShareHomogeneousMgr<A, G> {
     pub fn new(garbage: G, capacity: usize, unit_size: usize, timeout: usize) -> Self {
 		Self(HomogeneousMgr::new(garbage, capacity, unit_size, timeout))
 	}
+}
+
+impl<A, G: pi_assets::homogeneous::Garbageer<A>> Clone for ShareHomogeneousMgr<A, G> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
 }
 
 #[derive(Debug, Clone)]
