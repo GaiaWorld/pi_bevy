@@ -25,7 +25,7 @@ impl RenderWindow {
     }
 }
 
-pub fn prepare_windows(
+pub fn prepare_window(
     window: &mut RenderWindow,
     view: &mut Option<ScreenTexture>,
     device: &RenderDevice,

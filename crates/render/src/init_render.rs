@@ -1,6 +1,6 @@
 use crate::{
-    graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
-    PiRenderOptions, PiRenderQueue,
+    clear_node::ClearNode, graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph,
+    PiRenderInstance, PiRenderOptions, PiRenderQueue,
 };
 use bevy_ecs::world::World;
 use bevy_window::RawHandleWrapper;
@@ -64,10 +64,10 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     let queue = queue.unwrap();
     let adapter_info = adapter_info.unwrap();
 
-    let rg = RenderGraph::new(device.clone(), queue.clone());
+    let mut rg = RenderGraph::new(device.clone(), queue.clone());
 
     // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
-
+    ClearNode::init(&mut rg);
     world.insert_resource(PiRenderGraph(rg));
     world.insert_resource(PiRenderInstance(instance));
     world.insert_resource(PiRenderDevice(device));

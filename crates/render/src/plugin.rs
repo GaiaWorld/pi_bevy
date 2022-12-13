@@ -1,6 +1,6 @@
 use crate::{
     init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
-    PiAsyncRuntime, PiRenderOptions, PiRenderWindow, PiScreenTexture, PiRenderDevice, PiSafeAtlasAllocator,
+    PiAsyncRuntime, PiRenderOptions, PiRenderWindow, PiScreenTexture, PiRenderDevice, PiSafeAtlasAllocator, PiClearOptions
 };
 use bevy_app::{App, CoreStage, Plugin};
 use bevy_ecs::schedule::{StageLabel, SystemStage};
@@ -36,6 +36,10 @@ impl Plugin for PiRenderPlugin {
         if app.world.get_resource::<PiRenderOptions>().is_none() {
             app.insert_resource(PiRenderOptions::default());
         }
+        if app.world.get_resource::<PiClearOptions>().is_none() {
+            app.insert_resource(PiClearOptions::default());
+        }
+
         app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel());
 
         #[cfg(target_arch = "wasm32")]
