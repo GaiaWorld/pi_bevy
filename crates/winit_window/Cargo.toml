@@ -1,0 +1,21 @@
+[package]
+name = "pi_bevy_winit_window"
+version = "0.1.0"
+authors = ["suncy <@gmail.com>"]
+edition = "2021"
+description = "Renderer for PI Engine"
+repository = "https://github.com/GaiaWorld/pi_bevy_plugin"
+license = "MIT OR Apache-2.0"
+keywords = ["pi", "bevy", "window", "winit"]
+
+[dependencies]
+bevy_window = "0.9"
+bevy_app = "0.9"
+winit = {git = "http://ser.yinengyun.com:10082/tech/winit.git"}
+glam="0.22"
+raw-window-handle = "0.5"
+
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = {version="0.3", features = [
+	"HtmlCanvasElement"
+]}
