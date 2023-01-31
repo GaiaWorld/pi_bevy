@@ -8,8 +8,8 @@ use pi_share::Share;
 use wgpu::TextureFormat;
 
 pub struct RenderWindow {
-    width: u32,
-    height: u32,
+    pub width: u32,
+    pub height: u32,
     handle: RawHandleWrapper,
     present_mode: PresentMode,
 }

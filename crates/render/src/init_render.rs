@@ -5,7 +5,7 @@ use crate::{
 use bevy_ecs::world::World;
 use bevy_window::RawHandleWrapper;
 use log::{debug, warn};
-use pi_async::prelude::*;
+use pi_async::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::{
     device::RenderDevice,
     options::{RenderOptions, RenderPriority},
@@ -17,9 +17,10 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
     rt: &A,
 ) -> (RawHandleWrapper, wgpu::PresentMode) {
-    let options = world.resource::<PiRenderOptions>().0.clone();
+    let mut options = world.resource::<PiRenderOptions>().0.clone();
     let windows = world.resource_mut::<bevy_window::Windows>();
-    let mode = options.present_mode;
+	// options.present_mode = wgpu::PresentMode::Mailbox;
+	let mode = options.present_mode;
 
     let raw_handler = windows
         .get_primary()
@@ -123,6 +124,15 @@ async fn initialize_renderer(
     let adapter_info = adapter.get_info();
     warn!("initialize_renderer {:?}", adapter_info);
 
+	// #[cfg(feature = "trace")]
+    // let trace_path = {
+    //     let path = std::path::Path::new("wgpu_trace");
+    //     // ignore potential error, wgpu will log it
+    //     let _ = std::fs::create_dir(path);
+    //     Some(path)
+    // };
+
+	// #[cfg(not(feature = "trace"))]
     let trace_path = None;
 
     // Maybe get features and limits based on what is supported by the adapter/backend

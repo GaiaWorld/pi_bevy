@@ -7,6 +7,7 @@ use crate::{
 use bevy_ecs::world::World;
 use pi_async::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
+use tracing::Instrument;
 
 /// ================ System ================
 
@@ -33,10 +34,12 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         std::mem::transmute(views)
     };
 
-    let (width, height) = world
+    let (width, height) = match world
         .resource::<bevy_window::Windows>()
-        .get_primary().map(|window| (window.physical_width(), window.physical_height()))
-        .unwrap();
+        .get_primary().map(|window| (window.physical_width(), window.physical_height())) {
+			Some(r) => r,
+			None => return,
+		};
 
     let window: &'static mut RenderWindow = unsafe {
         let w = &mut *(ptr_world as *mut World);
@@ -51,23 +54,64 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     };
 
     let rt_clone = rt.clone();
-    rt.block_on(async move {
-        // ============ 1. 获取 窗口 可用纹理 ============
 
-        prepare_window(window, view, device, instance, width, height).unwrap();
+	#[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
+    let prepare_window_span = tracing::info_span!("prepare_window");
+	#[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
+    let rg_build_span = tracing::info_span!("rg build");
+	#[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
+    let rg_run_span = tracing::info_span!("rg_run");
+	#[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
+    let take_texture_span = tracing::info_span!("take_texture");
+	#[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
+    let system_present_span = tracing::info_span!("present");
+	#[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
+    let frame_render_span = tracing::info_span!("frame_render");
+
+	#[cfg(not(feature = "trace"))]
+	let task = async move {
+        // ============ 1. 获取 窗口 可用纹理 ============
+		prepare_window(window, view, device, instance, width, height).unwrap();
 
         // ============ 2. 执行渲染图 ============
-        rg.build().unwrap();
-        rg.run(&rt_clone, world).await.unwrap();
+		rg.build().unwrap();
+		rg.run(&rt_clone, world).await.unwrap();
+		if let Some(view) = view.as_mut().unwrap().take_surface_texture() {
+			view.present();
+		}
+        
+    };
+	#[cfg(feature = "trace")]
+	let task = async move {
+        // ============ 1. 获取 窗口 可用纹理 ============
+		async {
+			prepare_window(window, view, device, instance, width, height).unwrap();
+		}.instrument(prepare_window_span).await;
 
-        present_window(view.as_mut().unwrap());
-    }).unwrap();
+        // ============ 2. 执行渲染图 ============
+		async {
+        	rg.build().unwrap();
+		}.instrument(rg_build_span).await;
+
+		
+		rg.run(&rt_clone, world).instrument(rg_run_span).await.unwrap();
+
+		let view = async move{view.as_mut().unwrap().take_surface_texture()}.instrument(take_texture_span).await;
+		if let Some(view) = view {
+			async move{
+				view.present();
+			}.instrument(system_present_span).await
+		}
+        
+    }.instrument(frame_render_span);
+
+    rt.block_on(task).unwrap();
 }
 
-fn present_window(screen_texture: &mut ScreenTexture) {
-    if let Some(view) = screen_texture.take_surface_texture() {
-        view.present();
-    }
+// fn present_window(screen_texture: &mut ScreenTexture) {
+//     if let Some(view) = screen_texture.take_surface_texture() {
+//         view.present();
+//     }
     
-    log::trace!("render_system: after surface_texture.present");
-}
+//     log::trace!("render_system: after surface_texture.present");
+// }

@@ -25,6 +25,10 @@ pi_share = "0.4"
 pi_render = { git = "https://github.com/GaiaWorld/pi_render.git", branch = "bevy" }
 pi_bevy_assert = { path = "../assert", version = "0.1" }
 pi_assets = "0.10"
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+
+[features]
+trace = []
 
 [dev-dependencies]
 bevy_log = "0.9"

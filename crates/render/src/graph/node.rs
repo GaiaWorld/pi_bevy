@@ -7,6 +7,7 @@ use bevy_ecs::{system::{SystemParam, SystemState}, world::World};
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareRefCell, ThreadSync};
+use tracing::Instrument;
 use wgpu::CommandEncoder;
 
 pub use pi_render::depend_graph::node::{NodeId, NodeLabel, ParamUsage};
@@ -111,7 +112,7 @@ where
         usage: &'a ParamUsage,
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let context = self.context.clone();
-        Box::pin(async move {
+		let mut task = async move {
             // 每节点 一个 CommandEncoder
             let commands = self
                 .context
@@ -129,18 +130,27 @@ where
                     commands.clone(),
                     input,
                     usage,
-                )
-                .await
-                .unwrap();
+                );
+			#[cfg(feature = "trace")]
+			let output = output.instrument(tracing::info_span!("GraphNode run"));
+			let output = output.await.unwrap();
 
             // CommandEncoder --> CommandBuffer
             let commands = Share::try_unwrap(commands.0).unwrap();
             let commands = commands.into_inner();
 
             // CommandBuffer --> Queue
+			#[cfg(not(feature = "trace"))]
             self.context.queue.submit(vec![commands.finish()]);
 
+			#[cfg(feature = "trace")]
+			async {
+				self.context.queue.submit(vec![commands.finish()]);
+			}.instrument(tracing::info_span!("submit")).await;
+
             Ok(output)
-        })
+        };
+
+        Box::pin(task)
     }
 }
