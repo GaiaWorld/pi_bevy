@@ -10,10 +10,13 @@
 
 [workspace]
 members = ["crates/*"]
-resolver="2"
+resolver = "2"
 
 [patch."https://github.com/GaiaWorld/pi_post_process"]
-pi_postprocess ={path="../pi_post_process"}
+pi_postprocess = { path = "../pi_post_process" }
 
 [patch."https://github.com/GaiaWorld/pi_render"]
-pi_render = {path="../pi_render"}
+pi_render = { path = "../pi_render" }
+
+[patch.crates-io]
+pi_map = { path = "../pi_map" }

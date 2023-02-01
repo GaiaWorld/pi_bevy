@@ -1,5 +1,7 @@
 //! RenderGraph
 
+use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE};
+
 use super::{
     node::{Node, NodeId, NodeImpl, NodeLabel},
     param::{InParam, OutParam},
@@ -18,6 +20,8 @@ pub struct RenderGraph {
     device: RenderDevice,
     queue: RenderQueue,
 
+    node_count: u32,
+
     imp: DependGraph<World>,
 }
 
@@ -26,11 +30,20 @@ impl RenderGraph {
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
-        Self {
+        let mut graph = Self {
             device,
             queue,
+            node_count: 0,
             imp: Default::default(),
-        }
+        };
+
+        // 一开始，就将 Clear 扔到 graph
+        // 注：每帧 必须运行一次 窗口的 清屏，否则 wgpu 会报错
+        let clear_node = ClearNode;
+        graph.add_node(CLEAR_WIDNOW_NODE, clear_node).unwrap();
+        graph.set_finish(CLEAR_WIDNOW_NODE, true).unwrap();
+
+        graph
     }
 
     /// 查 指定节点 的 前驱节点
@@ -64,13 +77,32 @@ impl RenderGraph {
         };
 
         let node = NodeImpl::<I, O, R, P>::new(node, context);
-        self.imp.add_node(name, node)
+        let r = self.imp.add_node(name, node);
+
+        if r.is_ok() {
+            self.node_count += 1;
+            if self.node_count > 1 {
+                let id = *r.as_ref().unwrap();
+                // 清屏节点 在 所有节点 之前
+                self.add_depend(CLEAR_WIDNOW_NODE, id).unwrap();
+                // 两个以上的节点，清屏节点设置为 非终止节点
+                self.set_finish(CLEAR_WIDNOW_NODE, false).unwrap();
+            }
+        }
+        r
     }
 
     /// 移除 节点
     #[inline]
     pub fn remove_node(&mut self, label: impl Into<NodeLabel>) -> Result<(), GraphError> {
-        self.imp.remove_node(label)
+        let r = self.imp.remove_node(label);
+        if r.is_ok() {
+            self.node_count -= 1;
+            if self.node_count == 1 {
+                self.set_finish(CLEAR_WIDNOW_NODE, true).unwrap();
+            }
+        }
+        r
     }
 
     /// 建立 Node 的 依赖关系

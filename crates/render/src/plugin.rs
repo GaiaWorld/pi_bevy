@@ -112,7 +112,7 @@ impl Plugin for PiRenderPlugin {
         app.insert_resource(PiRenderWindow(RenderWindow::new(wrapper, present_mode)));
 
 		let device = app.world.get_resource::<PiRenderDevice>().unwrap();
-		app.insert_resource(PiSafeAtlasAllocator(SafeAtlasAllocator::new(device.0.clone(), share_texture_res.0.clone(), share_unuse.0.clone())));
+		app.insert_resource(PiSafeAtlasAllocator(SafeAtlasAllocator::new(device.0.clone(), share_texture_res.0, share_unuse.0)));
     }
 }
 

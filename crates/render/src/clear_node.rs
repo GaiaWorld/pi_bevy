@@ -1,6 +1,4 @@
-use crate::{
-    graph::graph::RenderGraph, node::Node, PiClearOptions, PiScreenTexture, RenderContext,
-};
+use crate::{node::Node, PiClearOptions, PiScreenTexture, RenderContext};
 use bevy_ecs::{
     system::{Res, SystemState},
     world::World,
@@ -9,17 +7,11 @@ use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::ParamUsage;
 use pi_share::ShareRefCell;
 
+/// 窗口清屏
+/// 注：此节点 只清屏窗口
 pub(crate) struct ClearNode;
 
 pub const CLEAR_WIDNOW_NODE: &str = "clear_window";
-
-impl ClearNode {
-    pub(crate) fn init(rg: &mut RenderGraph) {
-        let node = ClearNode;
-        rg.add_node(CLEAR_WIDNOW_NODE, node).unwrap();
-        rg.set_finish(CLEAR_WIDNOW_NODE, true).unwrap();
-    }
-}
 
 impl Node for ClearNode {
     type Input = ();

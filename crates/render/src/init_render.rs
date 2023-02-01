@@ -1,6 +1,6 @@
 use crate::{
-    clear_node::ClearNode, graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph,
-    PiRenderInstance, PiRenderOptions, PiRenderQueue,
+    graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
+    PiRenderOptions, PiRenderQueue,
 };
 use bevy_ecs::world::World;
 use bevy_window::RawHandleWrapper;
@@ -17,10 +17,10 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
     rt: &A,
 ) -> (RawHandleWrapper, wgpu::PresentMode) {
-    let mut options = world.resource::<PiRenderOptions>().0.clone();
+    let options = world.resource::<PiRenderOptions>().0.clone();
     let windows = world.resource_mut::<bevy_window::Windows>();
-	// options.present_mode = wgpu::PresentMode::Mailbox;
-	let mode = options.present_mode;
+    // options.present_mode = wgpu::PresentMode::Mailbox;
+    let mode = options.present_mode;
 
     let raw_handler = windows
         .get_primary()
@@ -65,10 +65,9 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     let queue = queue.unwrap();
     let adapter_info = adapter_info.unwrap();
 
-    let mut rg = RenderGraph::new(device.clone(), queue.clone());
+    let rg = RenderGraph::new(device.clone(), queue.clone());
 
     // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
-    ClearNode::init(&mut rg);
     world.insert_resource(PiRenderGraph(rg));
     world.insert_resource(PiRenderInstance(instance));
     world.insert_resource(PiRenderDevice(device));
@@ -124,7 +123,7 @@ async fn initialize_renderer(
     let adapter_info = adapter.get_info();
     warn!("initialize_renderer {:?}", adapter_info);
 
-	// #[cfg(feature = "trace")]
+    // #[cfg(feature = "trace")]
     // let trace_path = {
     //     let path = std::path::Path::new("wgpu_trace");
     //     // ignore potential error, wgpu will log it
@@ -132,7 +131,7 @@ async fn initialize_renderer(
     //     Some(path)
     // };
 
-	// #[cfg(not(feature = "trace"))]
+    // #[cfg(not(feature = "trace"))]
     let trace_path = None;
 
     // Maybe get features and limits based on what is supported by the adapter/backend
