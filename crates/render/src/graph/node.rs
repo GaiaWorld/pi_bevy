@@ -3,7 +3,10 @@ use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
-use bevy_ecs::{system::{SystemParam, SystemState}, world::World};
+use bevy_ecs::{
+    system::{SystemParam, SystemState},
+    world::World,
+};
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareRefCell, ThreadSync};
@@ -111,7 +114,7 @@ where
         usage: &'a ParamUsage,
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let context = self.context.clone();
-		let task = async move {
+        let task = async move {
             // 每节点 一个 CommandEncoder
             let commands = self
                 .context
@@ -120,32 +123,24 @@ where
 
             let commands = ShareRefCell::new(commands);
 
-            let output = self
-                .node
-                .run(
-                    world,
-                    self.state.as_mut().unwrap(),
-                    context,
-                    commands.clone(),
-                    input,
-                    usage,
-                );
-			#[cfg(feature = "trace")]
-			let output = output.instrument(tracing::info_span!("GraphNode run"));
-			let output = output.await.unwrap();
+            let output = self.node.run(
+                world,
+                self.state.as_mut().unwrap(),
+                context,
+                commands.clone(),
+                input,
+                usage,
+            );
+            #[cfg(feature = "trace")]
+            let output = output.instrument(tracing::info_span!("GraphNode run"));
+            let output = output.await.unwrap();
 
             // CommandEncoder --> CommandBuffer
             let commands = Share::try_unwrap(commands.0).unwrap();
             let commands = commands.into_inner();
 
             // CommandBuffer --> Queue
-			#[cfg(not(feature = "trace"))]
-            self.context.queue.submit(vec![commands.finish()]);
-
-			#[cfg(feature = "trace")]
-			async {
-				self.context.queue.submit(vec![commands.finish()]);
-			}.instrument(tracing::info_span!("submit")).await;
+            self.context.queue.push_back(commands.finish()).await;
 
             Ok(output)
         };
