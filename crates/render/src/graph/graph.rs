@@ -1,18 +1,18 @@
 //! RenderGraph
 
-use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE};
-
 use super::{
     node::{Node, NodeId, NodeImpl, NodeLabel},
     param::{InParam, OutParam},
     GraphError, RenderContext,
 };
 use bevy::ecs::{system::SystemParam, world::World};
+use crate::{async_queue::AsyncQueue, clear_node::ClearNode, CLEAR_WIDNOW_NODE};
 use pi_async::prelude::AsyncRuntime;
 use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
 };
+use pi_share::{Share, ShareRefCell};
 use std::borrow::Cow;
 
 /// 渲染图
@@ -23,6 +23,8 @@ pub struct RenderGraph {
     node_count: u32,
 
     imp: DependGraph<World>,
+
+    async_queue: Share<AsyncQueue>,
 }
 
 /// 渲染图的 拓扑信息 相关 方法
@@ -30,11 +32,14 @@ impl RenderGraph {
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
+        let q = queue.clone();
+
         let mut graph = Self {
             device,
             queue,
             node_count: 0,
             imp: Default::default(),
+            async_queue: Share::new(AsyncQueue::new(q)),
         };
 
         // 一开始，就将 Clear 扔到 graph
@@ -73,7 +78,7 @@ impl RenderGraph {
     {
         let context = RenderContext {
             device: self.device.clone(),
-            queue: self.queue.clone(),
+            queue: self.async_queue.clone(),
         };
 
         let node = NodeImpl::<I, O, R, P>::new(node, context);

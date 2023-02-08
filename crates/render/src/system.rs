@@ -7,6 +7,8 @@ use crate::{
 use bevy::ecs::world::World;
 use pi_async::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
+#[cfg(feature = "trace")] 
+use tracing::Instrument;
 
 /// ================ System ================
 
