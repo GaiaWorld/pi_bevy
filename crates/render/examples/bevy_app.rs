@@ -1,7 +1,7 @@
-use bevy_app::App;
-use bevy_log::LogPlugin;
-use bevy_window::WindowPlugin;
-use bevy::winit::WinitPlugin;
+// use bevy_app::App;
+// use bevy_log::LogPlugin;
+// use bevy_window::WindowPlugin;
+use bevy::{app::App, log::LogPlugin, window::WindowPlugin, winit::WinitPlugin};
 use pi_bevy_render_plugin::{ClearOptions, PiClearOptions, PiRenderPlugin};
 
 fn main() {

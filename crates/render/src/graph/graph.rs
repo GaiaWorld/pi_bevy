@@ -167,12 +167,13 @@ impl RenderGraph {
 		let context = NodeContext::new(world, Box::new(task_queue.clone()));
         let ret = self.imp.run(rt, unsafe { transmute::<_, &'static NodeContext>(&context) }).await;
 		
+        // 用 异步值 等待 队列的 提交 全部完成
 		let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
 		let wait1 = wait.clone();
 		task_queue.push(Box::pin(async move {
 			wait1.set(());
 		}));
-		wait.await;
+        wait.await;
 
 		ret
     }
