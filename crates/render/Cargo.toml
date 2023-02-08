@@ -13,7 +13,7 @@ keywords = ["pi", "bevy", "plugin"]
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 # bevy_window = "0.9"
-bevy={path="../../../bevy", default-features = false}
+bevy={version="0.9", default-features = false}
 raw-window-handle = "0.5"
 
 log = "0.4"
@@ -33,4 +33,4 @@ tracing = { version = "0.1", default-features = false, features = ["std"] }
 trace = []
 
 [dev-dependencies]
-bevy={path="../../../bevy", default-features = false, features=["bevy_winit"]}
+bevy={version="0.9", default-features = false, features=["bevy_winit"]}
