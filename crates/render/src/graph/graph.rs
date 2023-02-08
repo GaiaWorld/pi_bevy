@@ -6,6 +6,7 @@ use super::{
     GraphError, RenderContext,
 };
 use bevy::ecs::{system::SystemParam, world::World};
+use tracing::Instrument;
 use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE, node::{AsyncTaskQueue, NodeContext, AsyncQueue}};
 use pi_async::{prelude::{AsyncRuntime, AsyncValueNonBlocking}};
 use pi_render::{
@@ -13,7 +14,7 @@ use pi_render::{
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareRefCell, ShareMutex};
-use std::{borrow::Cow, collections::VecDeque, mem::transmute};
+use std::{borrow::Cow, collections::VecDeque, mem::transmute, sync::atomic::AtomicBool};
 use pi_futures::BoxFuture;
 
 /// 渲染图
@@ -160,6 +161,7 @@ impl RenderGraph {
 		let async_submit_queue = self.async_submit_queue.clone();
 		let task_queue = AsyncTaskQueue {
 			queue: async_submit_queue,
+			is_runing: Share::new(AtomicBool::new(false)),
 			rt: rt.clone(),
 		};
 		let context = NodeContext::new(world, Box::new(task_queue.clone()));
@@ -171,7 +173,7 @@ impl RenderGraph {
 			wait1.set(());
 		}));
 		wait.await;
-		
+
 		ret
     }
 }

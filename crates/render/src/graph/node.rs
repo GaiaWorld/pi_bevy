@@ -1,5 +1,5 @@
 //! 利用 DependGraph 实现 渲染图
-use std::collections::VecDeque;
+use std::{collections::VecDeque, sync::atomic::{AtomicBool, Ordering}};
 
 use super::{
     param::{InParam, OutParam},
@@ -183,32 +183,36 @@ pub trait AsyncQueue: Send + Sync + 'static {
 #[derive(Clone)]
 pub struct AsyncTaskQueue<A: AsyncRuntime> {
 	pub queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>,
+	pub is_runing: Share<AtomicBool>,
 	pub rt: A
 }
 
 impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
 	fn push(&self, task: BoxFuture<'static, ()>) {
-		fn run<A: AsyncRuntime>(queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>, rt: A) {
-			let t = queue.lock().pop_front();
+		fn run<A: AsyncRuntime>(queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>, rt: A, is_runing: Share<AtomicBool>) {
+			let mut t = queue.lock().pop_front();
 			if let Some(task) = t {
 				let rt1 = rt.clone();
 				rt.spawn(rt.alloc(), async move {
 					task.await;
-					run(queue, rt1);
+					run(queue, rt1, is_runing);
 				});
+			} else {
+				is_runing.store(false, Ordering::Relaxed);
 			}
 		}
 		
-        let is_empty = {
+		
+        let is_start_run = {
 			let mut lock = self.queue.lock();
-			let is_empty = lock.is_empty();
+			let is_start_run = lock.is_empty() && self.is_runing.compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed).is_ok();
             lock.push_back(task);
-            is_empty
+            is_start_run
         };
 
-        if is_empty {
+        if is_start_run {
             // 第一个元素，挨个 执行一次
-            run(self.queue.clone(), self.rt.clone());
+            run(self.queue.clone(), self.rt.clone(), self.is_runing.clone());
         }
     }
 }
