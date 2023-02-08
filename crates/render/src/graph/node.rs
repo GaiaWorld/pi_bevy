@@ -1,12 +1,16 @@
 //! 利用 DependGraph 实现 渲染图
+use std::collections::VecDeque;
+
 use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
 use bevy::ecs::{system::{SystemParam, SystemState}, world::World};
+use pi_async::rt::{AsyncRuntime, AsyncValue};
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
-use pi_share::{Share, ShareRefCell, ThreadSync};
+use pi_share::{Share, ShareRefCell, ThreadSync, ShareMutex};
+use crossbeam::queue::SegQueue;
 use wgpu::CommandEncoder;
 #[cfg(feature = "trace")]
 use tracing::Instrument;
@@ -79,7 +83,25 @@ where
     }
 }
 
-impl<I, O, R, P> DependNode<World> for NodeImpl<I, O, R, P>
+pub struct NodeContext {
+	world: &'static World,
+	pub async_tasks: Box<dyn AsyncQueue>,
+}
+
+impl NodeContext {
+	pub fn new(world: &'static World, async_tasks: Box<dyn AsyncQueue>) -> Self {
+		NodeContext {
+			world, 
+			async_tasks
+		}
+	}
+
+	pub fn world(&self) -> &World {
+		&*self.world
+	}
+}
+
+impl<I, O, R, P> DependNode<NodeContext> for NodeImpl<I, O, R, P>
 where
     I: InParam + Default,
     O: OutParam + Default + Clone,
@@ -90,15 +112,15 @@ where
     type Output = O;
 
     #[inline]
-    fn build<'a>(&'a mut self, world: &'a World, usage: &'a ParamUsage) -> Result<(), String> {
+    fn build<'a>(&'a mut self, context: &'a NodeContext, usage: &'a ParamUsage) -> Result<(), String> {
         if self.state.is_none() {
-            let w_ptr = world as *const World as usize;
+            let w_ptr = context.world() as *const World as usize;
             let world = unsafe { std::mem::transmute(w_ptr) };
             self.state = Some(SystemState::new(world));
         }
 
         self.node.build(
-            world,
+            context.world,
             self.state.as_mut().unwrap(),
             self.context.clone(),
             usage,
@@ -108,8 +130,7 @@ where
     #[inline]
     fn run<'a>(
         &'a mut self,
-        world: &'a World,
-		
+        c: &'a NodeContext,
         input: &'a Self::Input,
         usage: &'a ParamUsage,
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
@@ -124,7 +145,7 @@ where
             let commands = ShareRefCell::new(commands);
 
             let output = self.node.run(
-                world,
+                c.world(),
                 self.state.as_mut().unwrap(),
                 context,
                 commands.clone(),
@@ -140,11 +161,54 @@ where
             let commands = commands.into_inner();
 
             // CommandBuffer --> Queue
-            self.context.queue.push_back(commands.finish()).await;
+			let queue = self.context.queue.clone();
+			let submit_task = async move {
+				queue.submit(vec![commands.finish()]);
+			};
+			#[cfg(feature = "trace")]
+			let submit_task = submit_task.instrument(tracing::info_span!("submite"));
+			c.async_tasks.push(Box::pin(submit_task));
 
             Ok(output)
         };
 
         Box::pin(task)
+    }
+}
+
+pub trait AsyncQueue: Send + Sync + 'static {
+	fn push(&self, task: BoxFuture<'static, ()>);
+}
+
+#[derive(Clone)]
+pub struct AsyncTaskQueue<A: AsyncRuntime> {
+	pub queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>,
+	pub rt: A
+}
+
+impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
+	fn push(&self, task: BoxFuture<'static, ()>) {
+		fn run<A: AsyncRuntime>(queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>, rt: A) {
+			let t = queue.lock().pop_front();
+			if let Some(task) = t {
+				let rt1 = rt.clone();
+				rt.spawn(rt.alloc(), async move {
+					task.await;
+					run(queue, rt1);
+				});
+			}
+		}
+		
+        let is_empty = {
+			let mut lock = self.queue.lock();
+			let is_empty = lock.is_empty();
+            lock.push_back(task);
+            is_empty
+        };
+
+        if is_empty {
+            // 第一个元素，挨个 执行一次
+            run(self.queue.clone(), self.rt.clone());
+        }
     }
 }

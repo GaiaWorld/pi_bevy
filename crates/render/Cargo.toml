@@ -19,6 +19,7 @@ raw-window-handle = "0.5"
 log = "0.4"
 thiserror = "1.0"
 wgpu = { version = "0.14", features = ["spirv"] }
+crossbeam="0.8"
 
 pi_futures = "0.1"
 pi_async = "0.5"

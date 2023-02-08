@@ -6,14 +6,15 @@ use super::{
     GraphError, RenderContext,
 };
 use bevy::ecs::{system::SystemParam, world::World};
-use crate::{async_queue::AsyncQueue, clear_node::ClearNode, CLEAR_WIDNOW_NODE};
-use pi_async::prelude::AsyncRuntime;
+use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE, node::{AsyncTaskQueue, NodeContext, AsyncQueue}};
+use pi_async::{prelude::{AsyncRuntime, AsyncValueNonBlocking}};
 use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
 };
-use pi_share::{Share, ShareRefCell};
-use std::borrow::Cow;
+use pi_share::{Share, ShareRefCell, ShareMutex};
+use std::{borrow::Cow, collections::VecDeque, mem::transmute};
+use pi_futures::BoxFuture;
 
 /// 渲染图
 pub struct RenderGraph {
@@ -22,9 +23,9 @@ pub struct RenderGraph {
 
     node_count: u32,
 
-    imp: DependGraph<World>,
+    imp: DependGraph<NodeContext>,
 
-    async_queue: Share<AsyncQueue>,
+    async_submit_queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>,
 }
 
 /// 渲染图的 拓扑信息 相关 方法
@@ -39,7 +40,7 @@ impl RenderGraph {
             queue,
             node_count: 0,
             imp: Default::default(),
-            async_queue: Share::new(AsyncQueue::new(q)),
+            async_submit_queue: Share::new(ShareMutex::new(VecDeque::new())),
         };
 
         // 一开始，就将 Clear 扔到 graph
@@ -78,7 +79,7 @@ impl RenderGraph {
     {
         let context = RenderContext {
             device: self.device.clone(),
-            queue: self.async_queue.clone(),
+            queue: self.queue.clone(),
         };
 
         let node = NodeImpl::<I, O, R, P>::new(node, context);
@@ -156,6 +157,21 @@ impl RenderGraph {
         rt: &'a A,
         world: &'static World,
     ) -> Result<(), GraphError> {
-        self.imp.run(rt, world).await
+		let async_submit_queue = self.async_submit_queue.clone();
+		let task_queue = AsyncTaskQueue {
+			queue: async_submit_queue,
+			rt: rt.clone(),
+		};
+		let context = NodeContext::new(world, Box::new(task_queue.clone()));
+        let ret = self.imp.run(rt, unsafe { transmute::<_, &'static NodeContext>(&context) }).await;
+		
+		let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
+		let wait1 = wait.clone();
+		task_queue.push(Box::pin(async move {
+			wait1.set(());
+		}));
+		wait.await;
+		
+		ret
     }
 }
