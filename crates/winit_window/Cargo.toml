@@ -9,8 +9,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy", "window", "winit"]
 
 [dependencies]
-bevy_window = "0.9"
-bevy_app = "0.9"
+bevy={path="../../../bevy", default-features=false}
 winit = {git = "http://ser.yinengyun.com:10082/tech/winit.git"}
 glam="0.22"
 raw-window-handle = "0.5"

@@ -1,4 +1,4 @@
-use bevy_ecs::{world::{FromWorld, World}, system::{Resource, ResState, ResMutState, SystemParamState, SystemMeta, ReadOnlySystemParamFetch, SystemParam, Res, SystemParamFetch, ResMut}};
+use bevy::ecs::{world::{FromWorld, World}, system::{Resource, ResState, ResMutState, SystemParamState, SystemMeta, ReadOnlySystemParamFetch, SystemParam, Res, SystemParamFetch, ResMut}};
 use derive_deref::{DerefMut, Deref};
 
 #[derive(Debug, Deref, DerefMut)]

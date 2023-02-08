@@ -1,5 +1,5 @@
 
-// use bevy_ecs::{
+// use bevy::ecs::{
 // 	all_tuples, 
 // 	archetype::{ArchetypeComponentId, ArchetypeGeneration, ArchetypeId},
 //     change_detection::MAX_CHANGE_AGE,
@@ -78,9 +78,9 @@
 // ///
 // /// Basic usage:
 // /// ```rust
-// /// use bevy_ecs::prelude::*;
-// /// use bevy_ecs::{system::SystemState};
-// /// use bevy_ecs::event::Events;
+// /// use bevy::ecs::prelude::*;
+// /// use bevy::ecs::{system::SystemState};
+// /// use bevy::ecs::event::Events;
 // ///
 // /// struct MyEvent;
 // /// struct MyResource(u32);
@@ -106,9 +106,9 @@
 // /// ```
 // /// Caching:
 // /// ```rust
-// /// use bevy_ecs::prelude::*;
-// /// use bevy_ecs::{system::SystemState};
-// /// use bevy_ecs::event::Events;
+// /// use bevy::ecs::prelude::*;
+// /// use bevy::ecs::{system::SystemState};
+// /// use bevy::ecs::event::Events;
 // ///
 // /// struct MyEvent;
 // /// struct CachedSystemState<'w, 's>{
@@ -249,8 +249,8 @@
 // /// # Examples
 // ///
 // /// ```
-// /// use bevy_ecs::system::IntoSystem;
-// /// use bevy_ecs::system::Res;
+// /// use bevy::ecs::system::IntoSystem;
+// /// use bevy::ecs::system::Res;
 // ///
 // /// fn my_system_function(an_usize_resource: Res<usize>) {}
 // ///
@@ -287,7 +287,7 @@
 // /// Here is a simple example of a system that takes a [`usize`] returning the square of it.
 // ///
 // /// ```
-// /// use bevy_ecs::prelude::*;
+// /// use bevy::ecs::prelude::*;
 // ///
 // /// fn main() {
 // ///     let mut square_system = IntoSystem::into_system(square);
@@ -495,8 +495,8 @@
 // /// ```rust
 // /// use std::num::ParseIntError;
 // ///
-// /// use bevy_ecs::prelude::*;
-// /// use bevy_ecs::system::{SystemParam, SystemParamItem};
+// /// use bevy::ecs::prelude::*;
+// /// use bevy::ecs::system::{SystemParam, SystemParamItem};
 // ///
 // /// // Unfortunately, we need all of these generics. `A` is the first system, with its
 // /// // parameters and marker type required for coherence. `B` is the second system, and

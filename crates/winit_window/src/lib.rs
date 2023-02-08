@@ -1,5 +1,5 @@
-use bevy_app::Plugin;
-use bevy_window::{RawHandleWrapper, WindowDescriptor, WindowId, Windows};
+use bevy::app::Plugin;
+use bevy::window::{RawHandleWrapper, WindowDescriptor, WindowId, Windows};
 use glam::IVec2;
 use raw_window_handle::HasRawDisplayHandle;
 use raw_window_handle::HasRawWindowHandle;
@@ -36,14 +36,14 @@ impl WinitPlugin {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Plugin for WinitPlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+    fn build(&self, app: &mut bevy::app::App) {
         self.descript.build(app);
     }
 }
 
 #[cfg(target_arch = "wasm32")]
 pub struct WinitPlugin {
-    canvas: HtmlCanvasElement,
+    canvas: web_sys::HtmlCanvasElement,
     window_id: WindowId,
     size: Option<(u32, u32)>,
 }
@@ -56,7 +56,7 @@ unsafe impl Sync for WinitPlugin {}
 
 #[cfg(target_arch = "wasm32")]
 impl WinitPlugin {
-    pub fn new(canvas: HtmlCanvasElement, window_id: WindowId) -> Self {
+    pub fn new(canvas: web_sys::HtmlCanvasElement, window_id: WindowId) -> Self {
         Self {
             canvas,
             window_id,
@@ -72,10 +72,10 @@ impl WinitPlugin {
 
 #[cfg(target_arch = "wasm32")]
 impl Plugin for WinitPlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+    fn build(&self, app: &mut bevy::app::App) {
         let event_loop = winit::event_loop::EventLoop::new();
         let window = Arc::new(
-            WindowBuilder::new()
+            winit::window::WindowBuilder::new()
                 .with_canvas(Some(self.canvas.clone()))
                 .build(&event_loop)
                 .unwrap(),
@@ -110,7 +110,7 @@ impl WindowDescribe {
         self
     }
 
-    fn build(&self, app: &mut bevy_app::App) {
+    fn build(&self, app: &mut bevy::app::App) {
         let world = app.world.cell();
         let mut windows = world.resource_mut::<Windows>();
         let winit_window = &*self.window;
@@ -131,7 +131,7 @@ impl WindowDescribe {
             window_handle: winit_window.raw_window_handle(),
             display_handle: winit_window.raw_display_handle(),
         };
-        let window = bevy_window::Window::new(
+        let window = bevy::prelude::Window::new(
             self.window_id,
             &window_descriptor,
             inner_size.width,
@@ -142,12 +142,12 @@ impl WindowDescribe {
         );
 
         #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
-        world.send_event(bevy_window::WindowResized {
+        world.send_event(bevy::window::WindowResized {
             id: self.window_id,
             width: window.width(),
             height: window.height(),
         });
         windows.add(window);
-        world.send_event(bevy_window::WindowCreated { id: self.window_id });
+        world.send_event(bevy::window::WindowCreated { id: self.window_id });
     }
 }

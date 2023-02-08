@@ -1,6 +1,6 @@
-use bevy_app::{Plugin, App};
-use bevy_derive::{Deref, DerefMut};
-use bevy_ecs::system::Resource;
+use bevy::app::{Plugin, App};
+use bevy::prelude::{Deref, DerefMut};
+use bevy::ecs::system::Resource;
 use pi_postprocess::{postprocess_pipeline::PostProcessMaterialMgr, postprocess_geometry::PostProcessGeometryManager};
 
 #[derive(Deref, DerefMut, Resource)]

@@ -9,10 +9,11 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy", "plugin"]
 
 [dependencies]
-bevy_app = "0.9"
-bevy_ecs = "0.9"
-bevy_derive = "0.9"
-bevy_window = "0.9"
+# bevy_app = "0.9"
+# bevy_ecs = "0.9"
+# bevy_derive = "0.9"
+# bevy_window = "0.9"
+bevy={path="../../../bevy", default-features = false}
 raw-window-handle = "0.5"
 
 log = "0.4"
@@ -31,5 +32,4 @@ tracing = { version = "0.1", default-features = false, features = ["std"] }
 trace = []
 
 [dev-dependencies]
-bevy_log = "0.9"
-bevy_winit = "0.9"
+bevy={path="../../../bevy", default-features = false, features=["bevy_winit"]}

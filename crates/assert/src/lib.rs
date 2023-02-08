@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
-use bevy_ecs::system::Resource;
-use bevy_derive::{DerefMut, Deref};
+use bevy::ecs::system::Resource;
+use bevy::prelude::{DerefMut, Deref};
 use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer}, homogeneous::HomogeneousMgr};
 use pi_hash::XHashMap;
 use pi_share::Share;

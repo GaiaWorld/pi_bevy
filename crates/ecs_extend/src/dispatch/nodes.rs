@@ -1,6 +1,6 @@
 use super::interface::Run;
 use crate::dispatch::interface::{Arrange, ExecNode, GraphNode, Operate};
-use bevy_ecs::{
+use bevy::ecs::{
     system::{SystemParam, FunctionSystem, SystemParamFunction, System},
 	query::Access,
     world::World,

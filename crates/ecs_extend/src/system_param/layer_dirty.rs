@@ -1,7 +1,7 @@
 //! 层脏
 
 use super::tree::{EntityTree, RecursiveIterator};
-use bevy_ecs::{
+use bevy::ecs::{
     event::ManualEventReader,
     prelude::{Component, Entity, Events},
     query::{Added, Changed, Or, WorldQuery},
@@ -413,7 +413,7 @@ pub struct ComponentEventReader<'w, 's, F: Dirty> {
     events: Res<'w, Events<ComponentEvent<F>>>,
 }
 
-impl<'w, 's, F: Dirty> bevy_ecs::system::SystemParam for ComponentEventReader<'w, 's, F> {
+impl<'w, 's, F: Dirty> bevy::ecs::system::SystemParam for ComponentEventReader<'w, 's, F> {
     type Fetch = ComponentEventFetchState<F>;
 }
 
@@ -424,10 +424,10 @@ pub struct ComponentEventFetchState<F: Dirty> {
         ResState<Events<ComponentEvent<F>>>,
     ),
 }
-unsafe impl<F: Dirty> bevy_ecs::system::SystemParamState for ComponentEventFetchState<F> {
+unsafe impl<F: Dirty> bevy::ecs::system::SystemParamState for ComponentEventFetchState<F> {
     fn init(
-        world: &mut bevy_ecs::world::World,
-        system_meta: &mut bevy_ecs::system::SystemMeta,
+        world: &mut bevy::ecs::world::World,
+        system_meta: &mut bevy::ecs::system::SystemMeta,
     ) -> Self {
         Self {
             state: (
@@ -438,27 +438,27 @@ unsafe impl<F: Dirty> bevy_ecs::system::SystemParamState for ComponentEventFetch
     }
     fn new_archetype(
         &mut self,
-        archetype: &bevy_ecs::archetype::Archetype,
-        system_meta: &mut bevy_ecs::system::SystemMeta,
+        archetype: &bevy::ecs::archetype::Archetype,
+        system_meta: &mut bevy::ecs::system::SystemMeta,
     ) {
         self.state.new_archetype(archetype, system_meta)
     }
-    fn apply(&mut self, world: &mut bevy_ecs::world::World) {
+    fn apply(&mut self, world: &mut bevy::ecs::world::World) {
         self.state.apply(world)
     }
 }
-impl<'w, 's, F: Dirty> bevy_ecs::system::SystemParamFetch<'w, 's> for ComponentEventFetchState<F> {
+impl<'w, 's, F: Dirty> bevy::ecs::system::SystemParamFetch<'w, 's> for ComponentEventFetchState<F> {
     type Item = ComponentEventReader<'w, 's, F>;
     unsafe fn get_param(
         state: &'s mut Self,
-        system_meta: &bevy_ecs::system::SystemMeta,
-        world: &'w bevy_ecs::world::World,
+        system_meta: &bevy::ecs::system::SystemMeta,
+        world: &'w bevy::ecs::world::World,
         change_tick: u32,
     ) -> Self::Item {
-        ComponentEventReader { reader : < < Local < 's , ManualEventReader < ComponentEvent<F> > > as bevy_ecs :: system :: SystemParam > :: Fetch as bevy_ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 0 , system_meta , world , change_tick) , events : < < Res < 'w , Events < ComponentEvent<F> > > as bevy_ecs :: system :: SystemParam > :: Fetch as bevy_ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 1 , system_meta , world , change_tick) , }
+        ComponentEventReader { reader : < < Local < 's , ManualEventReader < ComponentEvent<F> > > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 0 , system_meta , world , change_tick) , events : < < Res < 'w , Events < ComponentEvent<F> > > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 1 , system_meta , world , change_tick) , }
     }
 }
-unsafe impl<F: Dirty> bevy_ecs::system::ReadOnlySystemParamFetch for ComponentEventFetchState<F> {}
+unsafe impl<F: Dirty> bevy::ecs::system::ReadOnlySystemParamFetch for ComponentEventFetchState<F> {}
 
 pub trait EventList: SystemParam {
     fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity>;

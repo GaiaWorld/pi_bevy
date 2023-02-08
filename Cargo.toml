@@ -19,4 +19,4 @@ pi_postprocess = { path = "../pi_post_process" }
 pi_render = { path = "../pi_render" }
 
 [patch.crates-io]
-pi_map = { path = "../pi_map" }
+# pi_map = { path = "../pi_map" }

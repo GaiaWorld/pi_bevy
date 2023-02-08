@@ -2,8 +2,8 @@ use crate::{
     init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
     PiAsyncRuntime, PiRenderOptions, PiRenderWindow, PiScreenTexture, PiRenderDevice, PiSafeAtlasAllocator, PiClearOptions
 };
-use bevy_app::{App, CoreStage, Plugin};
-use bevy_ecs::schedule::{StageLabel, SystemStage};
+use bevy::app::{App, CoreStage, Plugin};
+use bevy::ecs::schedule::{StageLabel, SystemStage};
 use pi_assets::asset::GarbageEmpty;
 use pi_async::prelude::*;
 use pi_bevy_assert::{ShareAssetMgr, ShareHomogeneousMgr};

@@ -2,8 +2,8 @@ use crate::{
     graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderOptions, PiRenderQueue,
 };
-use bevy_ecs::world::World;
-use bevy_window::RawHandleWrapper;
+use bevy::ecs::world::World;
+use bevy::window::RawHandleWrapper;
 use log::{debug, warn};
 use pi_async::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::{
@@ -18,7 +18,7 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     rt: &A,
 ) -> (RawHandleWrapper, wgpu::PresentMode) {
     let options = world.resource::<PiRenderOptions>().0.clone();
-    let windows = world.resource_mut::<bevy_window::Windows>();
+    let windows = world.resource_mut::<bevy::prelude::Windows>();
     // options.present_mode = wgpu::PresentMode::Mailbox;
     let mode = options.present_mode;
 

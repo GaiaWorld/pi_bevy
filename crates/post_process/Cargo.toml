@@ -9,7 +9,8 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy"]
 
 [dependencies]
-bevy_app = "0.9"
-bevy_ecs = "0.9"
-bevy_derive = "0.9"
+# bevy_app = "0.9"
+# bevy_ecs = "0.9"
+# bevy_derive = "0.9"
+bevy={path="../../../bevy", default-features = false}
 pi_postprocess={git="https://github.com/GaiaWorld/pi_post_process.git"}

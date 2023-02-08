@@ -1,6 +1,6 @@
 use crate::render_windows::RenderWindow;
-use bevy_derive::{Deref, DerefMut};
-use bevy_ecs::system::Resource;
+use bevy::prelude::{Deref, DerefMut};
+use bevy::ecs::system::Resource;
 use pi_async::prelude::*;
 
 /// ================ 单例 ================

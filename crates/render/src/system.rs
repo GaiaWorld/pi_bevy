@@ -4,7 +4,7 @@ use crate::{
     PiAsyncRuntime, PiRenderDevice, PiRenderGraph, PiRenderInstance, PiRenderWindow,
     PiScreenTexture,
 };
-use bevy_ecs::world::World;
+use bevy::ecs::world::World;
 use pi_async::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
 
@@ -34,7 +34,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     };
 
     let (width, height) = match world
-        .resource::<bevy_window::Windows>()
+        .resource::<bevy::window::Windows>()
         .get_primary()
         .map(|window| (window.physical_width(), window.physical_height()))
     {

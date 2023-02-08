@@ -7,7 +7,7 @@ use super::{
     param::{InParam, OutParam},
     GraphError, RenderContext,
 };
-use bevy_ecs::{system::SystemParam, world::World};
+use bevy::ecs::{system::SystemParam, world::World};
 use pi_async::prelude::AsyncRuntime;
 use pi_render::{
     depend_graph::graph::DependGraph,
