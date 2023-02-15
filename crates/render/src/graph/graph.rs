@@ -31,6 +31,15 @@ pub struct RenderGraph {
 
 /// 渲染图的 拓扑信息 相关 方法
 impl RenderGraph {
+
+    /// + Debug 模式
+    ///     - windwos 非 wasm32 平台，运行目录 生成 dump_graphviz.dot
+    ///     - 其他 平台，返回 字符串
+    /// + Release 模式：返回 空串
+    pub fn dump_graphviz(&self) -> String {
+        self.imp.dump_graphviz()
+    }
+    
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
