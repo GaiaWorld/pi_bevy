@@ -140,6 +140,7 @@ where
     }
 
     pub fn mark(&mut self, entity: Entity) {
+		self.init();
         marked_dirty(
             entity,
             entity,

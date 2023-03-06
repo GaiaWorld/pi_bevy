@@ -7,7 +7,7 @@ use super::{
 };
 use bevy::ecs::{system::SystemParam, world::World};
 use tracing::Instrument;
-use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE, node::{AsyncTaskQueue, NodeContext, AsyncQueue}};
+use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE, node::{AsyncTaskQueue, NodeContext, AsyncQueue, TaskQueue}};
 use pi_async::{prelude::{AsyncRuntime, AsyncValueNonBlocking}};
 use pi_render::{
     depend_graph::graph::DependGraph,
@@ -26,7 +26,7 @@ pub struct RenderGraph {
 
     imp: DependGraph<NodeContext>,
 
-    async_submit_queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>,
+    async_submit_queue: TaskQueue,
 }
 
 /// 渲染图的 拓扑信息 相关 方法
@@ -41,7 +41,7 @@ impl RenderGraph {
             queue,
             node_count: 0,
             imp: Default::default(),
-            async_submit_queue: Share::new(ShareMutex::new(VecDeque::new())),
+            async_submit_queue: TaskQueue(Share::new(ShareMutex::new(VecDeque::new()))),
         };
 
         // 一开始，就将 Clear 扔到 graph

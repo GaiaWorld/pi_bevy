@@ -5,8 +5,8 @@ use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
-use bevy::ecs::{system::{SystemParam, SystemState}, world::World};
-use pi_async::rt::{AsyncRuntime, AsyncValue};
+use bevy::{ecs::{system::{SystemParam, SystemState}, world::World}, prelude::{Deref, DerefMut}};
+use pi_async::prelude::{AsyncRuntime, AsyncValue};
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareRefCell, ThreadSync, ShareMutex};
@@ -182,14 +182,21 @@ pub trait AsyncQueue: Send + Sync + 'static {
 
 #[derive(Clone)]
 pub struct AsyncTaskQueue<A: AsyncRuntime> {
-	pub queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>,
+	pub queue: TaskQueue,
 	pub is_runing: Share<AtomicBool>,
 	pub rt: A
 }
 
+#[derive(Clone, Deref, DerefMut)]
+pub struct TaskQueue (pub Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>);
+
+// 强制实现send和sync， 否则wasm上不能运行 TODO
+unsafe impl Send for TaskQueue {}
+unsafe impl Sync for TaskQueue {}
+
 impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
 	fn push(&self, task: BoxFuture<'static, ()>) {
-		fn run<A: AsyncRuntime>(queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>, rt: A, is_runing: Share<AtomicBool>) {
+		fn run<A: AsyncRuntime>(queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
 			let mut t = queue.lock().pop_front();
 			if let Some(task) = t {
 				let rt1 = rt.clone();

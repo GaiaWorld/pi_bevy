@@ -3,7 +3,8 @@ use crate::{
     PiAsyncRuntime, PiRenderOptions, PiRenderWindow, PiScreenTexture, PiRenderDevice, PiSafeAtlasAllocator, PiClearOptions
 };
 use bevy::app::{App, CoreStage, Plugin};
-use bevy::ecs::schedule::{StageLabel, SystemStage};
+use bevy::ecs::{schedule::{StageLabel, SystemStage, ShouldRun}, system::Res};
+use bevy::prelude::Resource;
 use pi_assets::asset::GarbageEmpty;
 use pi_async::prelude::*;
 use pi_bevy_assert::{ShareAssetMgr, ShareHomogeneousMgr};
@@ -24,13 +25,32 @@ use wgpu::TextureView;
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
 pub struct PiRenderStage;
 
+#[derive(Debug, Default, Resource, Clone, Copy)]
+pub enum FrameState {
+	#[default]
+	Active,
+	UnActive,
+}
+
+pub fn should_run(state: Res<FrameState>) -> ShouldRun {
+	if let FrameState::Active = *state {
+		ShouldRun::Yes
+	} else {
+		ShouldRun::No
+	}
+}
+
 /// ================ 插件 ================
 
 #[derive(Default)]
-pub struct PiRenderPlugin;
+pub struct PiRenderPlugin {
+	pub frame_init_state: FrameState,
+}
 
 impl Plugin for PiRenderPlugin {
     fn build(&self, app: &mut App) {
+		app.insert_resource(self.frame_init_state);
+
         app.insert_resource(PiScreenTexture::default());
 
         if app.world.get_resource::<PiRenderOptions>().is_none() {
@@ -40,7 +60,7 @@ impl Plugin for PiRenderPlugin {
             app.insert_resource(PiClearOptions::default());
         }
 
-        app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel());
+        app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel().with_run_criteria(should_run));
 
         #[cfg(target_arch = "wasm32")]
         let (rt, runner) = {
