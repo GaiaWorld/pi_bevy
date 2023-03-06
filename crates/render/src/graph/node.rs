@@ -1,19 +1,25 @@
 //! 利用 DependGraph 实现 渲染图
-use std::{collections::VecDeque, sync::atomic::{AtomicBool, Ordering}};
+use std::{
+    collections::VecDeque,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
-use bevy::{ecs::{system::{SystemParam, SystemState}, world::World}, prelude::{Deref, DerefMut}};
+use bevy::ecs::{
+    system::{SystemParam, SystemState},
+    world::World,
+};
+use crossbeam::queue::SegQueue;
 use pi_async::prelude::{AsyncRuntime, AsyncValue};
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
-use pi_share::{Share, ShareRefCell, ThreadSync, ShareMutex};
-use crossbeam::queue::SegQueue;
-use wgpu::CommandEncoder;
+use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
+use wgpu::CommandEncoder;
 
 pub use pi_render::depend_graph::node::{NodeId, NodeLabel, ParamUsage};
 
@@ -84,21 +90,18 @@ where
 }
 
 pub struct NodeContext {
-	world: &'static World,
-	pub async_tasks: Box<dyn AsyncQueue>,
+    world: &'static World,
+    pub async_tasks: Box<dyn AsyncQueue>,
 }
 
 impl NodeContext {
-	pub fn new(world: &'static World, async_tasks: Box<dyn AsyncQueue>) -> Self {
-		NodeContext {
-			world, 
-			async_tasks
-		}
-	}
+    pub fn new(world: &'static World, async_tasks: Box<dyn AsyncQueue>) -> Self {
+        NodeContext { world, async_tasks }
+    }
 
-	pub fn world(&self) -> &World {
-		&*self.world
-	}
+    pub fn world(&self) -> &World {
+        &*self.world
+    }
 }
 
 impl<I, O, R, P> DependNode<NodeContext> for NodeImpl<I, O, R, P>
@@ -112,7 +115,11 @@ where
     type Output = O;
 
     #[inline]
-    fn build<'a>(&'a mut self, context: &'a NodeContext, usage: &'a ParamUsage) -> Result<(), String> {
+    fn build<'a>(
+        &'a mut self,
+        context: &'a NodeContext,
+        usage: &'a ParamUsage,
+    ) -> Result<(), String> {
         if self.state.is_none() {
             let w_ptr = context.world() as *const World as usize;
             let world = unsafe { std::mem::transmute(w_ptr) };
@@ -161,13 +168,15 @@ where
             let commands = commands.into_inner();
 
             // CommandBuffer --> Queue
-			let queue = self.context.queue.clone();
-			let submit_task = async move {
-				queue.submit(vec![commands.finish()]);
-			};
-			#[cfg(feature = "trace")]
-			let submit_task = submit_task.instrument(tracing::info_span!("submite"));
-			c.async_tasks.push(Box::pin(submit_task));
+            let queue = self.context.queue.clone();
+
+            let submit_task = async move {
+                queue.submit(vec![commands.finish()]);
+            };
+            #[cfg(feature = "trace")]
+            let submit_task = submit_task.instrument(tracing::info_span!("submite"));
+
+            c.async_tasks.push(Box::pin(submit_task));
 
             Ok(output)
         };
@@ -177,7 +186,7 @@ where
 }
 
 pub trait AsyncQueue: Send + Sync + 'static {
-	fn push(&self, task: BoxFuture<'static, ()>);
+    fn push(&self, task: BoxFuture<'static, ()>);
 }
 
 #[derive(Clone)]
@@ -195,25 +204,41 @@ unsafe impl Send for TaskQueue {}
 unsafe impl Sync for TaskQueue {}
 
 impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
-	fn push(&self, task: BoxFuture<'static, ()>) {
-		fn run<A: AsyncRuntime>(queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
-			let mut t = queue.lock().pop_front();
-			if let Some(task) = t {
-				let rt1 = rt.clone();
-				rt.spawn(rt.alloc(), async move {
-					task.await;
-					run(queue, rt1, is_runing);
-				});
-			} else {
-				is_runing.store(false, Ordering::Relaxed);
-			}
-		}
-		
-		
+    // 扔任务 到 异步库
+    fn push(&self, task: BoxFuture<'static, ()>) {
+        // 依次 处理 队列
+        fn run<A: AsyncRuntime>(
+            queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>,
+            rt: A,
+            is_runing: Share<AtomicBool>,
+        ) {
+            let mut t = queue.lock().pop_front();
+
+            if let Some(task) = t {
+                let rt1 = rt.clone();
+                // 运行时 处理，但 不等待
+                rt.spawn(rt.alloc(), async move {
+                    task.await;
+                    run(queue, rt1, is_runing);
+                });
+            } else {
+                // 队列为空时，设置为 false
+                is_runing.store(false, Ordering::Relaxed);
+            }
+        }
+
+        // 当 队列为空，而且 里面的东西已经执行完的时候，才会去 推 队列
         let is_start_run = {
-			let mut lock = self.queue.lock();
-			let is_start_run = lock.is_empty() && self.is_runing.compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed).is_ok();
+            let mut lock = self.queue.lock();
+
+            let is_start_run = lock.is_empty()
+                && self
+                    .is_runing
+                    .compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed)
+                    .is_ok();
+
             lock.push_back(task);
+
             is_start_run
         };
 

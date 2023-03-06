@@ -31,6 +31,15 @@ pub struct RenderGraph {
 
 /// 渲染图的 拓扑信息 相关 方法
 impl RenderGraph {
+
+    /// + Debug 模式
+    ///     - windwos 非 wasm32 平台，运行目录 生成 dump_graphviz.dot
+    ///     - 其他 平台，返回 字符串
+    /// + Release 模式：返回 空串
+    pub fn dump_graphviz(&self) -> String {
+        self.imp.dump_graphviz()
+    }
+    
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
@@ -167,12 +176,13 @@ impl RenderGraph {
 		let context = NodeContext::new(world, Box::new(task_queue.clone()));
         let ret = self.imp.run(rt, unsafe { transmute::<_, &'static NodeContext>(&context) }).await;
 		
+        // 用 异步值 等待 队列的 提交 全部完成
 		let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
 		let wait1 = wait.clone();
 		task_queue.push(Box::pin(async move {
 			wait1.set(());
 		}));
-		wait.await;
+        wait.await;
 
 		ret
     }
