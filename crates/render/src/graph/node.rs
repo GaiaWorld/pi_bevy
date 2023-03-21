@@ -12,6 +12,7 @@ use bevy::ecs::{
     system::{SystemParam, SystemState},
     world::World,
 };
+use bevy::prelude::{Deref, DerefMut};
 use crossbeam::queue::SegQueue;
 use pi_async::prelude::{AsyncRuntime, AsyncValue};
 use pi_futures::BoxFuture;
@@ -208,11 +209,11 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
     fn push(&self, task: BoxFuture<'static, ()>) {
         // 依次 处理 队列
         fn run<A: AsyncRuntime>(
-            queue: Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>,
+            queue: TaskQueue,
             rt: A,
             is_runing: Share<AtomicBool>,
         ) {
-            let mut t = queue.lock().pop_front();
+            let mut t = queue.0.lock().pop_front();
 
             if let Some(task) = t {
                 let rt1 = rt.clone();
@@ -229,7 +230,7 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
 
         // 当 队列为空，而且 里面的东西已经执行完的时候，才会去 推 队列
         let is_start_run = {
-            let mut lock = self.queue.lock();
+            let mut lock = self.queue.0.lock();
 
             let is_start_run = lock.is_empty()
                 && self
