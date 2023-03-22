@@ -41,7 +41,7 @@ impl<A, G: pi_assets::homogeneous::Garbageer<A>> Clone for ShareHomogeneousMgr<A
 }
 
 #[derive(Debug, Clone)]
-pub struct AssertConfig (pub XHashMap<TypeId, Capacity>);
+pub struct AssetConfig (pub XHashMap<TypeId, Capacity>);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Capacity {
