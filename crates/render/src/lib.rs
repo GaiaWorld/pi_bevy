@@ -49,7 +49,7 @@ pub use clear_node::CLEAR_WIDNOW_NODE;
 
 #[derive(Default, Clone)]
 pub struct SimpleInOut {
-    target: Option<ShareTargetView>,
+    pub target: Option<ShareTargetView>,
 }
 impl InParam for SimpleInOut {
     fn can_fill<O: pi_render::depend_graph::param::OutParam + ?Sized>(
