@@ -11,6 +11,8 @@
 // #[macro_use]
 // extern crate pi_ecs_macros;
 
+use bevy::prelude::{World, App};
+
 pub mod system_param;
 pub mod query;
 pub mod async_system;
@@ -28,3 +30,9 @@ pub mod prelude {
     };
 }
 
+pub trait TShell {
+	fn world(&self) -> &World;
+	fn world_mut(&mut self) -> &mut World;
+	fn app(&self) -> &App;
+	fn app_mut(&mut self) -> &mut App;
+}
