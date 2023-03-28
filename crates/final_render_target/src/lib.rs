@@ -163,6 +163,12 @@ impl FinalRenderTarget {
             self.pipeline = Some(pipeline);
         }
     }
+    pub fn format(&self) -> wgpu::TextureFormat {
+        self.format
+    }
+    pub fn view(&self) -> Option<&TextureView> {
+        self.view.as_ref()
+    }
 }
 
 pub struct FinalRenderTargetNode;
