@@ -8,6 +8,7 @@ use bevy::prelude::Resource;
 use pi_assets::asset::GarbageEmpty;
 use pi_async::prelude::*;
 use pi_bevy_asset::{ShareAssetMgr, ShareHomogeneousMgr};
+use pi_render::renderer::sampler::SamplerRes;
 use pi_render::{
     components::view::target_alloc::{UnuseTexture, SafeAtlasAllocator},
     rhi::{
@@ -101,6 +102,14 @@ impl Plugin for PiRenderPlugin {
             20 * 1024 * 1024,
             3 * 60 * 1000,
         ));
+
+		app.insert_resource(ShareAssetMgr::<SamplerRes>::new(
+            GarbageEmpty(),
+            false,
+            2 * 1024,
+            3 * 60 * 1000,
+        ));
+		
         app.insert_resource(ShareAssetMgr::<RenderRes<BindGroup>>::new(
             GarbageEmpty(),
             false,

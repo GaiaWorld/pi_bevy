@@ -16,7 +16,7 @@ resolver = "2"
 pi_postprocess = { path = "../pi_post_process" }
 
 [patch."https://github.com/GaiaWorld/pi_render"]
-pi_render = { path = "../pi_render" }
+pi_render = { path = "../pi_render_bevy_shader" }
 
 [patch.crates-io]
 # pi_map = { path = "../pi_map" }
