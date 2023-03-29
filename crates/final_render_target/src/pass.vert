@@ -8,5 +8,6 @@ layout(location = 0) out vec2 vUV;
 
 void main() {
     vUV = a_position + 0.5;
+    vUV.y = 1.0 - vUV.y;
     gl_Position = vec4(a_position * 2., 0., 1.);
 }
