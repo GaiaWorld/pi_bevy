@@ -2,7 +2,7 @@
 use std::ops::Deref;
 
 use bevy::prelude::{Res, Plugin, Resource, CoreStage, ResMut};
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, PiClearOptions, ClearOptions};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, PiClearOptions, ClearOptions, CLEAR_WIDNOW_NODE};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::{Texture, TextureView}, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
 
@@ -339,10 +339,10 @@ impl Plugin for PluginFinalRender {
         let node = FinalRenderTarget::new(device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::Bgra8Unorm);
 
         let mut rg = app.world.get_resource_mut::<PiRenderGraph>().unwrap();
-        rg.add_node(FinalRenderTarget::CLEAR_KEY, FinalRenderTargetNode);
+        rg.add_node(FinalRenderTarget::CLEAR_KEY, FinalRenderTargetClearNode);
         rg.add_node(FinalRenderTarget::KEY, FinalRenderTargetNode);
-        rg.add_depend(FinalRenderTarget::CLEAR_KEY, FinalRenderTarget::KEY);
         rg.set_finish(FinalRenderTarget::KEY, true);
+        rg.add_depend(CLEAR_WIDNOW_NODE, FinalRenderTarget::CLEAR_KEY);
 
         app.insert_resource(node);
         app.add_system_to_stage(CoreStage::First, sys_changesize);
