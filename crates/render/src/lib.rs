@@ -37,8 +37,7 @@ mod system;
 
 /// 渲染图
 pub use graph::*;
-use pi_hash::{XHashSet, XHashMap};
-use pi_render::{components::view::target_alloc::ShareTargetView, depend_graph::param::{InParam, OutParam}};
+use pi_render::{components::view::target_alloc::ShareTargetView};
 /// 渲染 插件
 pub use plugin::*;
 use render_derive::NodeParam;

@@ -37,7 +37,7 @@ pub fn prepare_window(
     if is_first {
         let surface = unsafe {
             let handle = window.handle.get_handle();
-            instance.create_surface(&handle)
+            instance.create_surface(&handle).unwrap()
         };
 
         let surface = Share::new(surface);
@@ -54,6 +54,7 @@ pub fn prepare_window(
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         present_mode: window.present_mode,
         alpha_mode: wgpu::CompositeAlphaMode::Auto,
+        view_formats: vec![wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::Rgba8UnormSrgb],
     };
 
     let is_size_changed = width != window.width || height != window.height;

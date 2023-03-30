@@ -13,8 +13,7 @@ use bevy::ecs::{
     world::World,
 };
 use bevy::prelude::{Deref, DerefMut};
-use crossbeam::queue::SegQueue;
-use pi_async::prelude::{AsyncRuntime, AsyncValue};
+use pi_async::prelude::{AsyncRuntime};
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
@@ -213,12 +212,12 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
             rt: A,
             is_runing: Share<AtomicBool>,
         ) {
-            let mut t = queue.0.lock().pop_front();
+            let t = queue.0.lock().pop_front();
 
             if let Some(task) = t {
                 let rt1 = rt.clone();
                 // 运行时 处理，但 不等待
-                rt.spawn(rt.alloc(), async move {
+                let _ = rt.spawn(rt.alloc(), async move {
                     task.await;
                     run(queue, rt1, is_runing);
                 });

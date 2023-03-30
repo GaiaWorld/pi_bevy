@@ -1,71 +1,51 @@
-use bevy::ecs::{world::{FromWorld, World}, system::{Resource, ResState, ResMutState, SystemParamState, SystemMeta, ReadOnlySystemParamFetch, SystemParam, Res, SystemParamFetch, ResMut}};
+use bevy::ecs::{world::{FromWorld, World}, system::{Resource, SystemMeta, ReadOnlySystemParam, SystemParam, Res, ResMut}, component::ComponentId};
 use derive_deref::{DerefMut, Deref};
 
 #[derive(Debug, Deref, DerefMut)]
 pub struct OrInitRes<'w, T: FromWorld + Resource>(pub Res<'w, T>);
 
-impl<'w, T: Resource + FromWorld> SystemParam for OrInitRes<'w, T> {
-    type Fetch = OrInitResState<T>;
+unsafe impl<T: Resource + FromWorld> SystemParam for OrInitRes<'_, T> {
+    type State = ComponentId;
+	type Item<'world, 'state> = OrInitRes<'world, T>;
+
+	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+		world.init_resource::<T>();
+        ResMut::<T>::init_state(world, system_meta)
+    }
+
+	#[inline]
+    unsafe fn get_param<'w, 's>(
+        component_id: &'s mut Self::State,
+        system_meta: &SystemMeta,
+        world: &'w World,
+        change_tick: u32,
+    ) -> Self::Item<'w, 's> {
+		OrInitRes(Res::<T>::get_param(component_id, system_meta, world, change_tick))
+    }
 }
+
+unsafe impl<T: Resource + FromWorld> ReadOnlySystemParam for OrInitRes<'_, T> {}
 
 #[derive(Debug, Deref, DerefMut)]
 pub struct OrInitResMut<'w, T: FromWorld + Resource>(pub ResMut<'w, T>);
 
-impl<'w, T: Resource + FromWorld> SystemParam for OrInitResMut<'w, T> {
-    type Fetch = OrInitResMutState<T>;
-}
+unsafe impl<T: Resource + FromWorld> SystemParam for OrInitResMut<'_, T> {
+    type State = ComponentId;
+	type Item<'world, 'state> = OrInitResMut<'world, T>;
 
-pub struct OrInitResState<T: FromWorld + Resource>(ResState<T>);
-
-unsafe impl<T: FromWorld + Resource> SystemParamState for OrInitResState<T> {
-	fn init(world: &mut World, system_meta: &mut SystemMeta) -> Self {
-		if world.get_resource::<T>().is_none() {
-			let value = T::from_world(world);
-			world.insert_resource(value);
-		}
-		Self(ResState::init(world, system_meta))
-	}
-}
-
-unsafe impl<T: Resource + FromWorld> ReadOnlySystemParamFetch for OrInitResState<T> {}
-
-impl<'w, 's, T: Resource + FromWorld> SystemParamFetch<'w, 's> for OrInitResState<T> {
-    type Item = OrInitRes<'w, T>;
-
-    #[inline]
-    unsafe fn get_param(
-        state: &'s mut Self,
-        system_meta: &SystemMeta,
-        world: &'w World,
-        change_tick: u32,
-    ) -> Self::Item {
-        OrInitRes(ResState::<T>::get_param(&mut state.0, system_meta, world, change_tick))
+	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+		world.init_resource::<T>();
+        ResMut::<T>::init_state(world, system_meta)
     }
-}
 
-pub struct OrInitResMutState<T: FromWorld + Resource>(ResMutState<T>);
-
-unsafe impl<T: FromWorld + Resource> SystemParamState for OrInitResMutState<T> {
-	fn init(world: &mut World, system_meta: &mut SystemMeta) -> Self {
-		if world.get_resource::<T>().is_none() {
-			let value = T::from_world(world);
-			world.insert_resource(value);
-		}
-		Self(ResMutState::init(world, system_meta))
-	}
-}
-
-impl<'w, 's, T: Resource + FromWorld> SystemParamFetch<'w, 's> for OrInitResMutState<T> {
-    type Item = OrInitResMut<'w, T>;
-
-    #[inline]
-    unsafe fn get_param(
-        state: &'s mut Self,
+	#[inline]
+    unsafe fn get_param<'w, 's>(
+        component_id: &'s mut Self::State,
         system_meta: &SystemMeta,
         world: &'w World,
         change_tick: u32,
-    ) -> Self::Item {
-        OrInitResMut(ResMutState::<T>::get_param(&mut state.0, system_meta, world, change_tick))
+    ) -> Self::Item<'w, 's> {
+		OrInitResMut(ResMut::<T>::get_param(component_id, system_meta, world, change_tick))
     }
 }
 

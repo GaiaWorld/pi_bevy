@@ -1,8 +1,8 @@
 
 use std::ops::Deref;
 
-use bevy::prelude::{Res, Plugin, Resource, CoreStage, ResMut};
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, PiClearOptions, ClearOptions, CLEAR_WIDNOW_NODE};
+use bevy::prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfig, CoreSet};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, ClearOptions, CLEAR_WIDNOW_NODE};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::{Texture, TextureView}, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
 
@@ -113,6 +113,7 @@ impl FinalRenderTarget {
                     dimension: wgpu::TextureDimension::D2,
                     format,
                     usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::COPY_DST,
+					view_formats: &[wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::Rgba8UnormSrgb],
                 }
             );
             let view = texture.create_view(&wgpu::TextureViewDescriptor {
@@ -137,6 +138,7 @@ impl FinalRenderTarget {
                     dimension: wgpu::TextureDimension::D2,
                     format: wgpu::TextureFormat::Depth24PlusStencil8,
                     usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::COPY_DST,
+					view_formats: &[],
                 }
             );
             let view = texture.create_view(&wgpu::TextureViewDescriptor {
@@ -345,6 +347,6 @@ impl Plugin for PluginFinalRender {
         rg.add_depend(CLEAR_WIDNOW_NODE, FinalRenderTarget::CLEAR_KEY);
 
         app.insert_resource(node);
-        app.add_system_to_stage(CoreStage::First, sys_changesize);
+        app.add_system(sys_changesize.in_base_set(CoreSet::First));
     }
 }

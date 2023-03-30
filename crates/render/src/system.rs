@@ -4,7 +4,7 @@ use crate::{
     PiAsyncRuntime, PiRenderDevice, PiRenderGraph, PiRenderInstance, PiRenderWindow,
     PiScreenTexture,
 };
-use bevy::ecs::world::World;
+use bevy::{ecs::world::World, window::{Window, PrimaryWindow}, prelude::With};
 use pi_async::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
 #[cfg(feature = "trace")] 
@@ -19,6 +19,14 @@ use tracing::Instrument;
 //   + 否则 是 MultiTaskRuntime
 //
 pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World) {
+	let mut primary_window = world.query_filtered::<&Window, With<PrimaryWindow>>();
+	let mut primary_window = primary_window.iter(world);
+
+    let (width, height) = match primary_window.next() {
+        Some(primary_window) => (primary_window.physical_width(), primary_window.physical_height()),
+        None => return,
+    };
+	
     // 从 world 取 res
     let ptr_world = world as *mut World as usize;
 
@@ -33,15 +41,6 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         let w = &mut *(ptr_world as *mut World);
         let views = &mut w.resource_mut::<PiScreenTexture>().0;
         std::mem::transmute(views)
-    };
-
-    let (width, height) = match world
-        .resource::<bevy::window::Windows>()
-        .get_primary()
-        .map(|window| (window.physical_width(), window.physical_height()))
-    {
-        Some(r) => r,
-        None => return,
     };
 
     let window: &'static mut RenderWindow = unsafe {

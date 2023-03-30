@@ -13,12 +13,12 @@ keywords = ["pi", "bevy", "plugin"]
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 # bevy_window = "0.9"
-bevy={version="0.9", default-features = false}
+bevy = {version="0.10", default-features = false}
 raw-window-handle = "0.5"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = { version = "0.14", features = ["spirv"] }
+wgpu = { version = "0.15", features = ["spirv"] }
 crossbeam="0.8"
 futures="0.3"
 
@@ -36,4 +36,4 @@ tracing = { version = "0.1", default-features = false, features = ["std"] }
 trace = []
 
 [dev-dependencies]
-bevy={version="0.9", default-features = false, features=["bevy_winit"]}
+bevy = {version="0.10", default-features = false, features=["bevy_winit"]}

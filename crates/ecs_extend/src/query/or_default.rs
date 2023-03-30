@@ -2,7 +2,7 @@
 
 use std::marker::PhantomData;
 
-use bevy::ecs::{query::{Access, FilteredAccess, WorldQuery, ReadFetch, ReadOnlyWorldQuery}, component::{StorageType, ComponentStorage, ComponentId}, archetype::{Archetype, ArchetypeComponentId}, world::{ World, FromWorld}, storage::Table, prelude::{Component, Entity}, system::Resource};
+use bevy::ecs::{query::{Access, FilteredAccess, WorldQuery, ReadFetch, ReadOnlyWorldQuery}, component::{StorageType, ComponentStorage, ComponentId}, archetype::{Archetype, ArchetypeComponentId}, world::{ World, FromWorld}, storage::{Table, TableRow}, prelude::{Component, Entity}, system::Resource};
 use derive_deref::{Deref, DerefMut};
 
 /// 不存在T时，使用默认值。
@@ -95,7 +95,7 @@ unsafe impl<T: Component + FromWorld> WorldQuery for OrDefault<T> {
     unsafe fn fetch<'w>(
         fetch: &mut Self::Fetch<'w>,
         entity: Entity,
-        table_row: usize,
+        table_row: TableRow,
     ) -> Self::Item<'w> {
 		if fetch.matches {
 			<&T>::fetch(&mut fetch.inner, entity, table_row)

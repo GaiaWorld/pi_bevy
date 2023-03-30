@@ -1,7 +1,7 @@
 //! 实体树
 
 use std::mem::transmute;
-use bevy::ecs::{prelude::{Entity, Component, EventWriter}, system::{Query, Commands, SystemParam}, query::Changed};
+use bevy::{ecs::{prelude::{Entity, Component, EventWriter}, system::{Query, Commands, SystemParam, SystemMeta}, query::Changed, archetype::Archetype}, prelude::World};
 use derive_deref::{Deref, DerefMut};
 use pi_null::Null;
 use pi_slotmap_tree::{Up as Up1, Down as Down1, Storage, StorageMut, Tree, Layer as Layer1, ChildrenIterator as ChildrenIterator1, RecursiveIterator as RecursiveIterator1, InsertType};
@@ -221,75 +221,67 @@ pub struct TreeStorageMut<'w, 's> {
 	up_query: Query<'w, 's, &'static mut Up>,
 	down_query: Query<'w, 's, &'static mut Down>,
 	command: Commands<'w, 's>, // 用于插入Root组件
-	layer_notify: EventWriter<'w, 's, ComponentEvent<Changed<Layer>>>, // 用于通知Layer修改
+	layer_notify: EventWriter<'w, ComponentEvent<Changed<Layer>>>, // 用于通知Layer修改
 }
 
-const _: () = {
-    impl<'w, 's> bevy::ecs::system::SystemParam for EntityTreeMut<'w, 's> {
-        type Fetch = FetchState<(
-            <Query<'w, 's, &'static mut Layer> as bevy::ecs::system::SystemParam>::Fetch,
-            <Query<'w, 's, &'static mut Up> as bevy::ecs::system::SystemParam>::Fetch,
-            <Query<'w, 's, &'static mut Down> as bevy::ecs::system::SystemParam>::Fetch,
-            <Commands<'w, 's> as bevy::ecs::system::SystemParam>::Fetch,
-			<EventWriter < 'w , 's , ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::Fetch,
-        )>;
-    }
-    #[doc(hidden)]
-    pub struct FetchState<TSystemParamState> {
-        state: TSystemParamState,
-        marker: std::marker::PhantomData<fn() -> ()>,
-    }
-    unsafe impl<TSystemParamState: bevy::ecs::system::SystemParamState>
-        bevy::ecs::system::SystemParamState for FetchState<TSystemParamState>
-    {
-        fn init(
-            world: &mut bevy::ecs::world::World,
-            system_meta: &mut bevy::ecs::system::SystemMeta,
-        ) -> Self {
-            Self {
-                state: TSystemParamState::init(world, system_meta),
-                marker: std::marker::PhantomData,
-            }
-        }
-        fn new_archetype(
-            &mut self,
-            archetype: &bevy::ecs::archetype::Archetype,
-            system_meta: &mut bevy::ecs::system::SystemMeta,
-        ) {
-            self.state.new_archetype(archetype, system_meta)
-        }
-        fn apply(&mut self, world: &mut bevy::ecs::world::World) {
-            self.state.apply(world)
-        }
-    }
-    impl<'w, 's> bevy::ecs::system::SystemParamFetch<'w, 's>
-        for FetchState<(
-            <Query<'w, 's, &'static mut Layer> as bevy::ecs::system::SystemParam>::Fetch,
-            <Query<'w, 's, &'static mut Up> as bevy::ecs::system::SystemParam>::Fetch,
-            <Query<'w, 's, &'static mut Down> as bevy::ecs::system::SystemParam>::Fetch,
-            <Commands<'w, 's> as bevy::ecs::system::SystemParam>::Fetch,
-			<EventWriter < 'w , 's , ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::Fetch,
-        )>
-    {
-        type Item = EntityTreeMut<'w, 's>;
-        unsafe fn get_param(
-            state: &'s mut Self,
-            system_meta: &bevy::ecs::system::SystemMeta,
-            world: &'w bevy::ecs::world::World,
-            change_tick: u32,
-        ) -> Self::Item {
-            EntityTreeMut{
-				tree: Tree::new(TreeStorageMut { layer_query : < < Query < 'w , 's , & 'static mut Layer > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 0 , system_meta , world , change_tick) , up_query : < < Query < 'w , 's , & 'static mut Up > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 1 , system_meta , world , change_tick) , down_query : < < Query < 'w , 's , & 'static mut Down > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 2 , system_meta , world , change_tick) , command : < < Commands < 'w , 's > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 3 , system_meta , world , change_tick) , 
-				layer_notify: < < EventWriter < 'w , 's , ComponentEvent<Changed<Layer>> > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 4 , system_meta , world , change_tick)})
-			}
-        }
-    }
-    unsafe impl<
-            TSystemParamState: bevy::ecs::system::SystemParamState + bevy::ecs::system::ReadOnlySystemParamFetch,
-        > bevy::ecs::system::ReadOnlySystemParamFetch for FetchState<TSystemParamState>
-    {
-    }
-};
+unsafe impl bevy::ecs::system::SystemParam for EntityTreeMut<'_, '_> {
+	type State = (
+		<Query<'static, 'static, &'static mut Layer> as bevy::ecs::system::SystemParam>::State,
+		<Query<'static, 'static, &'static mut Up> as bevy::ecs::system::SystemParam>::State,
+		<Query<'static, 'static, &'static mut Down> as bevy::ecs::system::SystemParam>::State,
+		<Commands<'static, 'static> as bevy::ecs::system::SystemParam>::State,
+		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::State,
+	);
+	type Item<'world, 'state> = EntityTreeMut<'world, 'state>;
+	// type Fetch = FetchState<(
+	//     <Query<'w, 's, &'static mut Layer> as bevy::ecs::system::SystemParam>::Fetch,
+	//     <Query<'w, 's, &'static mut Up> as bevy::ecs::system::SystemParam>::Fetch,
+	//     <Query<'w, 's, &'static mut Down> as bevy::ecs::system::SystemParam>::Fetch,
+	//     <Commands<'w, 's> as bevy::ecs::system::SystemParam>::Fetch,
+	// 	<EventWriter <'w, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::Fetch,
+	// )>;
+
+	fn init_state(world: &mut bevy::prelude::World, system_meta: &mut bevy::ecs::system::SystemMeta) -> Self::State {
+		(
+			<Query<'static, 'static, &'static mut Layer> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
+			<Query<'static, 'static, &'static mut Up> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
+			<Query<'static, 'static, &'static mut Down> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
+			<Commands<'static, 'static> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
+			<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
+		)
+	}
+	fn new_archetype(state: &mut Self::State, archetype: &Archetype, _system_meta: &mut SystemMeta) {
+		state.0.new_archetype(archetype);
+		state.1.new_archetype(archetype);
+		state.2.new_archetype(archetype);
+	}
+
+	fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
+		<Query<'static, 'static, &'static mut Layer> as bevy::ecs::system::SystemParam>::apply(&mut state.0, system_meta, world);
+		<Query<'static, 'static, &'static mut Up> as bevy::ecs::system::SystemParam>::apply(&mut state.1, system_meta, world);
+		<Query<'static, 'static, &'static mut Down> as bevy::ecs::system::SystemParam>::apply(&mut state.2, system_meta, world);
+		<Commands<'static, 'static> as bevy::ecs::system::SystemParam>::apply(&mut state.3, system_meta, world);
+		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::apply(&mut state.4, system_meta, world);
+	}
+
+	unsafe fn get_param<'w, 's>(
+        state: &'s mut Self::State,
+        system_meta: &SystemMeta,
+        world: &'w World,
+        change_tick: u32,
+    ) -> Self::Item<'w, 's> {
+		EntityTreeMut{
+			tree: Tree::new(
+				TreeStorageMut { 
+					layer_query : <Query < 'w, 's , &'static mut Layer > as SystemParam>::get_param (&mut state.0, system_meta, world, change_tick), 
+					up_query : <Query<'w, 's, &'static mut Up > as SystemParam> :: get_param (&mut state.1, system_meta, world, change_tick),
+					down_query : <Query<'w, 's ,& 'static mut Down> as SystemParam >:: get_param (& mut state.2 , system_meta, world, change_tick), 
+					command : <Commands<'w, 's> as SystemParam>::get_param (& mut state. 3 , system_meta, world, change_tick) , 
+					layer_notify: <EventWriter <'w, ComponentEvent<Changed<Layer>>> as SystemParam>::get_param(&mut state.4, system_meta, world, change_tick)}
+				)
+		}
+	}
+}
 
 impl<'w, 's> EntityTreeMut<'w, 's> {
 	pub fn get_up(&self, k: Entity) -> Option<&Up> {

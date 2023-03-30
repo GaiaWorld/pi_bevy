@@ -1,12 +1,14 @@
 //! 层脏
 
 use super::tree::{EntityTree, RecursiveIterator};
-use bevy::ecs::{
+use bevy::{ecs::{
     event::ManualEventReader,
     prelude::{Component, Entity, Events},
     query::{Added, Changed, Or, WorldQuery},
-    system::{Local, LocalState, Res, ResState, SystemParam, SystemParamFetch},
-};
+    system::{Local, Res, SystemParam, SystemMeta},
+	component::ComponentId,
+}, prelude::World};
+use bevy::utils::synccell::SyncCell;
 use pi_bevy_ecs_macro::all_tuples;
 use pi_dirty::{
     DirtyIterator, LayerDirty as LayerDirty1, NextDirty, PreDirty, ReverseDirtyIterator,
@@ -49,23 +51,60 @@ pub fn marked<'w, 's, 'a, T: Eq + Clone>(
     }
 }
 
-#[derive(SystemParam)]
 pub struct LayerDirty<'w, 's, F: Dirty>
-where
-    for<'a, 'b> <<F as Dirty>::EventReaderState as SystemParamFetch<'a, 'b>>::Item: EventList,
+// where
+//     for<'a, 'b> <<F as Dirty>::EventReader as SystemParam>::Item<'a, 'b>: EventList,
 {
     entity_tree: EntityTree<'w, 's>,
-    event_reader: <<F as Dirty>::EventReaderState as SystemParamFetch<'w, 's>>::Item,
+    event_reader: <<F as Dirty>::EventReader as SystemParam>::Item<'w, 's>,
 
     dirty_mark: Local<'s, DirtyMark>,
     layer_list: Local<'s, LayerDirty1<Entity>>,
-    #[system_param(ignore)]
+  
     is_init: bool,
 }
 
+unsafe impl<F: Dirty> SystemParam for LayerDirty<'_, '_, F> {
+    type State = (
+		<EntityTree<'static, 'static> as SystemParam>::State, 
+		<<F as Dirty>::EventReader as SystemParam>::State, 
+		<Local<'static, DirtyMark> as SystemParam>::State, 
+		<Local<'static, LayerDirty1<Entity>> as SystemParam>::State, 
+	);
+	type Item<'world, 'state> = LayerDirty<'world, 'state, F>;
+
+	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+		(
+			<EntityTree<'static, 'static> as SystemParam>::init_state(world, system_meta), 
+			<<F as Dirty>::EventReader as SystemParam>::init_state(world, system_meta), 
+			<Local<'static, DirtyMark> as SystemParam>::init_state(world, system_meta), 
+			<Local<'static, LayerDirty1<Entity>> as SystemParam>::init_state(world, system_meta), 
+		)
+    }
+
+	#[inline]
+    unsafe fn get_param<'w, 's>(
+        state: &'s mut Self::State,
+        system_meta: &SystemMeta,
+        world: &'w World,
+        change_tick: u32,
+    ) -> Self::Item<'w, 's> {
+		LayerDirty {
+			entity_tree: <EntityTree<'static, 'static> as SystemParam>::get_param(&mut state.0, system_meta, world, change_tick), 
+			event_reader: <<F as Dirty>::EventReader as SystemParam>::get_param(&mut state.1, system_meta, world, change_tick), 
+			dirty_mark: <Local<'static, DirtyMark> as SystemParam>::get_param(&mut state.2, system_meta, world, change_tick), 
+			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(&mut state.3, system_meta, world, change_tick),
+			is_init: false,
+		}
+		// OrInitRes(Res::<T>::get_param(component_id, system_meta, world, change_tick))
+    }
+
+	
+}
+
 impl<'w, 's, F: Dirty> LayerDirty<'w, 's, F>
-where
-    for<'a, 'b> <<F as Dirty>::EventReaderState as SystemParamFetch<'a, 'b>>::Item: EventList,
+// where
+// 	for<'a, 'b> <<F as Dirty>::EventReader as SystemParam>::Item<'a, 'b>: EventList,
 {
     pub fn iter<'a>(&'a mut self) -> AutoLayerDirtyIter<'w, 's, 'a> {
         self.init();
@@ -280,10 +319,12 @@ impl<'w, 's, 'a> Iterator for LayerReverseDirtyIter<'w, 's, 'a> {
 }
 
 impl<T: Component> Dirty for Changed<T> {
-    type EventReaderState = ComponentEventFetchState<Changed<T>>;
+    type EventReader = ComponentEventReader<'static, 'static, Self>;
+	type Item<'w, 's> = ComponentEventReader<'w, 's, Self>;
 }
 impl<T: Component> Dirty for Added<T> {
-    type EventReaderState = ComponentEventFetchState<Added<T>>;
+    type EventReader = ComponentEventReader<'static, 'static, Self>;
+	type Item<'w, 's> = ComponentEventReader<'w, 's, Self>;
 }
 
 macro_rules! impl_dirty_tuple {
@@ -294,20 +335,29 @@ macro_rules! impl_dirty_tuple {
     ($($filter: ident),*) => {
 		// Or TODO
 		impl<$($filter: Dirty),*> Dirty for Or<($($filter,)*)> {
-			type EventReaderState = ($($filter::EventReaderState,)*);
+			type EventReader = ($($filter::EventReader,)*);
+			type Item<'w, 's> = ($(<$filter as Dirty>::Item<'w, 's>,)*);
+		}
+
+		impl<$($filter: EventList),*> EventList for ($($filter,)*) {
+			#[allow(non_snake_case)]
+			fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity> {
+				let ($($filter),*) = self;
+				EmptyIterator(PhantomData)$(.chain($filter.iter()))*
+			}
 		}
 
 		// impl<$($filter: Dirty),*> Dirty for Or<($($filter,)*)> {
 		// 	type EventReaderState = Or<($($filter::EventReaderState,)*)>;
 		// }
 
-		#[allow(non_snake_case)]
-		impl<'w, 's, $($filter: Dirty),*> EventList for ($(ComponentEventReader<'w, 's, $filter>,)*) {
-			fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity> {
-				let ($($filter),*) = self;
-				EmptyIterator(PhantomData)$(.chain($filter.iter()))*
-			}
-		}
+		// #[allow(non_snake_case)]
+		// impl<'w, 's, $($filter: Dirty),*> EventList for ($(ComponentEventReader<'w, 's, $filter>,)*) {
+		// 	fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity> {
+		// 		let ($($filter),*) = self;
+		// 		EmptyIterator(PhantomData)$(.chain($filter.iter()))*
+		// 	}
+		// }
 	}
 }
 
@@ -332,7 +382,8 @@ unsafe impl<T: Dirty> Send for ComponentEvent<T> {}
 unsafe impl<T: Dirty> Sync for ComponentEvent<T> {}
 
 pub trait Dirty: WorldQuery + 'static {
-    type EventReaderState: for<'w, 's> SystemParamFetch<'w, 's>;
+    type EventReader: for<'world, 'state> SystemParam<Item<'world, 'state> = <Self as Dirty>::Item<'world, 'state>>;
+	type Item<'w, 's>: EventList;
 }
 
 pub struct AutoLayerDirtyIter<'w, 's, 'a> {
@@ -414,52 +465,34 @@ pub struct ComponentEventReader<'w, 's, F: Dirty> {
     events: Res<'w, Events<ComponentEvent<F>>>,
 }
 
-impl<'w, 's, F: Dirty> bevy::ecs::system::SystemParam for ComponentEventReader<'w, 's, F> {
-    type Fetch = ComponentEventFetchState<F>;
+unsafe impl<F: Dirty> SystemParam for ComponentEventReader<'_, '_, F> {
+    type State = (
+        SyncCell<ManualEventReader<ComponentEvent<F>>>,
+		ComponentId,
+    );
+	type Item<'w, 's> = ComponentEventReader<'w, 's, F>;
+
+	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+		(
+			Local::<'_, ManualEventReader<ComponentEvent<F>>>::init_state(world, system_meta),
+			Res::<'_, Events<ComponentEvent<F>>>::init_state(world, system_meta)
+		)
+	}
+
+	unsafe fn get_param<'w, 's>(
+        state: &'s mut Self::State,
+        system_meta: &SystemMeta,
+        world: &'w World,
+        change_tick: u32,
+    ) -> Self::Item<'w, 's> {
+        ComponentEventReader { 
+			reader : <Local<'s , ManualEventReader<ComponentEvent<F>>> as bevy::ecs :: system :: SystemParam>::get_param(& mut state.0 , system_meta, world, change_tick) , 
+			events : <Res <'w, Events< ComponentEvent<F> >> as bevy::ecs :: system :: SystemParam >::get_param(& mut state.1, system_meta, world, change_tick) ,
+		}
+    }
 }
 
-#[doc(hidden)]
-pub struct ComponentEventFetchState<F: Dirty> {
-    state: (
-        LocalState<ManualEventReader<ComponentEvent<F>>>,
-        ResState<Events<ComponentEvent<F>>>,
-    ),
-}
-unsafe impl<F: Dirty> bevy::ecs::system::SystemParamState for ComponentEventFetchState<F> {
-    fn init(
-        world: &mut bevy::ecs::world::World,
-        system_meta: &mut bevy::ecs::system::SystemMeta,
-    ) -> Self {
-        Self {
-            state: (
-                LocalState::<ManualEventReader<ComponentEvent<F>>>::init(world, system_meta),
-                ResState::<Events<ComponentEvent<F>>>::init(world, system_meta),
-            ),
-        }
-    }
-    fn new_archetype(
-        &mut self,
-        archetype: &bevy::ecs::archetype::Archetype,
-        system_meta: &mut bevy::ecs::system::SystemMeta,
-    ) {
-        self.state.new_archetype(archetype, system_meta)
-    }
-    fn apply(&mut self, world: &mut bevy::ecs::world::World) {
-        self.state.apply(world)
-    }
-}
-impl<'w, 's, F: Dirty> bevy::ecs::system::SystemParamFetch<'w, 's> for ComponentEventFetchState<F> {
-    type Item = ComponentEventReader<'w, 's, F>;
-    unsafe fn get_param(
-        state: &'s mut Self,
-        system_meta: &bevy::ecs::system::SystemMeta,
-        world: &'w bevy::ecs::world::World,
-        change_tick: u32,
-    ) -> Self::Item {
-        ComponentEventReader { reader : < < Local < 's , ManualEventReader < ComponentEvent<F> > > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 0 , system_meta , world , change_tick) , events : < < Res < 'w , Events < ComponentEvent<F> > > as bevy::ecs :: system :: SystemParam > :: Fetch as bevy::ecs :: system :: SystemParamFetch > :: get_param (& mut state . state . 1 , system_meta , world , change_tick) , }
-    }
-}
-unsafe impl<F: Dirty> bevy::ecs::system::ReadOnlySystemParamFetch for ComponentEventFetchState<F> {}
+unsafe impl<F: Dirty> bevy::ecs::system::ReadOnlySystemParam for ComponentEventReader<'_, '_, F> {}
 
 pub trait EventList: SystemParam {
     fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity>;

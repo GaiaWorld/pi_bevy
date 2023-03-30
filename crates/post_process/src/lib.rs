@@ -1,5 +1,4 @@
 use bevy::app::{Plugin, App};
-use bevy::prelude::{Deref, DerefMut};
 use bevy::ecs::system::Resource;
 use pi_assets::mgr::AssetMgr;
 use pi_bevy_asset::ShareAssetMgr;

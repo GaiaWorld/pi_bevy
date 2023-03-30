@@ -6,17 +6,14 @@ use super::{
     GraphError, RenderContext,
 };
 use bevy::ecs::{system::SystemParam, world::World};
-use tracing::Instrument;
 use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE, node::{AsyncTaskQueue, NodeContext, AsyncQueue, TaskQueue}};
 use pi_async::{prelude::{AsyncRuntime, AsyncValueNonBlocking}};
 use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
 };
-use pi_share::{Share, ShareRefCell, ShareMutex};
+use pi_share::{Share, ShareMutex};
 use std::{borrow::Cow, collections::VecDeque, mem::transmute, sync::atomic::AtomicBool};
-use pi_futures::BoxFuture;
-
 /// 渲染图
 pub struct RenderGraph {
     device: RenderDevice,
@@ -43,7 +40,6 @@ impl RenderGraph {
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
-        let q = queue.clone();
 
         let mut graph = Self {
             device,

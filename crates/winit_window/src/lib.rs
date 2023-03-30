@@ -1,6 +1,6 @@
 use bevy::app::Plugin;
-use bevy::window::{RawHandleWrapper, WindowDescriptor, WindowId, Windows};
-use glam::IVec2;
+use bevy::prelude::IVec2;
+use bevy::window::{RawHandleWrapper, WindowResolution, WindowPosition};
 use raw_window_handle::HasRawDisplayHandle;
 use raw_window_handle::HasRawWindowHandle;
 use std::sync::Arc;
@@ -21,9 +21,9 @@ unsafe impl Sync for WinitPlugin {}
 
 #[cfg(not(target_arch = "wasm32"))]
 impl WinitPlugin {
-    pub fn new(window: Arc<Window>, window_id: WindowId) -> Self {
+    pub fn new(window: Arc<Window>) -> Self {
         Self {
-            descript: WindowDescribe::new(window, window_id),
+            descript: WindowDescribe::new(window),
         }
     }
 
@@ -44,7 +44,6 @@ impl Plugin for WinitPlugin {
 #[cfg(target_arch = "wasm32")]
 pub struct WinitPlugin {
     canvas: web_sys::HtmlCanvasElement,
-    window_id: WindowId,
     size: Option<(u32, u32)>,
 }
 
@@ -56,10 +55,9 @@ unsafe impl Sync for WinitPlugin {}
 
 #[cfg(target_arch = "wasm32")]
 impl WinitPlugin {
-    pub fn new(canvas: web_sys::HtmlCanvasElement, window_id: WindowId) -> Self {
+    pub fn new(canvas: web_sys::HtmlCanvasElement) -> Self {
         Self {
             canvas,
-            window_id,
             size: None,
         }
     }
@@ -83,7 +81,6 @@ impl Plugin for WinitPlugin {
 
         let describe = WindowDescribe {
             window,
-            window_id: self.window_id,
             size: self.size.clone(),
         };
         describe.build(app);
@@ -92,16 +89,14 @@ impl Plugin for WinitPlugin {
 
 pub struct WindowDescribe {
     window: Arc<Window>,
-    window_id: WindowId,
     size: Option<(u32, u32)>,
 }
 
 impl WindowDescribe {
-    pub fn new(window: Arc<Window>, window_id: WindowId) -> Self {
+    pub fn new(window: Arc<Window>) -> Self {
         Self {
             window,
             size: None,
-            window_id,
         }
     }
 
@@ -111,8 +106,6 @@ impl WindowDescribe {
     }
 
     fn build(&self, app: &mut bevy::app::App) {
-        let world = app.world.cell();
-        let mut windows = world.resource_mut::<Windows>();
         let winit_window = &*self.window;
         if let Some(size) = self.size {
             winit_window.set_inner_size(PhysicalSize {
@@ -121,33 +114,30 @@ impl WindowDescribe {
             });
         }
 
-        let mut window_descriptor = WindowDescriptor::default();
         let inner_size = winit_window.inner_size();
-        window_descriptor.width = inner_size.width as f32;
-        window_descriptor.height = inner_size.height as f32;
-        let position = winit_window.outer_position().ok().map(|_| IVec2::new(0, 0));
-        let scale_factor = winit_window.scale_factor();
+		let scale_factor = winit_window.scale_factor();
         let raw_handle = RawHandleWrapper {
             window_handle: winit_window.raw_window_handle(),
             display_handle: winit_window.raw_display_handle(),
         };
-        let window = bevy::prelude::Window::new(
-            self.window_id,
-            &window_descriptor,
-            inner_size.width,
-            inner_size.height,
-            scale_factor,
-            position,
-            Some(raw_handle),
-        );
+        let mut window = bevy::prelude::Window::default();
+		window.resolution = WindowResolution::new(inner_size.width as f32 / scale_factor as f32, inner_size.height as f32 / scale_factor as f32);
+		window.resolution.set_scale_factor(scale_factor);
+		window.position = match winit_window.outer_position().map(|r| {IVec2::new(r.x, r.y)}) {
+			Ok(r) => WindowPosition::At(r),
+			_ => WindowPosition::Automatic,
+		};
+		app.world.spawn((window, raw_handle));
 
-        #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
-        world.send_event(bevy::window::WindowResized {
-            id: self.window_id,
-            width: window.width(),
-            height: window.height(),
-        });
-        windows.add(window);
-        world.send_event(bevy::window::WindowCreated { id: self.window_id });
+		// // TODO?
+		// #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
+        // world.send_event(bevy::window::WindowResized {
+        //     id: self.window_id,
+        //     width: window.width(),
+        //     height: window.height(),
+        // });
+
+        // windows.add(window);
+        // world.send_event(bevy::window::WindowCreated { id: self.window_id });
     }
 }

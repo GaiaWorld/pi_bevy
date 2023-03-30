@@ -2,8 +2,9 @@ use crate::{
     graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderOptions, PiRenderQueue,
 };
+use bevy::prelude::With;
 use bevy::ecs::world::World;
-use bevy::window::RawHandleWrapper;
+use bevy::window::{RawHandleWrapper, PrimaryWindow};
 use log::{debug, warn};
 use pi_async::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::{
@@ -18,18 +19,21 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     rt: &A,
 ) -> (RawHandleWrapper, wgpu::PresentMode) {
     let options = world.resource::<PiRenderOptions>().0.clone();
-    let windows = world.resource_mut::<bevy::prelude::Windows>();
+    // let windows = world.resource_mut::<bevy::prelude::Windows>();
+	let mut primary_window = world.query_filtered::<&RawHandleWrapper, With<PrimaryWindow>>();
+	let mut primary_window = primary_window.iter(world);
+	let primary_window_handle = primary_window.next().unwrap().clone();
     // options.present_mode = wgpu::PresentMode::Mailbox;
     let mode = options.present_mode;
 
-    let raw_handler = windows
-        .get_primary()
-        .and_then(|window| window.raw_handle())
-        .unwrap();
+    // let raw_handler = primary_window.get_window_handle();
+        // .get_primary()
+        // .and_then(|window| primary_window.raw_window_handle())
+        // .unwrap();
 
-    init_render_impl(world, rt, &raw_handler, options);
+    init_render_impl(world, rt, &primary_window_handle, options);
 
-    (raw_handler, mode)
+    (primary_window_handle, mode)
 }
 
 // 初始化 渲染环境 的 System
@@ -45,10 +49,13 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     options: RenderOptions,
 ) {
     let backends = options.backends;
-    let instance = wgpu::Instance::new(backends);
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+		backends,
+		dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
+	});
     let surface = unsafe {
         let w = window.get_handle();
-        instance.create_surface(&w)
+        instance.create_surface(&w).unwrap()
     };
 
     let SetupResult {
@@ -248,6 +255,9 @@ async fn initialize_renderer(
             max_buffer_size: limits
                 .max_buffer_size
                 .min(constrained_limits.max_buffer_size),
+			max_bindings_per_bind_group: limits
+                .max_bindings_per_bind_group
+                .min(constrained_limits.max_bindings_per_bind_group),
         };
     }
 

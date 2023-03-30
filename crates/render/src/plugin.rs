@@ -2,9 +2,9 @@ use crate::{
     init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
     PiAsyncRuntime, PiRenderOptions, PiRenderWindow, PiScreenTexture, PiRenderDevice, PiSafeAtlasAllocator, PiClearOptions
 };
-use bevy::app::{App, CoreStage, Plugin};
-use bevy::ecs::{schedule::{StageLabel, SystemStage, ShouldRun}, system::Res};
-use bevy::prelude::Resource;
+use bevy::app::{App, Plugin};
+use bevy::ecs::{system::Res};
+use bevy::prelude::{Resource, SystemSet, IntoSystemConfig};
 use pi_assets::asset::GarbageEmpty;
 use pi_async::prelude::*;
 use pi_bevy_asset::{ShareAssetMgr, ShareHomogeneousMgr};
@@ -23,8 +23,8 @@ use wgpu::TextureView;
 
 /// ================ 阶段标签 ================
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
-pub struct PiRenderStage;
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
+pub struct PiRenderSystemSet;
 
 #[derive(Debug, Default, Resource, Clone, Copy)]
 pub enum FrameState {
@@ -33,11 +33,11 @@ pub enum FrameState {
 	UnActive,
 }
 
-pub fn should_run(state: Res<FrameState>) -> ShouldRun {
+pub fn should_run(state: Res<FrameState>) -> bool {
 	if let FrameState::Active = *state {
-		ShouldRun::Yes
+		true
 	} else {
-		ShouldRun::No
+		false
 	}
 }
 
@@ -61,18 +61,18 @@ impl Plugin for PiRenderPlugin {
             app.insert_resource(PiClearOptions::default());
         }
 
-        app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel().with_run_criteria(should_run));
+        // app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel().with_run_criteria(should_run));
 
         #[cfg(target_arch = "wasm32")]
         let (rt, runner) = {
-            app.add_system_to_stage(PiRenderStage, run_frame_system::<SingleTaskRuntime>);
+            app.add_system(run_frame_system::<MultiTaskRuntime>.in_set(PiRenderSystemSet).run_if(should_run));
 
             create_single_runtime()
         };
 
         #[cfg(not(target_arch = "wasm32"))]
         let (rt, _runner) = {
-            app.add_system_to_stage(PiRenderStage, run_frame_system::<MultiTaskRuntime>);
+            app.add_system(run_frame_system::<MultiTaskRuntime>.in_set(PiRenderSystemSet).run_if(should_run));
 
             create_multi_runtime()
         };
