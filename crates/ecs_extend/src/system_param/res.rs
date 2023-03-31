@@ -10,7 +10,7 @@ unsafe impl<T: Resource + FromWorld> SystemParam for OrInitRes<'_, T> {
 
 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
 		world.init_resource::<T>();
-        ResMut::<T>::init_state(world, system_meta)
+        Res::<T>::init_state(world, system_meta)
     }
 
 	#[inline]

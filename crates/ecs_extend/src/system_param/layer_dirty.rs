@@ -6,7 +6,7 @@ use bevy::{ecs::{
     prelude::{Component, Entity, Events},
     query::{Added, Changed, Or, WorldQuery},
     system::{Local, Res, SystemParam, SystemMeta},
-	component::ComponentId,
+	component::ComponentId, archetype::Archetype,
 }, prelude::World};
 use bevy::utils::synccell::SyncCell;
 use pi_bevy_ecs_macro::all_tuples;
@@ -60,7 +60,7 @@ pub struct LayerDirty<'w, 's, F: Dirty>
 
     dirty_mark: Local<'s, DirtyMark>,
     layer_list: Local<'s, LayerDirty1<Entity>>,
-  
+
     is_init: bool,
 }
 
@@ -80,6 +80,14 @@ unsafe impl<F: Dirty> SystemParam for LayerDirty<'_, '_, F> {
 			<Local<'static, DirtyMark> as SystemParam>::init_state(world, system_meta), 
 			<Local<'static, LayerDirty1<Entity>> as SystemParam>::init_state(world, system_meta), 
 		)
+    }
+
+	fn new_archetype(
+        state: &mut Self::State,
+        archetype: &Archetype,
+        system_meta: &mut SystemMeta,
+    ) {
+		<EntityTree<'static, 'static> as SystemParam>::new_archetype(&mut state.0, archetype, system_meta);
     }
 
 	#[inline]

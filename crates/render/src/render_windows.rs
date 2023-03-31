@@ -54,7 +54,7 @@ pub fn prepare_window(
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         present_mode: window.present_mode,
         alpha_mode: wgpu::CompositeAlphaMode::Auto,
-        view_formats: vec![wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::Rgba8UnormSrgb],
+        view_formats: vec![],
     };
 
     let is_size_changed = width != window.width || height != window.height;
