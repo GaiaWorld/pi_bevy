@@ -20,11 +20,10 @@ use tracing::Instrument;
 //
 pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World) {
 	let mut primary_window = world.query_filtered::<&Window, With<PrimaryWindow>>();
-	let mut primary_window = primary_window.iter(world);
 
-    let (width, height) = match primary_window.next() {
-        Some(primary_window) => (primary_window.physical_width(), primary_window.physical_height()),
-        None => return,
+    let (width, height) = match primary_window.get_single(world) {
+        Ok(primary_window) => (primary_window.physical_width(), primary_window.physical_height()),
+	 	_ => return,
     };
 	
     // 从 world 取 res

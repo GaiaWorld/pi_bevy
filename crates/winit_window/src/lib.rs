@@ -1,8 +1,9 @@
 use bevy::app::Plugin;
-use bevy::prelude::IVec2;
-use bevy::window::{RawHandleWrapper, WindowResolution, WindowPosition};
+use bevy::prelude::{IVec2, Events};
+use bevy::window::{RawHandleWrapper, WindowResolution, WindowPosition, PrimaryWindow, WindowCreated};
 use raw_window_handle::HasRawDisplayHandle;
 use raw_window_handle::HasRawWindowHandle;
+use winit::event::Event;
 use std::sync::Arc;
 use winit::{dpi::PhysicalSize, window::Window};
 
@@ -127,17 +128,25 @@ impl WindowDescribe {
 			Ok(r) => WindowPosition::At(r),
 			_ => WindowPosition::Automatic,
 		};
-		app.world.spawn((window, raw_handle));
+		let primary = app.world.spawn((window, raw_handle, PrimaryWindow)).id();
 
-		// // TODO?
-		// #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
-        // world.send_event(bevy::window::WindowResized {
-        //     id: self.window_id,
-        //     width: window.width(),
-        //     height: window.height(),
-        // });
+
+		// TODO?
+		#[cfg(not(any(target_os = "windows", target_feature = "x11")))]
+        app.world.send_event(bevy::window::WindowResized {
+            window: primary,
+            width: inner_size.width as f32,
+            height: inner_size.height as f32,
+        });
+		
 
         // windows.add(window);
+		app.world.send_event(WindowCreated { window: primary });
+		let r = app.world.get_resource::<Events<WindowCreated>>();
+		log::warn!("create============================!!!, {:?}", r.is_some());
+		if let Some(r) = r {
+			log::warn!("create1============================!!!, {:?}", r.len());
+		}
         // world.send_event(bevy::window::WindowCreated { id: self.window_id });
     }
 }

@@ -20,9 +20,9 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
 ) -> (RawHandleWrapper, wgpu::PresentMode) {
     let options = world.resource::<PiRenderOptions>().0.clone();
     // let windows = world.resource_mut::<bevy::prelude::Windows>();
+
 	let mut primary_window = world.query_filtered::<&RawHandleWrapper, With<PrimaryWindow>>();
-	let mut primary_window = primary_window.iter(world);
-	let primary_window_handle = primary_window.next().unwrap().clone();
+	let primary_window_handle = primary_window.single(world).clone();
     // options.present_mode = wgpu::PresentMode::Mailbox;
     let mode = options.present_mode;
 
