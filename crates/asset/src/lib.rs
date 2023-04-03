@@ -15,6 +15,9 @@ impl<A: Asset, G: Garbageer<A>> ShareAssetMgr<A, G> {
     pub fn new(garbage: G, ref_garbage: bool, capacity: usize, timeout: usize) -> Self {
 		Self(AssetMgr::new(garbage, ref_garbage, capacity, timeout))
 	}
+    pub fn create(garbage: G, ref_garbage: bool, cfg: &AssetCapacity) -> Self {
+        Self(AssetMgr::new(garbage, ref_garbage, cfg.min, cfg.timeout))
+    }
 }
 
 impl<A: Asset, G: Garbageer<A>> Clone for ShareAssetMgr<A, G> {
@@ -47,4 +50,21 @@ pub struct AssetConfig (pub XHashMap<TypeId, Capacity>);
 pub struct Capacity {
 	pub min: usize,
 	pub max: usize,
+}
+
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AssetCapacity {
+	pub ty: String,
+	pub min: usize,
+	pub max: usize,
+	pub timeout: usize,
+}
+#[derive(Debug, Default, Clone, Resource, Serialize, Deserialize)]
+pub struct AssetMgrConfigs (pub XHashMap<String, AssetCapacity>);
+impl AssetMgrConfigs {
+    pub fn insert(&mut self, cfg: AssetCapacity) {
+        self.0.insert(cfg.ty.clone(), cfg);
+    }
 }
