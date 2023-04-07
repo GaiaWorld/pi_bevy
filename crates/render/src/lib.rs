@@ -34,6 +34,7 @@ mod plugin;
 mod render_windows;
 mod resource;
 mod system;
+pub mod component;
 
 /// 渲染图
 pub use graph::*;
