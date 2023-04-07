@@ -3,7 +3,7 @@ use std::ops::Deref;
 
 use bevy::prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfig, CoreSet};
 use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, ClearOptions, CLEAR_WIDNOW_NODE};
-use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::{Texture, TextureView}, buffer::Buffer}, renderer::sampler::SamplerRes};
+use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::{Texture, TextureView, PiRenderDefault}, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
 
 
@@ -326,6 +326,7 @@ fn sys_changesize(
     device: Res<PiRenderDevice>,
     mut final_render: ResMut<FinalRenderTarget>,
 ) {
+    log::warn!("sys_changesize");
     if window.width > 0 && window.height > 0 {
         let surface_size = wgpu::Extent3d { width: window.width, height: window.height, depth_or_array_layers: 1 };
         final_render.change(wgpu::TextureFormat::Rgba8Unorm, surface_size, &device);
@@ -336,17 +337,21 @@ fn sys_changesize(
 pub struct PluginFinalRender;
 impl Plugin for PluginFinalRender {
     fn build(&self, app: &mut bevy::prelude::App) {
-        let device = app.world.get_resource::<PiRenderDevice>().unwrap();
+        
+        // #[cfg(not(target_arch="wasm32"))]
+        // {
+            let device = app.world.get_resource::<PiRenderDevice>().unwrap();
 
-        let node = FinalRenderTarget::new(device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::Bgra8Unorm);
+            let node = FinalRenderTarget::new(device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default());
 
-        let mut rg = app.world.get_resource_mut::<PiRenderGraph>().unwrap();
-        rg.add_node(FinalRenderTarget::CLEAR_KEY, FinalRenderTargetClearNode);
-        rg.add_node(FinalRenderTarget::KEY, FinalRenderTargetNode);
-        rg.set_finish(FinalRenderTarget::KEY, true);
-        rg.add_depend(CLEAR_WIDNOW_NODE, FinalRenderTarget::CLEAR_KEY);
-
-        app.insert_resource(node);
-        app.add_system(sys_changesize.in_base_set(CoreSet::First));
+            let mut rg = app.world.get_resource_mut::<PiRenderGraph>().unwrap();
+            rg.add_node(FinalRenderTarget::CLEAR_KEY, FinalRenderTargetClearNode);
+            rg.add_node(FinalRenderTarget::KEY, FinalRenderTargetNode);
+            rg.set_finish(FinalRenderTarget::KEY, true);
+            rg.add_depend(CLEAR_WIDNOW_NODE, FinalRenderTarget::CLEAR_KEY);
+    
+            app.insert_resource(node);
+            app.add_system(sys_changesize.in_base_set(CoreSet::First));
+        // }
     }
 }
