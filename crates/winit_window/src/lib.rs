@@ -142,11 +142,6 @@ impl WindowDescribe {
 
         // windows.add(window);
 		app.world.send_event(WindowCreated { window: primary });
-		let r = app.world.get_resource::<Events<WindowCreated>>();
-		log::warn!("create============================!!!, {:?}", r.is_some());
-		if let Some(r) = r {
-			log::warn!("create1============================!!!, {:?}", r.len());
-		}
         // world.send_event(bevy::window::WindowCreated { id: self.window_id });
     }
 }
