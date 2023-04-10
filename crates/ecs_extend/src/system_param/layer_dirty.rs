@@ -437,29 +437,32 @@ impl<'w, 's, 'a> Iterator for AutoLayerDirtyIter<'w, 's, 'a> {
         }
 
         // 上一个子树迭代完成，继续迭代下一个脏
-        let item = self.iter_inner.next();
-        if let Some((local, layer)) = item {
-            if let Some(layer1) = self.mark_inner.get(local) {
-                let layer1 = *layer1;
-                self.mark_inner.remove(local); // 标记为不脏
+		loop {
+			let item = self.iter_inner.next();
+			if let Some((local, layer)) = item {
+				if let Some(layer1) = self.mark_inner.get(local) {
+					let layer1 = *layer1;
+					self.mark_inner.remove(local); // 标记为不脏
 
-                // 记录的层次和实际层次相等，并且在idtree中的层次也相等，则返回该值
-                if layer == layer1 {
-                    if let Some(r) = self.tree.get_layer(*local) {
-                        if r.layer() == layer {
-                            // 是否判断changed？TODO
-                            // 记录上次迭代出的实体id，下次将对该节点在itree进行先序迭代
-                            if let Some(down) = self.tree.get_down(*local) {
-                                let head = down.head();
-                                self.pre_iter = Some(self.tree.recursive_iter(head));
-                            }
-                            return Some(*local);
-                        }
-                    }
-                }
-            }
-        }
-        return None;
+					// 记录的层次和实际层次相等，并且在idtree中的层次也相等，则返回该值
+					if layer == layer1 {
+						if let Some(r) = self.tree.get_layer(*local) {
+							if r.layer() == layer {
+								// 是否判断changed？TODO
+								// 记录上次迭代出的实体id，下次将对该节点在itree进行先序迭代
+								if let Some(down) = self.tree.get_down(*local) {
+									let head = down.head();
+									self.pre_iter = Some(self.tree.recursive_iter(head));
+								}
+								return Some(*local);
+							}
+						}
+					}
+				}
+			} else {
+				return None;
+			}
+		}
     }
 }
 
