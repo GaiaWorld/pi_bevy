@@ -93,6 +93,7 @@ impl RenderGraph {
 
         if r.is_ok() {
             self.node_count += 1;
+			
             if self.node_count > 1 {
                 let id = *r.as_ref().unwrap();
                 // 清屏节点 在 所有节点 之前
