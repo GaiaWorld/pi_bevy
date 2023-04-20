@@ -100,8 +100,8 @@ impl FinalRenderTarget {
         surface_size: Extent3d,
         device: &RenderDevice,
     ) {
-        log::warn!("{:?}", surface_size);
         if self.format != format || surface_size != self.size || self.pipeline.is_none() {
+            log::warn!("FinaleRender ChangeSize {:?}", surface_size);
             self.size = surface_size;
             self.format = format;
             let texture = device.create_texture(
@@ -201,6 +201,8 @@ impl FinalRenderTarget {
                 ),
                 multiview: None
             });
+            
+            log::warn!("FinaleRender ChangeSize Ok!");
             self.pipeline = Some(pipeline);
         }
     }
@@ -209,6 +211,12 @@ impl FinalRenderTarget {
     }
     pub fn view(&self) -> Option<&TextureView> {
         self.view.as_ref()
+    }
+    pub fn depth_view(&self) -> Option<&TextureView> {
+        self.depth_view.as_ref()
+    }
+    pub fn size(&self) -> Extent3d {
+        self.size
     }
 }
 
@@ -326,7 +334,6 @@ fn sys_changesize(
     device: Res<PiRenderDevice>,
     mut final_render: ResMut<FinalRenderTarget>,
 ) {
-    log::warn!("sys_changesize");
     if window.width > 0 && window.height > 0 {
         let surface_size = wgpu::Extent3d { width: window.width, height: window.height, depth_or_array_layers: 1 };
         final_render.change(wgpu::TextureFormat::Rgba8Unorm, surface_size, &device);
