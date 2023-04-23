@@ -8,7 +8,7 @@ use wgpu::Extent3d;
 
 
 #[derive(Resource)]
-pub struct FinalRenderTarget {
+pub struct WindowRenderer {
     format: wgpu::TextureFormat,
     surface_format: wgpu::TextureFormat,
     size: wgpu::Extent3d,
@@ -23,9 +23,11 @@ pub struct FinalRenderTarget {
     pipeline: Option<RenderPipeline>,
     depth_texture: Option<Texture>,
     depth_view: Option<TextureView>,
-    clear: ClearOptions,
+    pub clearcolor: wgpu::Color,
+    pub cleardepth: f32,
+    pub clearstencil: u32,
 }
-impl FinalRenderTarget {
+impl WindowRenderer {
     pub const CLEAR_KEY: &'static str = "FinalRenderClear";
     pub const KEY: &'static str = "FinalRender";
     pub fn new(
@@ -86,11 +88,9 @@ impl FinalRenderTarget {
             view: None,
             depth_texture: None,
             depth_view: None,
-            clear: ClearOptions {
-                color: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
-                depth: Some(1.),
-                stencil: Some(0),
-            }
+            clearcolor: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
+            cleardepth: 1.0,
+            clearstencil: 0,
         }
 
     }
@@ -220,13 +220,13 @@ impl FinalRenderTarget {
     }
 }
 
-pub struct FinalRenderTargetNode;
-impl Node for FinalRenderTargetNode {
+pub struct WindowRendererNode;
+impl Node for WindowRendererNode {
     type Input = SimpleInOut;
 
     type Output = ();
 
-    type Param = (Res<'static, PiScreenTexture>, Res<'static, FinalRenderTarget>);
+    type Param = (Res<'static, PiScreenTexture>, Res<'static, WindowRenderer>);
 
     fn run<'a>(
         &'a mut self,
@@ -243,7 +243,7 @@ impl Node for FinalRenderTargetNode {
         if final_render.pipeline.is_some() {
             let mut rpass = commands.begin_render_pass(
                 &wgpu::RenderPassDescriptor {
-                    label: Some(FinalRenderTarget::KEY),
+                    label: Some(WindowRenderer::KEY),
                     color_attachments: &[
                         Some(wgpu::RenderPassColorAttachment {
                             view: screen.0.as_ref().unwrap().view.as_ref().unwrap(),
@@ -270,13 +270,13 @@ impl Node for FinalRenderTargetNode {
     }
 }
 
-pub struct FinalRenderTargetClearNode;
-impl Node for FinalRenderTargetClearNode {
+pub struct WindowRendererClearNode;
+impl Node for WindowRendererClearNode {
     type Input = ();
 
     type Output = ();
 
-    type Param = Res<'static, FinalRenderTarget>;
+    type Param = Res<'static, WindowRenderer>;
 
     fn run<'a>(
         &'a mut self,
@@ -291,13 +291,13 @@ impl Node for FinalRenderTargetClearNode {
         if let (Some(view), Some(depth_view)) = (final_render.view(), &final_render.depth_view) {
             let mut rpass = commands.begin_render_pass(
                 &wgpu::RenderPassDescriptor {
-                    label: Some(FinalRenderTarget::CLEAR_KEY),
+                    label: Some(WindowRenderer::CLEAR_KEY),
                     color_attachments: &[
                         Some(wgpu::RenderPassColorAttachment {
                             view: view,
                             resolve_target: None,
                             ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(final_render.clear.color),
+                                load: wgpu::LoadOp::Clear(final_render.clearcolor),
                                 store: true,
                             },
                         })
@@ -307,13 +307,13 @@ impl Node for FinalRenderTargetClearNode {
                             view: depth_view,
                             depth_ops: Some(
                                 wgpu::Operations {
-                                    load: wgpu::LoadOp::Clear(final_render.clear.depth.unwrap()),
+                                    load: wgpu::LoadOp::Clear(final_render.cleardepth),
                                     store: true,
                                 }
                             ),
                             stencil_ops: Some(
                                 wgpu::Operations {
-                                    load: wgpu::LoadOp::Clear(final_render.clear.stencil.unwrap()),
+                                    load: wgpu::LoadOp::Clear(final_render.clearstencil),
                                     store: true,
                                 }
                             )
@@ -332,7 +332,7 @@ impl Node for FinalRenderTargetClearNode {
 fn sys_changesize(
     window: Res<PiRenderWindow>,
     device: Res<PiRenderDevice>,
-    mut final_render: ResMut<FinalRenderTarget>,
+    mut final_render: ResMut<WindowRenderer>,
 ) {
     if window.width > 0 && window.height > 0 {
         let surface_size = wgpu::Extent3d { width: window.width, height: window.height, depth_or_array_layers: 1 };
@@ -341,21 +341,21 @@ fn sys_changesize(
 }
 
 #[derive(Debug, Default)]
-pub struct PluginFinalRender;
-impl Plugin for PluginFinalRender {
+pub struct PluginWindowRender;
+impl Plugin for PluginWindowRender {
     fn build(&self, app: &mut bevy::prelude::App) {
         
         // #[cfg(not(target_arch="wasm32"))]
         // {
             let device = app.world.get_resource::<PiRenderDevice>().unwrap();
 
-            let node = FinalRenderTarget::new(device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default());
+            let node = WindowRenderer::new(device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default());
 
             let mut rg = app.world.get_resource_mut::<PiRenderGraph>().unwrap();
-            rg.add_node(FinalRenderTarget::CLEAR_KEY, FinalRenderTargetClearNode);
-            rg.add_node(FinalRenderTarget::KEY, FinalRenderTargetNode);
-            rg.set_finish(FinalRenderTarget::KEY, true);
-            rg.add_depend(CLEAR_WIDNOW_NODE, FinalRenderTarget::CLEAR_KEY);
+            rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode);
+            rg.add_node(WindowRenderer::KEY, WindowRendererNode);
+            rg.set_finish(WindowRenderer::KEY, true);
+            rg.add_depend(CLEAR_WIDNOW_NODE, WindowRenderer::CLEAR_KEY);
     
             app.insert_resource(node);
             app.add_system(sys_changesize.in_base_set(CoreSet::First));

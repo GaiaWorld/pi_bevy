@@ -7,6 +7,9 @@ use pi_hash::XHashMap;
 use pi_share::Share;
 use serde::{Serialize, Deserialize};
 
+pub mod texure_sampler;
+pub mod sync_load;
+
 #[derive(Resource, Deref, DerefMut)]
 pub struct ShareAssetMgr<A: Asset, G: Garbageer<A> = GarbageEmpty>(pub Share<AssetMgr<A, G>>);
 
