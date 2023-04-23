@@ -18,16 +18,10 @@ raw-window-handle = "0.5"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = { version = "0.15", features = ["spirv"] }
+wgpu = { version = "0.15", default-features = false, features = ["glsl"] }
 crossbeam="0.8"
 futures="0.3"
-naga = { version = "0.11", features = [
-    "glsl-in",
-    "spv-in",
-    "spv-out",
-    "wgsl-in",
-    "wgsl-out",
-] }
+naga = { version = "0.11"}
 bytemuck = { version = "1.4", features = ["derive"] }
 
 pi_hash = "0.1"

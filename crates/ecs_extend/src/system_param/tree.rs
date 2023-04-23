@@ -202,14 +202,19 @@ pub struct EntityTreeMut<'w, 's> {
 }
 
 impl<'w, 's> EntityTreeMut<'w, 's> {
+	/// 为节点插入子节点
+	/// 注意，调用此方法的前提条件是，parent的Down组件存在，node的Up组件存在
 	pub fn insert_child(&mut self, node: Entity, parent: Entity, index: usize) {
 		self.tree.insert_child(TreeKey(node), TreeKey(parent), index);
 	}
 
+	/// 为节点添加兄弟节点
+	/// 注意，调用此方法的前提条件是，node和anchor的Up组件存在
 	pub fn insert_brother(&mut self, node: Entity, anchor: Entity, ty: InsertType) {
 		self.tree.insert_brother(TreeKey(node), TreeKey(anchor), ty);
 	}
 
+	/// 移除节点
 	pub fn remove(&mut self, node: Entity) {
 		self.tree.remove(TreeKey(node));
 	}
