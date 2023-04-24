@@ -39,7 +39,7 @@ pub mod constant;
 
 /// 渲染图
 pub use graph::*;
-use pi_render::{components::view::target_alloc::ShareTargetView};
+use pi_render::{components::view::target_alloc::{ShareTargetView, GetTargetView, TargetView}};
 /// 渲染 插件
 pub use plugin::*;
 use render_derive::NodeParam;
@@ -52,4 +52,8 @@ pub use clear_node::CLEAR_WIDNOW_NODE;
 #[derive(Default, Clone, NodeParam)]
 pub struct SimpleInOut {
     pub target: Option<ShareTargetView>,
+}
+
+impl GetTargetView for SimpleInOut {
+    fn get_target_view(&self) -> Option<&TargetView> { return self.target.as_ref().map(|r| &**r); }
 }
