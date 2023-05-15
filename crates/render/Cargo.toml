@@ -38,6 +38,7 @@ web-sys = {version="0.3", features = [
 ]}
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 wasm-bindgen-futures = { version = "0.4" }
+lazy_static = "1.4"
 
 [features]
 trace = []
