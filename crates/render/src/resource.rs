@@ -1,12 +1,43 @@
+use std::marker::PhantomData;
+use std::mem::transmute;
+
 use crate::render_windows::RenderWindow;
-use bevy::prelude::{Deref, DerefMut};
+use bevy::prelude::{Deref, DerefMut, FromWorld};
 use bevy::ecs::system::Resource;
 use pi_async::prelude::*;
+use pi_render::rhi::buffer_alloc::BufferAlloter;
+use wgpu::BufferUsages;
 
 /// ================ 单例 ================
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiSafeAtlasAllocator(pub pi_render::components::view::target_alloc::SafeAtlasAllocator);
+
+// lazy_static::lazy_static! {
+
+// 	static ref VERTEX_USAGES: BufferUsages = BufferUsages::COPY_DST | BufferUsages::VERTEX;
+// }
+
+pub const VERTEX_USAGES: BufferUsages = BufferUsages::from_bits_truncate(BufferUsages::COPY_DST.bits() | BufferUsages::VERTEX.bits());
+pub const INDEX_USAGES: BufferUsages = BufferUsages::from_bits_truncate(BufferUsages::COPY_DST.bits() | BufferUsages::INDEX.bits());
+
+/// 顶点buffer分配器
+pub type PiVertexBufferAlloter = PiBufferAlloter<{VERTEX_USAGES}>;
+
+/// 顶点buffer分配器
+pub type PiIndexBufferAlloter = PiBufferAlloter<{INDEX_USAGES}>;
+
+/// buffer分配器
+#[derive(Resource, Deref, DerefMut)]
+pub struct PiBufferAlloter<const B: BufferUsages>(BufferAlloter);
+
+impl<const B: BufferUsages> FromWorld for PiBufferAlloter<B> {
+    fn from_world(world: &mut bevy::prelude::World) -> Self {
+        let device = world.get_resource::<PiRenderDevice>().unwrap();
+        let queue = world.get_resource::<PiRenderQueue>().unwrap();
+		Self(BufferAlloter::new((**device).clone(), (**queue).clone(), 4096, B))
+    }
+}
 
 /// 异步 运行时
 /// A 的 类型 见 plugin 模块
