@@ -3,6 +3,7 @@
 use pi_render::rhi::sampler::{EAddressMode, EFilterMode, EAnisotropyClamp, SamplerDesc};
 use wasm_bindgen::prelude::wasm_bindgen;
 
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum StencilOperation {
     /// Keep stencil value unchanged.
     /// #[default]
@@ -70,6 +71,7 @@ pub enum BlendFactor {
     /// 1.0 - Constant
     OneMinusConstant = 12,
 }
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum BlendFactor {
     /// 0.0
     Zero = 0,
@@ -181,6 +183,7 @@ pub enum CompareFunction {
     /// Function always passes
     Always = 8,
 }
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum CompareFunction {
     /// Function never passes
     Never = 1,
@@ -219,6 +222,46 @@ impl CompareFunction {
                 }
             },
             None => None,
+        }
+    }
+    pub fn val2(&self) -> wgpu::CompareFunction {
+        match self {
+            CompareFunction::Never          => wgpu::CompareFunction::Never,
+            CompareFunction::Less           => wgpu::CompareFunction::Less,
+            CompareFunction::Equal          => wgpu::CompareFunction::Equal,
+            CompareFunction::LessEqual      => wgpu::CompareFunction::LessEqual,
+            CompareFunction::Greater        => wgpu::CompareFunction::Greater,
+            CompareFunction::NotEqual       => wgpu::CompareFunction::NotEqual,
+            CompareFunction::GreaterEqual   => wgpu::CompareFunction::GreaterEqual,
+            CompareFunction::Always         => wgpu::CompareFunction::Always,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub struct StencilFaceState {
+    /// Comparison function that determines if the fail_op or pass_op is used on the stencil buffer.
+    pub compare: CompareFunction,
+    /// Operation that is preformed when stencil test fails.
+    pub fail_op: StencilOperation,
+    /// Operation that is performed when depth test fails but stencil test succeeds.
+    pub depth_fail_op: StencilOperation,
+    /// Operation that is performed when stencil test success.
+    pub pass_op: StencilOperation,
+}
+impl StencilFaceState {
+    pub const IGNORE: Self = StencilFaceState {
+        compare: CompareFunction::Always,
+        fail_op: StencilOperation::Keep,
+        depth_fail_op: StencilOperation::Keep,
+        pass_op: StencilOperation::Keep,
+    };
+    pub fn val(&self) -> wgpu::StencilFaceState {
+        wgpu::StencilFaceState {
+            compare: self.compare.val2(),
+            fail_op: self.fail_op.val(),
+            depth_fail_op: self.depth_fail_op.val(),
+            pass_op: self.pass_op.val(),
         }
     }
 }
