@@ -136,14 +136,14 @@ impl WindowRenderer {
                     mip_level_count: 1,
                     sample_count: 1,
                     dimension: wgpu::TextureDimension::D2,
-                    format: wgpu::TextureFormat::Depth24PlusStencil8,
+                    format: wgpu::TextureFormat::Depth32Float,
                     usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::COPY_DST,
 					view_formats: &[],
                 }
             );
             let view = texture.create_view(&wgpu::TextureViewDescriptor {
                 label: Some("Final"),
-                format: Some(wgpu::TextureFormat::Depth24PlusStencil8),
+                format: Some(wgpu::TextureFormat::Depth32Float),
                 dimension: Some(wgpu::TextureViewDimension::D2),
                 aspect: wgpu::TextureAspect::All,
                 base_mip_level: 0,
