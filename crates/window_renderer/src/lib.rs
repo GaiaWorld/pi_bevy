@@ -1,5 +1,5 @@
 
-use std::ops::Deref;
+use std::{ops::Deref, sync::Arc};
 
 use bevy::prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfig, CoreSet};
 use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, ClearOptions, CLEAR_WIDNOW_NODE};
@@ -16,13 +16,13 @@ pub struct WindowRenderer {
     vs: wgpu::ShaderModule,
     fs: wgpu::ShaderModule,
     bindgroup_layout: BindGroupLayout,
-    texture: Option<Texture>,
-    view: Option<TextureView>,
+    texture: Option<Arc<Texture>>,
+    view: Option<Arc<TextureView>>,
     sampler: Option<SamplerRes>,
     bindgroup: Option<BindGroup>,
     pipeline: Option<RenderPipeline>,
-    depth_texture: Option<Texture>,
-    depth_view: Option<TextureView>,
+    depth_texture: Option<Arc<Texture>>,
+    depth_view: Option<Arc<TextureView>>,
     pub clearcolor: wgpu::Color,
     pub cleardepth: f32,
     pub clearstencil: u32,
@@ -126,8 +126,8 @@ impl WindowRenderer {
                 base_array_layer: 0,
                 array_layer_count: None,
             });
-            self.texture = Some(texture);
-            self.view = Some(view);
+            self.texture = Some(Arc::new(texture));
+            self.view = Some(Arc::new(view));
             
             let texture = device.create_texture(
                 &wgpu::TextureDescriptor {
@@ -151,8 +151,8 @@ impl WindowRenderer {
                 base_array_layer: 0,
                 array_layer_count: None,
             });
-            self.depth_texture = Some(texture);
-            self.depth_view = Some(view);
+            self.depth_texture = Some(Arc::new(texture));
+            self.depth_view = Some(Arc::new(view));
 
             let sampler = SamplerRes::new(device, &SamplerDesc::default());
             self.sampler = Some(sampler);
@@ -209,10 +209,10 @@ impl WindowRenderer {
     pub fn format(&self) -> wgpu::TextureFormat {
         self.format
     }
-    pub fn view(&self) -> Option<&TextureView> {
+    pub fn view(&self) -> Option<&Arc<TextureView>> {
         self.view.as_ref()
     }
-    pub fn depth_view(&self) -> Option<&TextureView> {
+    pub fn depth_view(&self) -> Option<&Arc<TextureView>> {
         self.depth_view.as_ref()
     }
     pub fn size(&self) -> Extent3d {
