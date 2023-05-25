@@ -3,7 +3,7 @@ use bevy::ecs::system::Resource;
 use pi_assets::mgr::AssetMgr;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{PiRenderDevice, PiRenderQueue};
-use pi_postprocess::image_effect::*;
+use pi_postprocess::prelude::*;
 use pi_render::renderer::sampler::SamplerRes;
 use pi_render::renderer::vertex_buffer::VertexBufferAllocator;
 use pi_render::rhi::RenderQueue;
@@ -36,6 +36,9 @@ impl PostprocessResource {
         EffectFilterSobel::setup(&renderdevice, &mut resources, asset_samplers);
         EffectHorizonGlitch::setup(&renderdevice, &mut resources, asset_samplers);
         EffectRadialWave::setup(&renderdevice, &mut resources, asset_samplers);
+        EffectBlurGauss::setup(&renderdevice, &mut resources, asset_samplers);
+        EffectImageMask::setup(&renderdevice, &mut resources, asset_samplers);
+        EffectClipSdf::setup(&renderdevice, &mut resources, asset_samplers);
 
         Self {
             vballocator,

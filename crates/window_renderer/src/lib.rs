@@ -16,13 +16,13 @@ pub struct WindowRenderer {
     vs: wgpu::ShaderModule,
     fs: wgpu::ShaderModule,
     bindgroup_layout: BindGroupLayout,
-    texture: Option<Arc<Texture>>,
-    view: Option<Arc<TextureView>>,
+    texture: Option<Arc<wgpu::Texture>>,
+    view: Option<Arc<wgpu::TextureView>>,
     sampler: Option<SamplerRes>,
     bindgroup: Option<BindGroup>,
     pipeline: Option<RenderPipeline>,
-    depth_texture: Option<Arc<Texture>>,
-    depth_view: Option<Arc<TextureView>>,
+    depth_texture: Option<Arc<wgpu::Texture>>,
+    depth_view: Option<Arc<wgpu::TextureView>>,
     pub clearcolor: wgpu::Color,
     pub cleardepth: f32,
     pub clearstencil: u32,
@@ -104,7 +104,7 @@ impl WindowRenderer {
             log::warn!("FinaleRender ChangeSize {:?}", surface_size);
             self.size = surface_size;
             self.format = format;
-            let texture = device.create_texture(
+            let texture = (**device).create_texture(
                 &wgpu::TextureDescriptor {
                     label: Some("Final"),
                     size: surface_size,
@@ -129,7 +129,7 @@ impl WindowRenderer {
             self.texture = Some(Arc::new(texture));
             self.view = Some(Arc::new(view));
             
-            let texture = device.create_texture(
+            let texture = (**device).create_texture(
                 &wgpu::TextureDescriptor {
                     label: Some("Final"),
                     size: surface_size,
@@ -209,10 +209,10 @@ impl WindowRenderer {
     pub fn format(&self) -> wgpu::TextureFormat {
         self.format
     }
-    pub fn view(&self) -> Option<&Arc<TextureView>> {
+    pub fn view(&self) -> Option<&Arc<wgpu::TextureView>> {
         self.view.as_ref()
     }
-    pub fn depth_view(&self) -> Option<&Arc<TextureView>> {
+    pub fn depth_view(&self) -> Option<&Arc<wgpu::TextureView>> {
         self.depth_view.as_ref()
     }
     pub fn size(&self) -> Extent3d {
