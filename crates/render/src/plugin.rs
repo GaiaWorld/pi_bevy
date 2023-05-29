@@ -7,7 +7,7 @@ use bevy::ecs::{system::Res};
 use bevy::prelude::{Resource, SystemSet, IntoSystemConfig};
 use pi_assets::asset::GarbageEmpty;
 use pi_async::prelude::*;
-use pi_bevy_asset::{ShareAssetMgr, ShareHomogeneousMgr};
+use pi_bevy_asset::{ShareAssetMgr, ShareHomogeneousMgr, AssetCapacity};
 use pi_render::renderer::sampler::SamplerRes;
 use pi_render::{
     components::view::target_alloc::{UnuseTexture, SafeAtlasAllocator},

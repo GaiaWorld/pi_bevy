@@ -37,8 +37,10 @@ mod system;
 pub mod component;
 pub mod constant;
 
+use bevy::prelude::Resource;
 /// 渲染图
 pub use graph::*;
+use pi_bevy_asset::AssetCapacity;
 use pi_render::{components::view::target_alloc::{ShareTargetView, GetTargetView, TargetView}};
 /// 渲染 插件
 pub use plugin::*;
@@ -56,4 +58,158 @@ pub struct SimpleInOut {
 
 impl GetTargetView for SimpleInOut {
     fn get_target_view(&self) -> Option<&TargetView> { return self.target.as_ref().map(|r| &**r); }
+}
+
+pub mod asset_config {
+    use bevy::prelude::Resource;
+    use pi_bevy_asset::AssetCapacity;
+
+    /// Asset 资源管理
+    pub enum EAsset {
+        RenderResTextureView,
+        RenderResUnuseTexture,
+        TextureRes,
+        ImageTexture,
+        ImageTextureView,
+        BindGroup,
+        SamplerRes,
+        VertexBuffer3D,
+        ShaderMeta3D,
+        Shader3D,
+        RenderPipeline,
+        GLTF,
+        File,
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgRenderResTextureView(pub AssetCapacity);
+    impl Default for AssetCfgRenderResTextureView {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 32 * 1024 * 1024,
+                max: 64 * 1024 * 1024,
+                timeout: 60 * 1000,
+            })
+        }
+    }
+    #[derive(Resource)]
+    pub struct AssetCfgRenderResUnuseTexture(pub AssetCapacity);
+    impl Default for AssetCfgRenderResUnuseTexture {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 16 * 1024 * 1024,
+                max: 32 * 1024 * 1024,
+                timeout: 60 * 1000,
+            })
+        }
+    }
+
+    #[derive(Resource)]
+    pub struct AssetCfgSamplerRes(pub AssetCapacity);
+    impl Default for AssetCfgSamplerRes {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 1 * 1024 * 1024,
+                max: 2 * 1024 * 1024,
+                timeout: 24 * 60 * 60 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgTextureRes(pub AssetCapacity);
+    impl Default for AssetCfgTextureRes {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 10 * 1024 * 1024,
+                max: 20 * 1024 * 1024,
+                timeout: 10 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgImageTexture(pub AssetCapacity);
+    impl Default for AssetCfgImageTexture {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 10 * 1024 * 1024,
+                max: 20 * 1024 * 1024,
+                timeout: 10 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgImageTextureView(pub AssetCapacity);
+    impl Default for AssetCfgImageTextureView {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 1 * 1024 * 1024,
+                max: 2 * 1024 * 1024,
+                timeout: 10 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgBindGroup(pub AssetCapacity);
+    impl Default for AssetCfgBindGroup {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 1 * 1024 * 1024,
+                max: 2 * 1024 * 1024,
+                timeout: 10 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgVertexBuffer3D(pub AssetCapacity);
+    impl Default for AssetCfgVertexBuffer3D {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 10 * 1024 * 1024,
+                max: 20 * 1024 * 1024,
+                timeout: 10 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgShaderMeta3D(pub AssetCapacity);
+    impl Default for AssetCfgShaderMeta3D {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 2 * 1024 * 1024,
+                max: 4 * 1024 * 1024,
+                timeout: 100 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgShader3D(pub AssetCapacity);
+    impl Default for AssetCfgShader3D {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 2 * 1024 * 1024,
+                max: 4 * 1024 * 1024,
+                timeout: 10 * 1000,
+            })
+        }
+    }
+    
+    #[derive(Resource)]
+    pub struct AssetCfgRenderPipeline(pub AssetCapacity);
+    impl Default for AssetCfgRenderPipeline {
+        fn default() -> Self {
+            Self(AssetCapacity {
+                min: 2 * 1024 * 1024,
+                max: 4 * 1024 * 1024,
+                timeout: 10 * 1000,
+            })
+        }
+    }
+    
 }

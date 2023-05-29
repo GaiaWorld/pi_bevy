@@ -57,9 +57,8 @@ pub struct Capacity {
 
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AssetCapacity {
-	pub ty: String,
 	pub min: usize,
 	pub max: usize,
 	pub timeout: usize,
@@ -67,7 +66,7 @@ pub struct AssetCapacity {
 #[derive(Debug, Default, Clone, Resource, Serialize, Deserialize)]
 pub struct AssetMgrConfigs (pub XHashMap<String, AssetCapacity>);
 impl AssetMgrConfigs {
-    pub fn insert(&mut self, cfg: AssetCapacity) {
-        self.0.insert(cfg.ty.clone(), cfg);
+    pub fn insert(&mut self, ty: String, cfg: AssetCapacity) {
+        self.0.insert(ty, cfg);
     }
 }

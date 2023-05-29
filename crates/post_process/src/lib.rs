@@ -24,7 +24,7 @@ pub struct PostprocessResource {
 }
 impl PostprocessResource {
     pub fn new(renderdevice: &RenderDevice, queue: &RenderQueue, asset_samplers: &Share<AssetMgr<SamplerRes>>) -> Self {
-        let mut vballocator = VertexBufferAllocator::new();
+        let mut vballocator = VertexBufferAllocator::new(64 * 1024, 60 * 1000);
         let mut resources = SingleImageEffectResource::new(renderdevice, queue, &mut vballocator);
         EffectBlurBokeh::setup(&renderdevice, &mut resources, asset_samplers);
         EffectBlurDirect::setup(&renderdevice, &mut resources, asset_samplers);
