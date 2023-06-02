@@ -1,8 +1,8 @@
 use bevy::ecs::{world::{FromWorld, World}, system::{Resource, SystemMeta, ReadOnlySystemParam, SystemParam, Res, ResMut}, component::ComponentId};
 use derive_deref::{DerefMut, Deref};
 
-#[derive(Debug, Deref, DerefMut)]
-pub struct OrInitRes<'w, T: FromWorld + Resource>(pub Res<'w, T>);
+#[derive(Debug, Deref)]
+pub struct OrInitRes<'w, T: FromWorld + Resource>(Res<'w, T>);
 
 unsafe impl<T: Resource + FromWorld> SystemParam for OrInitRes<'_, T> {
     type State = ComponentId;
@@ -27,7 +27,7 @@ unsafe impl<T: Resource + FromWorld> SystemParam for OrInitRes<'_, T> {
 unsafe impl<T: Resource + FromWorld> ReadOnlySystemParam for OrInitRes<'_, T> {}
 
 #[derive(Debug, Deref, DerefMut)]
-pub struct OrInitResMut<'w, T: FromWorld + Resource>(pub ResMut<'w, T>);
+pub struct OrInitResMut<'w, T: FromWorld + Resource>(ResMut<'w, T>);
 
 unsafe impl<T: Resource + FromWorld> SystemParam for OrInitResMut<'_, T> {
     type State = ComponentId;
