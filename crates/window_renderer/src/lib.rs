@@ -26,6 +26,7 @@ pub struct WindowRenderer {
     pub clearcolor: wgpu::Color,
     pub cleardepth: f32,
     pub clearstencil: u32,
+    pub active: bool,
 }
 impl WindowRenderer {
     pub const CLEAR_KEY: &'static str = "FinalRenderClear";
@@ -91,6 +92,7 @@ impl WindowRenderer {
             clearcolor: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
             cleardepth: 1.0,
             clearstencil: 0,
+            active: false
         }
 
     }
@@ -100,6 +102,9 @@ impl WindowRenderer {
         surface_size: Extent3d,
         device: &RenderDevice,
     ) {
+        if !self.active {
+            return;
+        }
         if self.format != format || surface_size != self.size || self.pipeline.is_none() {
             log::warn!("FinaleRender ChangeSize {:?}", surface_size);
             self.size = surface_size;

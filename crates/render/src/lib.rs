@@ -183,7 +183,7 @@ pub mod asset_config {
             Self(AssetCapacity {
                 min: 2 * 1024 * 1024,
                 max: 4 * 1024 * 1024,
-                timeout: 100 * 1000,
+                timeout: 60 * 60 * 1000,
             })
         }
     }

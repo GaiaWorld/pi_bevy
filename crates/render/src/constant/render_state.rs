@@ -227,14 +227,6 @@ impl StencilFaceState {
     }
 }
 
-
-#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
-#[cfg(feature = "pi_js_export")]
-pub enum CullMode {
-    Off,
-    Back,
-    Front
-}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CullMode {
     Off,
@@ -251,28 +243,6 @@ impl CullMode {
     }
 }
 
-#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
-#[cfg(feature = "pi_js_export")]
-pub enum PrimitiveTopology {
-    /// Vertex data is a list of points. Each vertex is a new point.
-    PointList = 0,
-    /// Vertex data is a list of lines. Each pair of vertices composes a new line.
-    ///
-    /// Vertices `0 1 2 3` create two lines `0 1` and `2 3`
-    LineList = 1,
-    /// Vertex data is a strip of lines. Each set of two adjacent vertices form a line.
-    ///
-    /// Vertices `0 1 2 3` create three lines `0 1`, `1 2`, and `2 3`.
-    LineStrip = 2,
-    /// Vertex data is a list of triangles. Each set of 3 vertices composes a new triangle.
-    ///
-    /// Vertices `0 1 2 3 4 5` create two triangles `0 1 2` and `3 4 5`
-    TriangleList = 3,
-    /// Vertex data is a triangle strip. Each set of three adjacent vertices form a triangle.
-    ///
-    /// Vertices `0 1 2 3 4 5` creates four triangles `0 1 2`, `2 1 3`, `2 3 4`, and `4 3 5`
-    TriangleStrip = 4,
-}
 /// * 默认值 Fill
 #[derive(Debug, Clone, Copy)]
 pub enum PrimitiveTopology {
@@ -307,15 +277,6 @@ impl PrimitiveTopology {
     }
 }
 
-#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
-#[cfg(feature = "pi_js_export")]
-pub enum PolygonMode {
-    Fill = 0,
-    /// Polygons are drawn as line segments
-    Line = 1,
-    /// Polygons are drawn as points
-    Point = 2,
-}
 // #[derive(Debug, Clone, Copy)]
 /// * 默认值 Fill
 #[derive(Debug, Clone, Copy)]
@@ -336,15 +297,6 @@ impl PolygonMode {
     }
 }
 
-#[cfg_attr(target_arch="wasm32", wasm_bindgen)]
-#[cfg(feature = "pi_js_export")]
-pub enum FrontFace {
-    Ccw = 0,
-    /// Triangles with vertices in clockwise order are considered the front face.
-    ///
-    /// This is the default with left handed coordinate spaces.
-    Cw = 1,
-}
 /// * 默认值 Ccw
 #[derive(Debug, Clone, Copy)]
 pub enum FrontFace {
