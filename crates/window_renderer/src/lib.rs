@@ -1,11 +1,10 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use bevy::prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfig, CoreSet};
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, ClearOptions, CLEAR_WIDNOW_NODE};
+use bevy::{prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfig, CoreSet, Commands, Deref, Entity}, ecs::system::CommandQueue};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, ClearOptions, CLEAR_WIDNOW_NODE, component::GraphId, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::{Texture, TextureView, PiRenderDefault}, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
-
 
 #[derive(Resource)]
 pub struct WindowRenderer {
@@ -27,6 +26,10 @@ pub struct WindowRenderer {
     pub cleardepth: f32,
     pub clearstencil: u32,
     pub active: bool,
+    pub clear_entity: Entity,
+    pub clear_node: NodeId,
+    pub render_entity: Entity,
+    pub render_node: NodeId,
 }
 impl WindowRenderer {
     pub const CLEAR_KEY: &'static str = "FinalRenderClear";
@@ -35,6 +38,10 @@ impl WindowRenderer {
         device: &RenderDevice,
         format: wgpu::TextureFormat,
         surface_format: wgpu::TextureFormat,
+        clear_entity: Entity,
+        clear_node: NodeId,
+        render_entity: Entity,
+        render_node: NodeId,
     ) -> Self {
         let points: [f32; 12] = [-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
         let vertex = device.create_buffer_with_data(
@@ -92,7 +99,11 @@ impl WindowRenderer {
             clearcolor: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
             cleardepth: 1.0,
             clearstencil: 0,
-            active: false
+            active: false,
+            clear_entity,
+            clear_node,
+            render_entity,
+            render_node,
         }
 
     }
@@ -352,16 +363,26 @@ impl Plugin for PluginWindowRender {
         
         // #[cfg(not(target_arch="wasm32"))]
         // {
-            let device = app.world.get_resource::<PiRenderDevice>().unwrap();
+            let id_clear = app.world.spawn_empty().id();
+            let id_render = app.world.spawn_empty().id();
 
-            let node = WindowRenderer::new(device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default());
+            let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+
 
             let mut rg = app.world.get_resource_mut::<PiRenderGraph>().unwrap();
-            rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode);
-            rg.add_node(WindowRenderer::KEY, WindowRendererNode);
-            rg.set_finish(WindowRenderer::KEY, true);
-            rg.add_depend(CLEAR_WIDNOW_NODE, WindowRenderer::CLEAR_KEY);
-    
+            let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode).unwrap();
+            let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode).unwrap();
+            rg.set_finish(WindowRenderer::KEY, true).unwrap();
+            rg.add_depend(CLEAR_WIDNOW_NODE, WindowRenderer::CLEAR_KEY).unwrap();
+
+            let mut cmdqueue = CommandQueue::default();
+            let mut cmds = Commands::new(&mut cmdqueue, &app.world);
+            cmds.entity(id_clear).insert(GraphId(node_clear));
+            cmds.entity(id_render).insert(GraphId(node_render));
+
+            cmdqueue.apply(&mut app.world);
+
+            let node = WindowRenderer::new(&device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default(), id_clear, node_clear, id_render, node_render);
             app.insert_resource(node);
             app.add_system(sys_changesize.in_base_set(CoreSet::First));
         // }
