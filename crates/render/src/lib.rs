@@ -61,7 +61,7 @@ impl GetTargetView for SimpleInOut {
 }
 
 pub mod asset_config {
-    use bevy::prelude::Resource;
+    use bevy::prelude::{Resource};
     use pi_bevy_asset::AssetCapacity;
 
     /// Asset 资源管理
@@ -86,21 +86,34 @@ pub mod asset_config {
     impl Default for AssetCfgRenderResTextureView {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 32 * 1024 * 1024,
                 max: 64 * 1024 * 1024,
                 timeout: 60 * 1000,
             })
         }
     }
+    impl AsRef<AssetCapacity> for AssetCfgRenderResTextureView {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
+        }
+    }
+
     #[derive(Resource)]
     pub struct AssetCfgRenderResUnuseTexture(pub AssetCapacity);
     impl Default for AssetCfgRenderResUnuseTexture {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 16 * 1024 * 1024,
                 max: 32 * 1024 * 1024,
                 timeout: 60 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgRenderResUnuseTexture {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
 
@@ -109,10 +122,16 @@ pub mod asset_config {
     impl Default for AssetCfgSamplerRes {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 1 * 1024 * 1024,
                 max: 2 * 1024 * 1024,
                 timeout: 24 * 60 * 60 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgSamplerRes {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -121,10 +140,16 @@ pub mod asset_config {
     impl Default for AssetCfgTextureRes {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 10 * 1024 * 1024,
                 max: 20 * 1024 * 1024,
                 timeout: 10 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgTextureRes {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -133,10 +158,16 @@ pub mod asset_config {
     impl Default for AssetCfgImageTexture {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 10 * 1024 * 1024,
                 max: 20 * 1024 * 1024,
                 timeout: 10 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgImageTexture {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -145,10 +176,16 @@ pub mod asset_config {
     impl Default for AssetCfgImageTextureView {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 1 * 1024 * 1024,
                 max: 2 * 1024 * 1024,
                 timeout: 10 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgImageTextureView {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -157,10 +194,16 @@ pub mod asset_config {
     impl Default for AssetCfgBindGroup {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 1 * 1024 * 1024,
                 max: 2 * 1024 * 1024,
                 timeout: 10 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgBindGroup {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -169,10 +212,16 @@ pub mod asset_config {
     impl Default for AssetCfgVertexBuffer3D {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 10 * 1024 * 1024,
                 max: 20 * 1024 * 1024,
                 timeout: 10 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgVertexBuffer3D {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -181,10 +230,16 @@ pub mod asset_config {
     impl Default for AssetCfgShaderMeta3D {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 2 * 1024 * 1024,
                 max: 4 * 1024 * 1024,
                 timeout: 60 * 60 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgShaderMeta3D {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -193,10 +248,16 @@ pub mod asset_config {
     impl Default for AssetCfgShader3D {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 2 * 1024 * 1024,
                 max: 4 * 1024 * 1024,
                 timeout: 10 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgShader3D {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
@@ -205,10 +266,16 @@ pub mod asset_config {
     impl Default for AssetCfgRenderPipeline {
         fn default() -> Self {
             Self(AssetCapacity {
+                flag: false,
                 min: 2 * 1024 * 1024,
                 max: 4 * 1024 * 1024,
                 timeout: 10 * 1000,
             })
+        }
+    }
+    impl AsRef<AssetCapacity> for AssetCfgRenderPipeline {
+        fn as_ref(&self) -> &AssetCapacity {
+            &self.0
         }
     }
     
