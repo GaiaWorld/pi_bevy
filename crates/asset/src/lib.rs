@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use bevy::ecs::system::Resource;
 use bevy::prelude::{DerefMut, Deref, App, Local, IntoSystemConfig, ResMut, CoreSet, Plugin};
-use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer}, homogeneous::{HomogeneousMgr, Size}};
+use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer, Size}, homogeneous::HomogeneousMgr};
 use pi_hash::XHashMap;
 use pi_share::Share;
 use serde::{Serialize, Deserialize};
@@ -75,6 +75,7 @@ impl AssetConfig {
 /// 资产容量和超时描述
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AssetDesc {
+	pub ref_garbage: bool,
 	pub min: usize,
 	pub max: usize,
 	pub timeout: usize,
@@ -85,9 +86,9 @@ pub struct AssetDesc {
 pub struct ShareAssetMgr<A: Asset, G: Garbageer<A> = GarbageEmpty>(pub Share<AssetMgr<A, G>>);
 
 impl<A: Asset, G: Garbageer<A>> ShareAssetMgr<A, G> {
-	pub fn new_with_config(garbage: G, ref_garbage: bool, default: &AssetDesc, asset_config: &AssetConfig, allocator: &mut Allocator) -> Self {
+	pub fn new_with_config(garbage: G, default: &AssetDesc, asset_config: &AssetConfig, allocator: &mut Allocator) -> Self {
 		let desc = asset_config.get::<A>().unwrap_or(default);
-		let r = AssetMgr::new(garbage, ref_garbage, desc.min, desc.timeout);
+		let r = AssetMgr::new(garbage, desc.ref_garbage, desc.min, desc.timeout);
 		allocator.register(r.clone(), desc.min, desc.max);
 		Self(r)
 	}
@@ -152,7 +153,7 @@ impl Default for AssetCapacity {
 pub struct AssetMgrConfigs (pub XHashMap<String, AssetCapacity>);
 impl AssetMgrConfigs {
 	#[inline]
-    pub fn insert<T>(&mut self, key: String, cfg: AssetCapacity) {
+    pub fn insert(&mut self, key: String, cfg: AssetCapacity) {
         self.0.insert(key, cfg);
     }
 }

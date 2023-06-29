@@ -78,8 +78,6 @@ impl Plugin for PiRenderPlugin {
             create_multi_runtime()
         };
 
-		
-
 		let (share_texture_res,
 		share_unuse,
 		buffer_res, 
@@ -92,8 +90,8 @@ impl Plugin for PiRenderPlugin {
 			let asset_config = w.get_resource::<AssetConfig>().unwrap();
 			(ShareAssetMgr::<RenderRes<TextureView>>::new_with_config(
 				GarbageEmpty(),
-				false,
 				&AssetDesc {
+					ref_garbage: false,
 					min: 30 * 1024 * 1024,
 					max: 600 * 1024 * 1024,
 					timeout: 10 * 60 * 1000,
@@ -104,6 +102,7 @@ impl Plugin for PiRenderPlugin {
 			ShareHomogeneousMgr::<RenderRes<UnuseTexture>>::new_with_config(
 				pi_assets::homogeneous::GarbageEmpty(),
 				&AssetDesc {
+					ref_garbage: false,
 					min: 10 * size_of::<UnuseTexture>(),
 					max: 20 * size_of::<UnuseTexture>(),
 					timeout: 10 * 60 * 1000,
@@ -114,8 +113,8 @@ impl Plugin for PiRenderPlugin {
 
 			ShareAssetMgr::<RenderRes<Buffer>>::new_with_config(
 				GarbageEmpty(),
-				false,
 				&AssetDesc {
+					ref_garbage: false,
 					min: 10 * 1024 * 1024,
 					max: 50 * 1024 * 1024,
 					timeout: 10 * 60 * 1000,
@@ -126,8 +125,8 @@ impl Plugin for PiRenderPlugin {
 
 			ShareAssetMgr::<SamplerRes>::new_with_config(
 				GarbageEmpty(),
-				false,
 				&AssetDesc {
+					ref_garbage: false,
 					min: 10 * 1024,
 					max: 20 * 1024,
 					timeout: 10 * 60 * 1000,
@@ -137,8 +136,8 @@ impl Plugin for PiRenderPlugin {
 			),
 			ShareAssetMgr::<RenderRes<BindGroup>>::new_with_config(
 				GarbageEmpty(),
-				false,
 				&AssetDesc {
+					ref_garbage: false,
 					min: 5 * 1024 * 1024,
 					max: 10 * 1024 * 1024,
 					timeout: 10 * 60 * 1000,
@@ -148,8 +147,8 @@ impl Plugin for PiRenderPlugin {
 			),
 			ShareAssetMgr::<TextureRes>::new_with_config(
 				GarbageEmpty(),
-				false,
 				&AssetDesc {
+					ref_garbage: false,
 					min: 10 * 1024 * 1024,
 					max: 600 * 1024 * 1024,
 					timeout: 10 * 60 * 1000,
@@ -159,8 +158,8 @@ impl Plugin for PiRenderPlugin {
 			),
 			ShareAssetMgr::<RenderRes<RenderPipeline>>::new_with_config(
 				GarbageEmpty(),
-				false,
 				&AssetDesc {
+					ref_garbage: false,
 					min: 5 * 1024 * 1024,
 					max: 10 * 1024 * 1024,
 					timeout: 10 * 60 * 1000,
