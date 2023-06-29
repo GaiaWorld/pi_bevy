@@ -138,9 +138,15 @@ impl<A: Size, G: pi_assets::homogeneous::Garbageer<A>> Clone for ShareHomogeneou
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AssetCapacity {
+	pub flag: bool,
 	pub min: usize,
 	pub max: usize,
 	pub timeout: usize,
+}
+impl Default for AssetCapacity {
+    fn default() -> Self {
+        Self { flag: false, min: 1024, max: 10 * 1024, timeout: 10 * 1000 }
+    }
 }
 #[derive(Debug, Default, Clone, Resource, Serialize, Deserialize)]
 pub struct AssetMgrConfigs (pub XHashMap<String, AssetCapacity>);
