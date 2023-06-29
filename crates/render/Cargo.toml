@@ -22,6 +22,7 @@ wgpu = { version = "0.15", default-features = false, features = ["glsl"] }
 crossbeam="0.8"
 futures="0.3"
 
+half = "=2.2.1"
 pi_hash = "0.1"
 pi_futures = "0.1"
 pi_async = "0.5"

@@ -7,7 +7,7 @@ use bevy::ecs::{system::Res};
 use bevy::prelude::{Resource, SystemSet, IntoSystemConfig};
 use pi_assets::asset::GarbageEmpty;
 use pi_async::prelude::*;
-use pi_bevy_asset::{ShareAssetMgr, ShareHomogeneousMgr, AssetCapacity};
+use pi_bevy_asset::{ShareAssetMgr, ShareHomogeneousMgr, AssetCapacity, Allocator, AssetMgrConfigs, AssetConfig, AssetDesc};
 use pi_render::renderer::sampler::SamplerRes;
 use pi_render::{
     components::view::target_alloc::{UnuseTexture, SafeAtlasAllocator},
@@ -18,6 +18,7 @@ use pi_render::{
         pipeline::RenderPipeline,
     },
 };
+use std::borrow::BorrowMut;
 use std::mem::size_of;
 use wgpu::TextureView;
 
@@ -77,18 +78,97 @@ impl Plugin for PiRenderPlugin {
             create_multi_runtime()
         };
 
-		let share_texture_res = ShareAssetMgr::<RenderRes<TextureView>>::new(
-            GarbageEmpty(),
-            false,
-            60 * 1024 * 1024,
-            3 * 60 * 1000,
-        );
-		let share_unuse = ShareHomogeneousMgr::<RenderRes<UnuseTexture>>::new(
-            pi_assets::homogeneous::GarbageEmpty(),
-            10 * size_of::<UnuseTexture>(),
-            size_of::<UnuseTexture>(),
-            3 * 60 * 1000,
-        );
+		
+
+		let (share_texture_res,
+		share_unuse,
+		buffer_res, 
+		sampler_res,
+		bind_group_res,
+		texture_res,
+		pipeline_res)= {
+			let mut w = app.world.cell();
+			let mut allocator = w.get_resource_mut::<Allocator>().unwrap();
+			let asset_config = w.get_resource::<AssetConfig>().unwrap();
+			(ShareAssetMgr::<RenderRes<TextureView>>::new_with_config(
+				GarbageEmpty(),
+				false,
+				&AssetDesc {
+					min: 30 * 1024 * 1024,
+					max: 600 * 1024 * 1024,
+					timeout: 10 * 60 * 1000,
+				},
+				&asset_config,
+				&mut allocator,
+			),
+			ShareHomogeneousMgr::<RenderRes<UnuseTexture>>::new_with_config(
+				pi_assets::homogeneous::GarbageEmpty(),
+				&AssetDesc {
+					min: 10 * size_of::<UnuseTexture>(),
+					max: 20 * size_of::<UnuseTexture>(),
+					timeout: 10 * 60 * 1000,
+				},
+				&asset_config,
+				&mut allocator,
+			),
+
+			ShareAssetMgr::<RenderRes<Buffer>>::new_with_config(
+				GarbageEmpty(),
+				false,
+				&AssetDesc {
+					min: 10 * 1024 * 1024,
+					max: 50 * 1024 * 1024,
+					timeout: 10 * 60 * 1000,
+				},
+				&asset_config,
+				&mut allocator,
+			),
+
+			ShareAssetMgr::<SamplerRes>::new_with_config(
+				GarbageEmpty(),
+				false,
+				&AssetDesc {
+					min: 10 * 1024,
+					max: 20 * 1024,
+					timeout: 10 * 60 * 1000,
+				},
+				&asset_config,
+				&mut allocator,
+			),
+			ShareAssetMgr::<RenderRes<BindGroup>>::new_with_config(
+				GarbageEmpty(),
+				false,
+				&AssetDesc {
+					min: 5 * 1024 * 1024,
+					max: 10 * 1024 * 1024,
+					timeout: 10 * 60 * 1000,
+				},
+				&asset_config,
+				&mut allocator,
+			),
+			ShareAssetMgr::<TextureRes>::new_with_config(
+				GarbageEmpty(),
+				false,
+				&AssetDesc {
+					min: 10 * 1024 * 1024,
+					max: 600 * 1024 * 1024,
+					timeout: 10 * 60 * 1000,
+				},
+				&asset_config,
+				&mut allocator,
+			),
+			ShareAssetMgr::<RenderRes<RenderPipeline>>::new_with_config(
+				GarbageEmpty(),
+				false,
+				&AssetDesc {
+					min: 5 * 1024 * 1024,
+					max: 10 * 1024 * 1024,
+					timeout: 10 * 60 * 1000,
+				},
+				&asset_config,
+				&mut allocator,
+			))
+		};
 
 		app.insert_resource(share_texture_res.clone());
 		app.insert_resource(share_unuse.clone());
@@ -96,39 +176,14 @@ impl Plugin for PiRenderPlugin {
         app.insert_resource(PiAsyncRuntime(rt.clone()));
 
         // 添加资源管理器单例
-        app.insert_resource(ShareAssetMgr::<RenderRes<Buffer>>::new(
-            GarbageEmpty(),
-            false,
-            20 * 1024 * 1024,
-            3 * 60 * 1000,
-        ));
+        app.insert_resource(buffer_res);
 
-		app.insert_resource(ShareAssetMgr::<SamplerRes>::new(
-            GarbageEmpty(),
-            false,
-            2 * 1024,
-            3 * 60 * 1000,
-        ));
+		app.insert_resource(sampler_res);
 		
-        app.insert_resource(ShareAssetMgr::<RenderRes<BindGroup>>::new(
-            GarbageEmpty(),
-            false,
-            5 * 1024,
-            3 * 60 * 1000,
-        ));
+        app.insert_resource(bind_group_res);
         
-        app.insert_resource(ShareAssetMgr::<TextureRes>::new(
-            GarbageEmpty(),
-            false,
-            60 * 1024 * 1024,
-            3 * 60 * 1000,
-        ));
-        app.insert_resource(ShareAssetMgr::<RenderRes<RenderPipeline>>::new(
-            GarbageEmpty(),
-            false,
-            60 * 1024 * 1024,
-            3 * 60 * 1000,
-        ));
+        app.insert_resource(texture_res);
+        app.insert_resource(pipeline_res);
         // app.insert_resource(AssetMgr::<RenderRes<Program>>::new(
         // 	GarbageEmpty(),
         // 	false,
