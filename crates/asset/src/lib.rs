@@ -17,6 +17,11 @@ pub struct PiAssetPlugin {
 	pub total_capacity: usize,
 	pub asset_config: AssetConfig,
 }
+impl Default for PiAssetPlugin {
+	fn default() -> Self {
+		Self { total_capacity: 32 * 1024 * 1024, asset_config: AssetConfig::default() }
+	}
+}
 
 impl Plugin for PiAssetPlugin {
     fn build(&self, app: &mut App) {
