@@ -17,6 +17,11 @@ pub struct PiAssetPlugin {
 	pub total_capacity: usize,
 	pub asset_config: AssetConfig,
 }
+impl Default for PiAssetPlugin {
+	fn default() -> Self {
+		Self { total_capacity: 32 * 1024 * 1024, asset_config: AssetConfig::default() }
+	}
+}
 
 impl Plugin for PiAssetPlugin {
     fn build(&self, app: &mut App) {
@@ -134,7 +139,10 @@ impl<A: Size, G: pi_assets::homogeneous::Garbageer<A>> Clone for ShareHomogeneou
 }
 
 
-
+pub trait TAssetCapacity {
+	const ASSET_TYPE: &'static str;
+	fn capacity() -> AssetCapacity;
+}
 
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -155,5 +163,13 @@ impl AssetMgrConfigs {
 	#[inline]
     pub fn insert(&mut self, key: String, cfg: AssetCapacity) {
         self.0.insert(key, cfg);
+    }
+    pub fn query<T: TAssetCapacity>(&mut self) -> AssetCapacity  {
+		if let Some(cfg) = self.0.get(T::ASSET_TYPE) {
+			cfg.clone()
+		} else {
+			self.0.insert(String::from(T::ASSET_TYPE), T::capacity());
+			T::capacity()
+		}
     }
 }
