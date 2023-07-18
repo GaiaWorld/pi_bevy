@@ -5,15 +5,16 @@ use bevy::{ecs::{prelude::{Entity, Component, EventWriter}, system::{Query, Comm
 use derive_deref::{Deref, DerefMut};
 use pi_null::Null;
 use pi_slotmap_tree::{Up as Up1, Down as Down1, Storage, StorageMut, Tree, Layer as Layer1, ChildrenIterator as ChildrenIterator1, RecursiveIterator as RecursiveIterator1, InsertType};
+use serde::{Serialize, Deserialize};
 
 use super::layer_dirty::ComponentEvent;
 
 // use pi_print_any::{println_any, out_any};
 
-#[derive(Debug, Clone, Copy, Default, Component)]
+#[derive(Debug, Clone, Copy, Default, Component, Serialize, Deserialize)]
 pub struct Root;
 
-#[derive(Debug, Clone, Deref, PartialEq, Eq, Copy)]
+#[derive(Debug, Clone, Deref, PartialEq, Eq, Copy, Serialize, Deserialize)]
 pub struct TreeKey(pub Entity);
 
 impl Null for TreeKey {
@@ -27,7 +28,7 @@ impl Null for TreeKey {
     }
 }
 
-#[derive(Debug, Clone, Default, Component, Deref, DerefMut)]
+#[derive(Debug, Clone, Default, Component, Deref, DerefMut, Serialize, Deserialize)]
 pub struct Layer(Layer1<TreeKey>);
 impl Layer  {
 	#[inline]
@@ -40,7 +41,7 @@ impl Layer  {
 	}
 }
 
-#[derive(Debug, Clone, Default, Component, Deref, DerefMut)]
+#[derive(Debug, Clone, Default, Component, Deref, DerefMut, Serialize, Deserialize)]
 pub struct Up(Up1<TreeKey>);
 impl Up  {
 	#[inline]
@@ -57,7 +58,7 @@ impl Up  {
 	}
 }
 
-#[derive(Debug, Clone, Default, Component, Deref, DerefMut)]
+#[derive(Debug, Clone, Default, Component, Deref, DerefMut, Serialize, Deserialize)]
 pub struct Down(Down1<TreeKey>);
 impl Down  {
 	#[inline]
