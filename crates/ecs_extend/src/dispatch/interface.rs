@@ -6,7 +6,7 @@ use pi_time::Instant;
 use std::{collections::HashSet, io::Result as IoResult};
 
 use pi_futures::BoxFuture;
-use pi_async::prelude::{AsyncRuntime, AsyncValue};
+use pi_async_rt::prelude::{AsyncRuntime, AsyncValue};
 use fixedbitset::FixedBitSet;
 use pi_slotmap::{SlotMap, DefaultKey};
 use thiserror::Error;
@@ -178,7 +178,7 @@ impl<A: AsyncRuntime<()>> Dispatcher for SingleDispatcher<A>
     fn run<'a>(&'a self) -> BoxFuture<'a, ()> {
 		Box::pin(async move {
 			let statistics = Share::new(ShareMutex::new(Vec::new()));
-			let wait = pi_async::prelude::AsyncValue::new();
+			let wait = pi_async_rt::prelude::AsyncValue::new();
 			Self::exec(self.vec.clone(),  statistics, self.rt.clone(), 0, 0, wait.clone(), false);
 			wait.await;
 		})
@@ -210,7 +210,7 @@ impl<A1: AsyncRuntime<()>, A2: AsyncRuntime<()>> Dispatcher for MultiDispatcher<
 			if c.vec.len() == 0 {
 				return;
 			}
-			let wait = pi_async::prelude::AsyncValue::new();
+			let wait = pi_async_rt::prelude::AsyncValue::new();
 			exec(c, 0, wait.clone());
 			wait.await;
 		})

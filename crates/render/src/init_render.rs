@@ -6,7 +6,7 @@ use bevy::prelude::With;
 use bevy::ecs::world::World;
 use bevy::window::{RawHandleWrapper, PrimaryWindow};
 use log::{debug, warn};
-use pi_async::prelude::{AsyncRuntime, AsyncRuntimeExt};
+use pi_async_rt::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::{
     device::RenderDevice,
     options::{RenderOptions, RenderPriority},

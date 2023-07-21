@@ -1,7 +1,7 @@
 // //!
 // //!  异步队列
 // //!
-// use pi_async::rt::AsyncRuntime;
+// use pi_async_rt::rt::AsyncRuntime;
 // use pi_render::rhi::RenderQueue;
 // use std::{collections::VecDeque, sync::Mutex};
 // use wgpu::CommandBuffer;

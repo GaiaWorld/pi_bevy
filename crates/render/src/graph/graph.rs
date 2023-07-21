@@ -7,7 +7,7 @@ use super::{
 };
 use bevy::ecs::{system::SystemParam, world::World};
 use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE, node::{AsyncTaskQueue, NodeContext, AsyncQueue, TaskQueue}};
-use pi_async::{prelude::{AsyncRuntime, AsyncValueNonBlocking}};
+use pi_async_rt::{prelude::{AsyncRuntime, AsyncValueNonBlocking}};
 use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
@@ -98,8 +98,8 @@ impl RenderGraph {
                 let id = *r.as_ref().unwrap();
                 // 清屏节点 在 所有节点 之前
                 self.add_depend(CLEAR_WIDNOW_NODE, id).unwrap();
-                // 两个以上的节点，清屏节点设置为 非终止节点
-                self.set_finish(CLEAR_WIDNOW_NODE, false).unwrap();
+                // // 两个以上的节点，清屏节点设置为 非终止节点
+                // self.set_finish(CLEAR_WIDNOW_NODE, false).unwrap();
             }
         }
         r

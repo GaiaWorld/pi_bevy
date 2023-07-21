@@ -12,11 +12,12 @@
 members = ["crates/*"]
 resolver = "2"
 
-# [patch."https://github.com/GaiaWorld/pi_post_process"]
-# pi_postprocess = { path = "../pi_post_process" }
+[patch."https://github.com/GaiaWorld/pi_post_process"]
+pi_postprocess = { path = "../pi_post_process" }
 
 # [patch."https://github.com/GaiaWorld/pi_render"]
-# pi_render = { path = "../pi_render_bevy_shader" }
+# pi_render = { path = "../pi_render" }
 
-[patch.crates-io]
+# [patch.crates-io]
+# pi_async_graph = { path = "../pi_async_graph" }
 # pi_map = { path = "../pi_map" }

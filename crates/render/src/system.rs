@@ -5,7 +5,7 @@ use crate::{
     PiScreenTexture,
 };
 use bevy::{ecs::world::World, window::{Window, PrimaryWindow}, prelude::With};
-use pi_async::prelude::*;
+use pi_async_rt::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
 #[cfg(feature = "trace")] 
 use tracing::Instrument;

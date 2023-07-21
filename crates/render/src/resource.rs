@@ -4,7 +4,7 @@ use std::mem::transmute;
 use crate::render_windows::RenderWindow;
 use bevy::prelude::{Deref, DerefMut, FromWorld};
 use bevy::ecs::system::Resource;
-use pi_async::prelude::*;
+use pi_async_rt::prelude::*;
 use pi_render::rhi::buffer_alloc::BufferAlloter;
 use wgpu::BufferUsages;
 

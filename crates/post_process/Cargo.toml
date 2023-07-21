@@ -16,7 +16,7 @@ bevy = {version="0.10", default-features = false}
 pi_postprocess = {git="https://github.com/GaiaWorld/pi_post_process.git"}
 pi_render = {git="https://github.com/GaiaWorld/pi_render.git", branch="bevy_shader"}
 
-pi_assets = "0.12"
+pi_assets = "0.13"
 pi_share = "0.4"
 pi_hash = "0.1"
 

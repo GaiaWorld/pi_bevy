@@ -6,7 +6,7 @@ use bevy::app::{App, Plugin};
 use bevy::ecs::{system::Res};
 use bevy::prelude::{Resource, SystemSet, IntoSystemConfig};
 use pi_assets::asset::GarbageEmpty;
-use pi_async::prelude::*;
+use pi_async_rt::prelude::*;
 use pi_bevy_asset::{ShareAssetMgr, ShareHomogeneousMgr, AssetCapacity, Allocator, AssetMgrConfigs, AssetConfig, AssetDesc};
 use pi_render::renderer::sampler::SamplerRes;
 use pi_render::{
@@ -66,7 +66,7 @@ impl Plugin for PiRenderPlugin {
 
         #[cfg(target_arch = "wasm32")]
         let (rt, runner) = {
-            app.add_system(run_frame_system::<SingleTaskRuntime>.in_set(PiRenderSystemSet).run_if(should_run));
+            app.add_system(run_frame_system::<pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime>.in_set(PiRenderSystemSet).run_if(should_run));
 
             create_single_runtime()
         };
@@ -200,16 +200,16 @@ impl Plugin for PiRenderPlugin {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn create_single_runtime() -> (SingleTaskRuntime, Option<SingleTaskRunner<()>>) {
-    let mut runner = SingleTaskRunner::default();
+fn create_single_runtime() -> (pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime, Option<pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRunner<()>>) {
+    let mut runner = pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRunner::new();
 
-    let runtime = runner.startup().unwrap();
+    let runtime = runner.get_runtime();
 
     (runtime, Some(runner))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn create_multi_runtime() -> (MultiTaskRuntime, Option<SingleTaskRunner<()>>) {
+fn create_multi_runtime() -> (MultiTaskRuntime, Option<pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRunner<()>>) {
     let rt = AsyncRuntimeBuilder::default_multi_thread(Some("pi_bevy_render"), None, None, None);
 
     (rt, None)
