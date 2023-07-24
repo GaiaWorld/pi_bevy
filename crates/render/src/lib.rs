@@ -4,28 +4,6 @@
 //!
 //! pi_render 的 bevy 封装
 //!
-//!
-//! 将 pi_render 封装成 Bevy插件，使用方式 如下
-//!
-//! use bevy_app::App;
-//! use bevy_log::LogPlugin;
-//! use bevy_window::WindowPlugin;
-//! use bevy_winit::WinitPlugin;
-//! use pi_bevy_render_plugin::{ClearOptions, PiClearOptions, PiRenderPlugin};
-//!
-//! fn main() {
-//!    App::new()
-//!        .insert_resource(PiClearOptions(ClearOptions {
-//!            color: wgpu::Color::GREEN,
-//!            ..Default::default()
-//!        }))
-//!        .add_plugin(LogPlugin::default())
-//!        .add_plugin(WindowPlugin::default())
-//!        .add_plugin(WinitPlugin::default())
-//!       .add_plugin(PiRenderPlugin::default())
-//!        .run();
-//! }
-//!
 
 mod async_queue;
 mod clear_node;
@@ -38,11 +16,9 @@ mod system;
 pub mod component;
 pub mod constant;
 
-use bevy::prelude::Resource;
 /// 渲染图
 pub use graph::*;
-use pi_bevy_asset::AssetCapacity;
-use pi_render::{components::view::target_alloc::{ShareTargetView, GetTargetView, TargetView}};
+use pi_render::components::view::target_alloc::{ShareTargetView, GetTargetView, TargetView};
 /// 渲染 插件
 pub use plugin::*;
 use render_derive::NodeParam;

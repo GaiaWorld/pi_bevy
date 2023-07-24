@@ -2,9 +2,9 @@ use crate::{
     graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderOptions, PiRenderQueue,
 };
-use bevy::prelude::With;
 use bevy::ecs::world::World;
-use bevy::window::{RawHandleWrapper, PrimaryWindow};
+use bevy::prelude::With;
+use bevy::window::{PrimaryWindow, RawHandleWrapper};
 use log::{debug, warn};
 use pi_async_rt::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::{
@@ -21,17 +21,17 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     let options = world.resource::<PiRenderOptions>().0.clone();
     // let windows = world.resource_mut::<bevy::prelude::Windows>();
 
-	let mut primary_window = world.query_filtered::<&RawHandleWrapper, With<PrimaryWindow>>();
-	let primary_window_handle = primary_window.single(world).clone();
+    let mut primary_window = world.query_filtered::<&RawHandleWrapper, With<PrimaryWindow>>();
+    let primary_window_handle = primary_window.single(world).clone();
     // options.present_mode = wgpu::PresentMode::Mailbox;
     let mode = options.present_mode;
 
     // let raw_handler = primary_window.get_window_handle();
-        // .get_primary()
-        // .and_then(|window| primary_window.raw_window_handle())
-        // .unwrap();
+    // .get_primary()
+    // .and_then(|window| primary_window.raw_window_handle())
+    // .unwrap();
 
-    init_render_impl(world, rt, &primary_window_handle, options);
+    init_render_impl(world, rt, options);
 
     (primary_window_handle, mode)
 }
@@ -45,18 +45,13 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
 fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
     rt: &A,
-    window: &RawHandleWrapper,
     options: RenderOptions,
 ) {
     let backends = options.backends;
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-		backends,
-		dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
-	});
-    let surface = unsafe {
-        let w = window.get_handle();
-        instance.create_surface(&w).unwrap()
-    };
+        backends,
+        dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
+    });
 
     let SetupResult {
         instance,
@@ -64,7 +59,7 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
         queue,
         adapter_info,
     } = rt
-        .block_on(setup_render_context(instance, surface, options))
+        .block_on(setup_render_context(instance, options))
         .unwrap();
 
     let instance = instance.unwrap();
@@ -91,14 +86,10 @@ struct SetupResult {
 }
 
 /// 初始化 渲染 环境
-async fn setup_render_context(
-    instance: RenderInstance,
-    surface: wgpu::Surface,
-    options: RenderOptions,
-) -> SetupResult {
+async fn setup_render_context(instance: RenderInstance, options: RenderOptions) -> SetupResult {
     let request_adapter_options = wgpu::RequestAdapterOptions {
         power_preference: options.power_preference,
-        compatible_surface: Some(&surface),
+        compatible_surface: None,
         ..Default::default()
     };
     let (device, queue, adapter_info) =
@@ -255,7 +246,7 @@ async fn initialize_renderer(
             max_buffer_size: limits
                 .max_buffer_size
                 .min(constrained_limits.max_buffer_size),
-			max_bindings_per_bind_group: limits
+            max_bindings_per_bind_group: limits
                 .max_bindings_per_bind_group
                 .min(constrained_limits.max_bindings_per_bind_group),
         };
