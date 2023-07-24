@@ -6,6 +6,7 @@
 pub mod graph;
 pub mod node;
 pub mod param;
+pub(crate) mod state_pool;
 
 use pi_render::rhi::{device::RenderDevice, RenderQueue};
 

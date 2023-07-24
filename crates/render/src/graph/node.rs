@@ -4,6 +4,8 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
+use crate::state_pool::SystemStatePool;
+
 use super::{
     param::{InParam, OutParam},
     RenderContext,
@@ -13,7 +15,7 @@ use bevy::ecs::{
     world::World,
 };
 use bevy::prelude::{Deref, DerefMut};
-use pi_async_rt::prelude::{AsyncRuntime};
+use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
@@ -68,6 +70,7 @@ where
     P: SystemParam + 'static,
 {
     node: R,
+    state_pool: SystemStatePool,
     state: Option<SystemState<P>>,
     context: RenderContext,
 }
@@ -80,10 +83,11 @@ where
     P: SystemParam + 'static,
 {
     #[inline]
-    pub(crate) fn new(node: R, context: RenderContext) -> Self {
+    pub(crate) fn new(node: R, context: RenderContext, state_pool: SystemStatePool) -> Self {
         Self {
             node,
             context,
+            state_pool,
             state: None,
         }
     }
@@ -101,6 +105,21 @@ impl NodeContext {
 
     pub fn world(&self) -> &World {
         &*self.world
+    }
+}
+
+impl<I, O, R, P> Drop for NodeImpl<I, O, R, P>
+where
+    I: InParam + Default,
+    O: OutParam + Default + Clone,
+    R: Node<Param = P, Input = I, Output = O>,
+    P: SystemParam + 'static,
+{
+    fn drop(&mut self) {
+        // 将 state 拿出来，扔到 state_pool 中
+        if let Some(state) = self.state.take() {
+            self.state_pool.set(state);
+        }
     }
 }
 
@@ -123,7 +142,11 @@ where
         if self.state.is_none() {
             let w_ptr = context.world() as *const World as usize;
             let world = unsafe { std::mem::transmute(w_ptr) };
-            self.state = Some(SystemState::new(world));
+
+            self.state = self.state_pool.get();
+            if self.state.is_none() {
+                self.state = Some(SystemState::new(world));
+            }
         }
 
         self.node.build(
@@ -191,13 +214,13 @@ pub trait AsyncQueue: Send + Sync + 'static {
 
 #[derive(Clone)]
 pub struct AsyncTaskQueue<A: AsyncRuntime> {
-	pub queue: TaskQueue,
-	pub is_runing: Share<AtomicBool>,
-	pub rt: A
+    pub queue: TaskQueue,
+    pub is_runing: Share<AtomicBool>,
+    pub rt: A,
 }
 
 #[derive(Clone, Deref, DerefMut)]
-pub struct TaskQueue (pub Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>);
+pub struct TaskQueue(pub Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>);
 
 // 强制实现send和sync， 否则wasm上不能运行 TODO
 unsafe impl Send for TaskQueue {}
@@ -207,11 +230,7 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
     // 扔任务 到 异步库
     fn push(&self, task: BoxFuture<'static, ()>) {
         // 依次 处理 队列
-        fn run<A: AsyncRuntime>(
-            queue: TaskQueue,
-            rt: A,
-            is_runing: Share<AtomicBool>,
-        ) {
+        fn run<A: AsyncRuntime>(queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
             let t = queue.0.lock().pop_front();
 
             if let Some(task) = t {

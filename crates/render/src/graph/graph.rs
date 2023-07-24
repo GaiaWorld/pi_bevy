@@ -5,9 +5,14 @@ use super::{
     param::{InParam, OutParam},
     GraphError, RenderContext,
 };
+use crate::{
+    clear_node::ClearNode,
+    node::{AsyncQueue, AsyncTaskQueue, NodeContext, TaskQueue},
+    state_pool::SystemStatePool,
+    CLEAR_WIDNOW_NODE,
+};
 use bevy::ecs::{system::SystemParam, world::World};
-use crate::{clear_node::ClearNode, CLEAR_WIDNOW_NODE, node::{AsyncTaskQueue, NodeContext, AsyncQueue, TaskQueue}};
-use pi_async_rt::{prelude::{AsyncRuntime, AsyncValueNonBlocking}};
+use pi_async_rt::prelude::{AsyncRuntime, AsyncValueNonBlocking};
 use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
@@ -19,6 +24,8 @@ pub struct RenderGraph {
     device: RenderDevice,
     queue: RenderQueue,
 
+    state_pool: SystemStatePool,
+
     node_count: u32,
 
     imp: DependGraph<NodeContext>,
@@ -28,7 +35,6 @@ pub struct RenderGraph {
 
 /// 渲染图的 拓扑信息 相关 方法
 impl RenderGraph {
-
     /// + Debug 模式
     ///     - windwos 非 wasm32 平台，运行目录 生成 dump_graphviz.dot
     ///     - 其他 平台，返回 字符串
@@ -36,16 +42,16 @@ impl RenderGraph {
     pub fn dump_graphviz(&self) -> String {
         self.imp.dump_graphviz()
     }
-    
+
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
-
         let mut graph = Self {
             device,
             queue,
             node_count: 0,
             imp: Default::default(),
+            state_pool: SystemStatePool::default(),
             async_submit_queue: TaskQueue(Share::new(ShareMutex::new(VecDeque::new()))),
         };
 
@@ -88,12 +94,12 @@ impl RenderGraph {
             queue: self.queue.clone(),
         };
 
-        let node = NodeImpl::<I, O, R, P>::new(node, context);
+        let node = NodeImpl::<I, O, R, P>::new(node, context, self.state_pool.clone());
         let r = self.imp.add_node(name, node);
 
         if r.is_ok() {
             self.node_count += 1;
-			
+
             if self.node_count > 1 {
                 let id = *r.as_ref().unwrap();
                 // 清屏节点 在 所有节点 之前
@@ -164,23 +170,28 @@ impl RenderGraph {
         rt: &'a A,
         world: &'static World,
     ) -> Result<(), GraphError> {
-		let async_submit_queue = self.async_submit_queue.clone();
-		let task_queue = AsyncTaskQueue {
-			queue: async_submit_queue,
-			is_runing: Share::new(AtomicBool::new(false)),
-			rt: rt.clone(),
-		};
-		let context = NodeContext::new(world, Box::new(task_queue.clone()));
-        let ret = self.imp.run(rt, unsafe { transmute::<_, &'static NodeContext>(&context) }).await;
-		
+        let async_submit_queue = self.async_submit_queue.clone();
+        let task_queue = AsyncTaskQueue {
+            queue: async_submit_queue,
+            is_runing: Share::new(AtomicBool::new(false)),
+            rt: rt.clone(),
+        };
+        let context = NodeContext::new(world, Box::new(task_queue.clone()));
+        let ret = self
+            .imp
+            .run(rt, unsafe {
+                transmute::<_, &'static NodeContext>(&context)
+            })
+            .await;
+
         // 用 异步值 等待 队列的 提交 全部完成
-		let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
-		let wait1 = wait.clone();
-		task_queue.push(Box::pin(async move {
-			wait1.set(());
-		}));
+        let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
+        let wait1 = wait.clone();
+        task_queue.push(Box::pin(async move {
+            wait1.set(());
+        }));
         wait.await;
 
-		ret
+        ret
     }
 }
