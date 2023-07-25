@@ -4,7 +4,6 @@ use pi_render::rhi::{
     texture::{PiRenderDefault, ScreenTexture},
     PresentMode, RenderInstance,
 };
-use pi_share::Share;
 use wgpu::{Surface, TextureFormat};
 
 pub struct RenderWindow {
@@ -44,8 +43,6 @@ pub fn prepare_window(
         } else {
             first_surface.unwrap()
         };
-
-        let surface = Share::new(surface);
 
         *view = Some(ScreenTexture::with_surface(surface));
     }
