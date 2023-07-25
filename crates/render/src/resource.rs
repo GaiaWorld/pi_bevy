@@ -1,6 +1,3 @@
-use std::marker::PhantomData;
-use std::mem::transmute;
-
 use crate::render_windows::RenderWindow;
 use bevy::prelude::{Deref, DerefMut, FromWorld};
 use bevy::ecs::system::Resource;

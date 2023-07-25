@@ -23,15 +23,9 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
 
     let mut primary_window = world.query_filtered::<&RawHandleWrapper, With<PrimaryWindow>>();
     let primary_window_handle = primary_window.single(world).clone();
-    // options.present_mode = wgpu::PresentMode::Mailbox;
     let mode = options.present_mode;
 
-    // let raw_handler = primary_window.get_window_handle();
-    // .get_primary()
-    // .and_then(|window| primary_window.raw_window_handle())
-    // .unwrap();
-
-    init_render_impl(world, rt, options);
+    init_render_impl(world, rt, &primary_window_handle, options);
 
     (primary_window_handle, mode)
 }
@@ -45,6 +39,7 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
 fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
     rt: &A,
+    window: &RawHandleWrapper,
     options: RenderOptions,
 ) {
     let backends = options.backends;
@@ -53,13 +48,21 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
         dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
     });
 
+    #[cfg(target_arch = "wasm32")]
+    let surface = Some(unsafe {
+        let w = window.get_handle();
+        instance.create_surface(&w).unwrap()
+    });
+    #[cfg(not(target_arch = "wasm32"))]
+    let surface = None;
+
     let SetupResult {
         instance,
         device,
         queue,
         adapter_info,
     } = rt
-        .block_on(setup_render_context(instance, options))
+        .block_on(setup_render_context(instance, surface, options))
         .unwrap();
 
     let instance = instance.unwrap();
@@ -86,10 +89,14 @@ struct SetupResult {
 }
 
 /// 初始化 渲染 环境
-async fn setup_render_context(instance: RenderInstance, options: RenderOptions) -> SetupResult {
+async fn setup_render_context(
+    instance: RenderInstance,
+    surface: Option<wgpu::Surface>,
+    options: RenderOptions,
+) -> SetupResult {
     let request_adapter_options = wgpu::RequestAdapterOptions {
         power_preference: options.power_preference,
-        compatible_surface: None,
+        compatible_surface: surface.as_ref(),
         ..Default::default()
     };
     let (device, queue, adapter_info) =
