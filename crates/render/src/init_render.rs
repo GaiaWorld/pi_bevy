@@ -1,3 +1,4 @@
+use crate::PiFirstSurface;
 use crate::{
     graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderOptions, PiRenderQueue,
@@ -48,15 +49,20 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
         dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
     });
 
-    #[cfg(target_arch = "wasm32")]
-    let surface = Some(unsafe {
+    let surface = unsafe {
         let w = window.get_handle();
-        instance.create_surface(&w).unwrap()
-    });
-    #[cfg(not(target_arch = "wasm32"))]
-    let surface = None;
+
+        match instance.create_surface(&w) {
+            Ok(s) => s,
+            Err(e) => {
+                log::error!("create surface failed: {:?}", e);
+                panic!("create surface failed: {:?}", e);
+            }
+        }
+    };
 
     let SetupResult {
+        surface,
         instance,
         device,
         queue,
@@ -73,6 +79,7 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     let rg = RenderGraph::new(device.clone(), queue.clone());
 
     // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
+    world.insert_resource(PiFirstSurface(surface));
     world.insert_resource(PiRenderGraph(rg));
     world.insert_resource(PiRenderInstance(instance));
     world.insert_resource(PiRenderDevice(device));
@@ -82,6 +89,7 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
 
 #[derive(Default)]
 struct SetupResult {
+    pub surface: Option<wgpu::Surface>,
     pub instance: Option<RenderInstance>,
     pub device: Option<RenderDevice>,
     pub queue: Option<RenderQueue>,
@@ -91,12 +99,12 @@ struct SetupResult {
 /// 初始化 渲染 环境
 async fn setup_render_context(
     instance: RenderInstance,
-    surface: Option<wgpu::Surface>,
+    surface: wgpu::Surface,
     options: RenderOptions,
 ) -> SetupResult {
     let request_adapter_options = wgpu::RequestAdapterOptions {
         power_preference: options.power_preference,
-        compatible_surface: surface.as_ref(),
+        compatible_surface: Some(&surface),
         ..Default::default()
     };
     let (device, queue, adapter_info) =
@@ -106,6 +114,7 @@ async fn setup_render_context(
     debug!("Configured wgpu adapter Features: {:#?}", device.features());
 
     SetupResult {
+        surface: Some(surface),
         instance: Some(instance),
         device: Some(device),
         queue: Some(queue),

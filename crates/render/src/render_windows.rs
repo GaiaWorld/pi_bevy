@@ -5,7 +5,7 @@ use pi_render::rhi::{
     PresentMode, RenderInstance,
 };
 use pi_share::Share;
-use wgpu::TextureFormat;
+use wgpu::{Surface, TextureFormat};
 
 pub struct RenderWindow {
     pub width: u32,
@@ -27,6 +27,7 @@ impl RenderWindow {
 
 pub fn prepare_window(
     window: &mut RenderWindow,
+    first_surface: Option<Surface>, // 用于衔接 初始化的surface 和 这里的代码
     view: &mut Option<ScreenTexture>,
     device: &RenderDevice,
     instance: &RenderInstance,
@@ -35,9 +36,13 @@ pub fn prepare_window(
 ) -> std::io::Result<()> {
     let is_first = view.is_none();
     if is_first {
-        let surface = unsafe {
-            let handle = window.handle.get_handle();
-            instance.create_surface(&handle).unwrap()
+        let surface = if first_surface.is_none() {
+            log::info!("prepare_window, first_surface is none, create new surface");
+
+            let handle = unsafe { window.handle.get_handle() };
+            unsafe { instance.create_surface(&handle).unwrap() }
+        } else {
+            first_surface.unwrap()
         };
 
         let surface = Share::new(surface);

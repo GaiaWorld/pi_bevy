@@ -84,6 +84,10 @@ pub struct PiScreenTexture(pub Option<pi_render::rhi::texture::ScreenTexture>);
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct PiClearOptions(pub ClearOptions);
 
+/// 用于处理 初始化 的Surface 和 prepare_windows 的 关系
+#[derive(Resource, Deref, DerefMut)]
+pub(crate) struct PiFirstSurface(pub(crate) Option<wgpu::Surface>);
+
 #[derive(Clone)]
 pub struct ClearOptions {
     pub color: wgpu::Color,

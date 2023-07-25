@@ -1,13 +1,17 @@
 use crate::{
     graph::graph::RenderGraph,
     render_windows::{prepare_window, RenderWindow},
-    PiAsyncRuntime, PiRenderDevice, PiRenderGraph, PiRenderInstance, PiRenderWindow,
-    PiScreenTexture,
+    PiAsyncRuntime, PiFirstSurface, PiRenderDevice, PiRenderGraph, PiRenderInstance,
+    PiRenderWindow, PiScreenTexture,
 };
-use bevy::{ecs::world::World, window::{Window, PrimaryWindow}, prelude::With};
+use bevy::{
+    ecs::world::World,
+    prelude::With,
+    window::{PrimaryWindow, Window},
+};
 use pi_async_rt::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
-#[cfg(feature = "trace")] 
+#[cfg(feature = "trace")]
 use tracing::Instrument;
 
 /// ================ System ================
@@ -19,15 +23,23 @@ use tracing::Instrument;
 //   + 否则 是 MultiTaskRuntime
 //
 pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World) {
-	let mut primary_window = world.query_filtered::<&Window, With<PrimaryWindow>>();
+    let mut primary_window = world.query_filtered::<&Window, With<PrimaryWindow>>();
 
     let (width, height) = match primary_window.get_single(world) {
-        Ok(primary_window) => (primary_window.physical_width(), primary_window.physical_height()),
-	 	_ => return,
+        Ok(primary_window) => (
+            primary_window.physical_width(),
+            primary_window.physical_height(),
+        ),
+        _ => return,
     };
-	
+
     // 从 world 取 res
     let ptr_world = world as *mut World as usize;
+
+    let first_surface = {
+        let w = unsafe { &mut *(ptr_world as *mut World) };
+        w.resource_mut::<PiFirstSurface>().0.take()
+    };
 
     let world: &'static World = unsafe { std::mem::transmute(world) };
     let rt = &world.resource::<PiAsyncRuntime<A>>().0;
@@ -72,7 +84,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     #[cfg(not(feature = "trace"))]
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
-        prepare_window(window, view, device, instance, width, height).unwrap();
+        prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
 
         // ============ 2. 执行渲染图 ============
         rg.build().unwrap();
@@ -85,7 +97,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
         async {
-            prepare_window(window, view, device, instance, width, height).unwrap();
+            prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
         }
         .instrument(prepare_window_span)
         .await;
