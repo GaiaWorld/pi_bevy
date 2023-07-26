@@ -9,7 +9,7 @@ use crate::{
     clear_node::ClearNode,
     node::{AsyncQueue, AsyncTaskQueue, NodeContext, TaskQueue},
     state_pool::SystemStatePool,
-    CLEAR_WIDNOW_NODE,
+    CmdBuffers, CLEAR_WIDNOW_NODE,
 };
 use bevy::ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::{AsyncRuntime, AsyncValueNonBlocking};
@@ -23,6 +23,7 @@ use std::{borrow::Cow, collections::VecDeque, mem::transmute, sync::atomic::Atom
 pub struct RenderGraph {
     device: RenderDevice,
     queue: RenderQueue,
+    webgl_cmd_buffers: CmdBuffers,
 
     state_pool: SystemStatePool,
 
@@ -49,6 +50,8 @@ impl RenderGraph {
         let mut graph = Self {
             device,
             queue,
+            webgl_cmd_buffers: CmdBuffers::default(),
+
             node_count: 0,
             imp: Default::default(),
             state_pool: SystemStatePool::default(),
@@ -92,6 +95,7 @@ impl RenderGraph {
         let context = RenderContext {
             device: self.device.clone(),
             queue: self.queue.clone(),
+            webgl_cmd_buffers: self.webgl_cmd_buffers.clone(),
         };
 
         let node = NodeImpl::<I, O, R, P>::new(node, context, self.state_pool.clone());
@@ -171,11 +175,14 @@ impl RenderGraph {
         world: &'static World,
     ) -> Result<(), GraphError> {
         let async_submit_queue = self.async_submit_queue.clone();
+
         let task_queue = AsyncTaskQueue {
             queue: async_submit_queue,
             is_runing: Share::new(AtomicBool::new(false)),
             rt: rt.clone(),
         };
+
+        // 运行 渲染图
         let context = NodeContext::new(world, Box::new(task_queue.clone()));
         let ret = self
             .imp
@@ -185,12 +192,21 @@ impl RenderGraph {
             .await;
 
         // 用 异步值 等待 队列的 提交 全部完成
-        let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
-        let wait1 = wait.clone();
-        task_queue.push(Box::pin(async move {
-            wait1.set(());
-        }));
-        wait.await;
+        #[cfg(not(feature = "webgl"))]
+        {
+            let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
+            let wait1 = wait.clone();
+            task_queue.push(Box::pin(async move {
+                wait1.set(());
+            }));
+            wait.await;
+        }
+
+        #[cfg(feature = "webgl")]
+        {
+            let cmds = webgl_cmd_buffers.replace_with_new_buffer();
+            self.queue.submit(cmds);
+        }
 
         ret
     }

@@ -182,8 +182,10 @@ where
                 input,
                 usage,
             );
+
             #[cfg(feature = "trace")]
             let output = output.instrument(tracing::info_span!("GraphNode run"));
+
             let output = output.await.unwrap();
 
             // CommandEncoder --> CommandBuffer
@@ -193,13 +195,20 @@ where
             // CommandBuffer --> Queue
             let queue = self.context.queue.clone();
 
-            let submit_task = async move {
-                queue.submit(vec![commands.finish()]);
-            };
-            #[cfg(feature = "trace")]
-            let submit_task = submit_task.instrument(tracing::info_span!("submite"));
+            #[cfg(not(feature = "webgl"))]
+            {
+                let submit_task = async move {
+                    queue.submit(vec![commands.finish()]);
+                };
 
-            c.async_tasks.push(Box::pin(submit_task));
+                #[cfg(feature = "trace")]
+                let submit_task = submit_task.instrument(tracing::info_span!("submite"));
+
+                c.async_tasks.push(Box::pin(submit_task));
+            }
+
+            #[cfg(feature = "webgl")]
+            self.context.webgl_cmd_buffers.push(commands.finish());
 
             Ok(output)
         };

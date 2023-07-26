@@ -89,6 +89,8 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         // ============ 2. 执行渲染图 ============
         rg.build().unwrap();
         rg.run(&rt_clone, world).await.unwrap();
+        
+        // ============ 3. 呈现 ============
         if let Some(view) = view.as_mut().unwrap().take_surface_texture() {
             view.present();
         }
@@ -113,7 +115,8 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
             .instrument(rg_run_span)
             .await
             .unwrap();
-
+        
+        // ============ 3. 呈现 ============
         let view = async move { view.as_mut().unwrap().take_surface_texture() }
             .instrument(take_texture_span)
             .await;
