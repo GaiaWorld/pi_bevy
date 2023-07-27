@@ -166,13 +166,21 @@ where
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let context = self.context.clone();
         let task = async move {
-            // 每节点 一个 CommandEncoder
-            let commands = self
-                .context
-                .device
-                .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+            #[cfg(not(feature = "webgl"))]
+            let commands = {
+                // 每节点 一个 CommandEncoder
+                let commands = self
+                    .context
+                    .device
+                    .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
-            let commands = ShareRefCell::new(commands);
+                let commands = ShareRefCell::new(commands);
+
+                commands
+            };
+
+            #[cfg(feature = "webgl")]
+            let commands = self.context.commands.as_ref().clone();
 
             let output = self.node.run(
                 c.world(),
@@ -188,15 +196,15 @@ where
 
             let output = output.await.unwrap();
 
-            // CommandEncoder --> CommandBuffer
-            let commands = Share::try_unwrap(commands.0).unwrap();
-            let commands = commands.into_inner();
-
-            // CommandBuffer --> Queue
-            let queue = self.context.queue.clone();
-
             #[cfg(not(feature = "webgl"))]
             {
+                // CommandEncoder --> CommandBuffer
+                let commands = Share::try_unwrap(commands.0).unwrap();
+                let commands = commands.into_inner();
+
+                // CommandBuffer --> Queue
+                let queue = self.context.queue.clone();
+
                 let submit_task = async move {
                     queue.submit(vec![commands.finish()]);
                 };
@@ -206,9 +214,6 @@ where
 
                 c.async_tasks.push(Box::pin(submit_task));
             }
-
-            #[cfg(feature = "webgl")]
-            self.context.webgl_cmd_buffers.push(commands.finish());
 
             Ok(output)
         };

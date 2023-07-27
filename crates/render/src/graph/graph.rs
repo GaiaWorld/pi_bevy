@@ -9,7 +9,7 @@ use crate::{
     clear_node::ClearNode,
     node::{AsyncQueue, AsyncTaskQueue, NodeContext, TaskQueue},
     state_pool::SystemStatePool,
-    CmdBuffers, CLEAR_WIDNOW_NODE,
+    CLEAR_WIDNOW_NODE,
 };
 use bevy::ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::{AsyncRuntime, AsyncValueNonBlocking};
@@ -17,13 +17,13 @@ use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
 };
-use pi_share::{Share, ShareMutex};
+use pi_share::{Share, ShareCell, ShareMutex};
 use std::{borrow::Cow, collections::VecDeque, mem::transmute, sync::atomic::AtomicBool};
 /// 渲染图
 pub struct RenderGraph {
     device: RenderDevice,
     queue: RenderQueue,
-    webgl_cmd_buffers: CmdBuffers,
+    commands: Option<Share<ShareCell<wgpu::CommandBuffer>>>,
 
     state_pool: SystemStatePool,
 
@@ -47,10 +47,22 @@ impl RenderGraph {
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
+        #[cfg(not(feature = "webgl"))]
+        let commands = None;
+
+        #[cfg(feature = "webgl")]
+        let commands = {
+            let c = self
+                .device
+                .create_command_buffer(&wgpu::CommandEncoderDescriptor::default());
+
+            Some(Share::new(ShareCell::new(c)))
+        };
+
         let mut graph = Self {
             device,
             queue,
-            webgl_cmd_buffers: CmdBuffers::default(),
+            commands,
 
             node_count: 0,
             imp: Default::default(),
@@ -95,7 +107,7 @@ impl RenderGraph {
         let context = RenderContext {
             device: self.device.clone(),
             queue: self.queue.clone(),
-            webgl_cmd_buffers: self.webgl_cmd_buffers.clone(),
+            commands: self.commands.clone(),
         };
 
         let node = NodeImpl::<I, O, R, P>::new(node, context, self.state_pool.clone());
@@ -204,8 +216,8 @@ impl RenderGraph {
 
         #[cfg(feature = "webgl")]
         {
-            let cmds = webgl_cmd_buffers.replace_with_new_buffer();
-            self.queue.submit(cmds);
+            let cmd = self.commands.take().unwrap().into_inner();
+            self.queue.submit(vec![cmd]);
         }
 
         ret
