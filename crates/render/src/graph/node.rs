@@ -166,7 +166,7 @@ where
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let context = self.context.clone();
         let task = async move {
-            #[cfg(not(feature = "webgl"))]
+            #[cfg(not(feature = "pi_render/webgl"))]
             let commands = {
                 // 每节点 一个 CommandEncoder
                 let commands = self
@@ -179,7 +179,7 @@ where
                 commands
             };
 
-            #[cfg(feature = "webgl")]
+            #[cfg(feature = "pi_render/webgl")]
             let commands = self.context.commands.as_ref().clone();
 
             let output = self.node.run(
@@ -196,7 +196,7 @@ where
 
             let output = output.await.unwrap();
 
-            #[cfg(not(feature = "webgl"))]
+            #[cfg(not(feature = "pi_render/webgl"))]
             {
                 // CommandEncoder --> CommandBuffer
                 let commands = Share::try_unwrap(commands.0).unwrap();

@@ -47,10 +47,10 @@ impl RenderGraph {
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
-        #[cfg(not(feature = "webgl"))]
+        #[cfg(not(feature = "pi_render/webgl"))]
         let commands = None;
 
-        #[cfg(feature = "webgl")]
+        #[cfg(feature = "pi_render/webgl")]
         let commands = {
             let c = self
                 .device
@@ -204,7 +204,7 @@ impl RenderGraph {
             .await;
 
         // 用 异步值 等待 队列的 提交 全部完成
-        #[cfg(not(feature = "webgl"))]
+        #[cfg(not(feature = "pi_render/webgl"))]
         {
             let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
             let wait1 = wait.clone();
@@ -214,7 +214,7 @@ impl RenderGraph {
             wait.await;
         }
 
-        #[cfg(feature = "webgl")]
+        #[cfg(feature = "pi_render/webgl")]
         {
             let cmd = self.commands.take().unwrap().into_inner();
             self.queue.submit(vec![cmd]);
