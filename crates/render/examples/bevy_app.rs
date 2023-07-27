@@ -1,39 +1,48 @@
-use bevy::{
-    app::App,
-    window::{Window, WindowResolution},
-    winit::WinitPlugin,
-};
-use pi_bevy_asset::{PiAssetPlugin, AssetConfig};
+use std::sync::Arc;
+
+use bevy::app::App;
+use pi_bevy_asset::{AssetConfig, PiAssetPlugin};
 use pi_bevy_render_plugin::{ClearOptions, PiClearOptions, PiRenderPlugin};
+use pi_bevy_winit_window::WinitPlugin;
 
 pub const FILTER: &'static str = "wgpu=warn";
 
 fn main() {
     let mut app = App::default();
 
-    let mut window = Window::default();
-    window.resolution = WindowResolution::new(1024.0, 768.0);
+    let event_loop = winit::event_loop::EventLoop::new();
 
-    let mut window_plugin = bevy::window::WindowPlugin::default();
-    window_plugin.primary_window = Some(window);
+    let window = winit::window::Window::new(&event_loop).unwrap();
 
-    app.add_plugin(bevy::log::LogPlugin {
-        filter: FILTER.to_string(),
-        level: bevy::log::Level::INFO,
-    })
+    app
+    .add_plugin(WinitPlugin::new(Arc::new(window)))
     .insert_resource(PiClearOptions(ClearOptions {
         color: wgpu::Color::GREEN,
         ..Default::default()
     }))
     .add_plugin(bevy::a11y::AccessibilityPlugin)
     .add_plugin(bevy::input::InputPlugin::default())
-    .add_plugin(window_plugin)
-    .add_plugin(WinitPlugin::default())
     .add_plugin(PiAssetPlugin {
-        total_capacity: 1024 * 1024 * 1024,
+        total_capacity: 256 * 1024 * 1024,
         asset_config: AssetConfig::default(),
     })
     .add_plugin(PiRenderPlugin::default());
 
-    app.run();
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = winit::event_loop::ControlFlow::Poll;
+
+        match event {
+            winit::event::Event::MainEventsCleared => {
+                app.update();
+            }
+            winit::event::Event::WindowEvent { event, .. } => match event {
+                winit::event::WindowEvent::CloseRequested => {
+                    *control_flow = winit::event_loop::ControlFlow::Exit;
+                }
+                _ => (),
+            },
+            _ => (),
+        }
+    });
+
 }

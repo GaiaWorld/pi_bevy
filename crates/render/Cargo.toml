@@ -13,14 +13,14 @@ keywords = ["pi", "bevy", "plugin"]
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 # bevy_window = "0.9"
-bevy = {version="0.10", default-features = false}
+bevy = { version = "0.10", default-features = false }
 raw-window-handle = "0.5"
 
 log = "0.4"
 thiserror = "1.0"
 wgpu = { version = "0.15", default-features = false, features = ["glsl"] }
-crossbeam="0.8"
-futures="0.3"
+crossbeam = "0.8"
+futures = "0.3"
 
 half = "=2.2.1"
 pi_hash = "0.1"
@@ -34,9 +34,7 @@ pi_assets = "0.13"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 
 js-sys = "0.3"
-web-sys = {version="0.3", features = [
-	"HtmlCanvasElement"
-]}
+web-sys = { version = "0.3", features = ["HtmlCanvasElement"] }
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 wasm-bindgen-futures = { version = "0.4" }
 lazy_static = "1.4"
@@ -45,4 +43,6 @@ lazy_static = "1.4"
 trace = []
 
 [dev-dependencies]
-bevy = {version="0.10", default-features = false, features=["bevy_winit"]}
+bevy = { version = "0.10", default-features = false, features = ["bevy_winit"] }
+winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
+pi_bevy_winit_window = { path = "../winit_window" }
