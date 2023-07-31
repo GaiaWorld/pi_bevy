@@ -1,5 +1,6 @@
 #![feature(adt_const_params)]
 #![feature(trivial_bounds)]
+#![feature(arc_into_inner)]
 
 //!
 //! pi_render 的 bevy 封装

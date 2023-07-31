@@ -17,13 +17,13 @@ use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
 };
-use pi_share::{Share, ShareCell, ShareMutex};
-use std::{borrow::Cow, collections::VecDeque, mem::transmute, sync::atomic::AtomicBool};
+use pi_share::{Share, ShareCell, ShareMutex, ShareRefCell};
+use std::{borrow::{Cow, Borrow}, collections::VecDeque, mem::{transmute, replace}, sync::atomic::AtomicBool};
 /// 渲染图
 pub struct RenderGraph {
     device: RenderDevice,
     queue: RenderQueue,
-    commands: Option<Share<ShareCell<wgpu::CommandBuffer>>>,
+    commands: ShareRefCell<Option<ShareRefCell<wgpu::CommandEncoder>>>,
 
     state_pool: SystemStatePool,
 
@@ -47,22 +47,10 @@ impl RenderGraph {
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
-        #[cfg(not(feature = "pi_render/webgl"))]
-        let commands = None;
-
-        #[cfg(feature = "pi_render/webgl")]
-        let commands = {
-            let c = self
-                .device
-                .create_command_buffer(&wgpu::CommandEncoderDescriptor::default());
-
-            Some(Share::new(ShareCell::new(c)))
-        };
-
         let mut graph = Self {
             device,
             queue,
-            commands,
+            commands: ShareRefCell::new(None),
 
             node_count: 0,
             imp: Default::default(),
@@ -194,6 +182,15 @@ impl RenderGraph {
             rt: rt.clone(),
         };
 
+		#[cfg(feature = "webgl")]
+		{
+			let commands = {
+				let c = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+				Some(ShareRefCell::new(c))
+			};
+			*self.commands.0.borrow_mut() = commands;
+		}
+
         // 运行 渲染图
         let context = NodeContext::new(world, Box::new(task_queue.clone()));
         let ret = self
@@ -204,7 +201,7 @@ impl RenderGraph {
             .await;
 
         // 用 异步值 等待 队列的 提交 全部完成
-        #[cfg(not(feature = "pi_render/webgl"))]
+        #[cfg(not(feature = "webgl"))]
         {
             let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
             let wait1 = wait.clone();
@@ -214,10 +211,12 @@ impl RenderGraph {
             wait.await;
         }
 
-        #[cfg(feature = "pi_render/webgl")]
+        #[cfg(feature = "webgl")]
         {
-            let cmd = self.commands.take().unwrap().into_inner();
-            self.queue.submit(vec![cmd]);
+            let mut cmd_ref = self.commands.0.borrow_mut();
+			let r = replace(&mut *cmd_ref, None);
+			let cmd = Share::into_inner(r.unwrap().0).unwrap().into_inner();
+            self.queue.submit(vec![cmd.finish()]);
         }
 
         ret

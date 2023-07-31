@@ -41,6 +41,7 @@ lazy_static = "1.4"
 
 [features]
 trace = []
+webgl = ["pi_render/webgl"]
 
 [dev-dependencies]
 bevy = { version = "0.10", default-features = false, features = ["bevy_winit"] }

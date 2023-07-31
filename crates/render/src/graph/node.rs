@@ -1,7 +1,7 @@
 //! 利用 DependGraph 实现 渲染图
 use std::{
     collections::VecDeque,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool, Ordering}, borrow::Borrow,
 };
 
 use crate::state_pool::SystemStatePool;
@@ -166,7 +166,7 @@ where
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let context = self.context.clone();
         let task = async move {
-            #[cfg(not(feature = "pi_render/webgl"))]
+            #[cfg(not(feature = "webgl"))]
             let commands = {
                 // 每节点 一个 CommandEncoder
                 let commands = self
@@ -179,8 +179,8 @@ where
                 commands
             };
 
-            #[cfg(feature = "pi_render/webgl")]
-            let commands = self.context.commands.as_ref().clone();
+            #[cfg(feature = "webgl")]
+            let commands = self.context.commands.borrow().as_ref().unwrap().clone();
 
             let output = self.node.run(
                 c.world(),
@@ -196,7 +196,7 @@ where
 
             let output = output.await.unwrap();
 
-            #[cfg(not(feature = "pi_render/webgl"))]
+            #[cfg(not(feature = "webgl"))]
             {
                 // CommandEncoder --> CommandBuffer
                 let commands = Share::try_unwrap(commands.0).unwrap();

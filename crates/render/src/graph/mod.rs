@@ -14,7 +14,7 @@ use pi_render::rhi::{device::RenderDevice, RenderQueue};
 pub use pi_render::depend_graph::GraphError;
 
 pub use node::{NodeId, NodeLabel};
-use pi_share::{Share, ShareCell};
+use pi_share::ShareRefCell;
 
 /// 渲染图 执行过程需要的环境
 #[derive(Clone)]
@@ -26,5 +26,5 @@ pub struct RenderContext {
     pub queue: RenderQueue,
 
     /// webgl 环境下 使用
-    commands: Option<Share<ShareCell<wgpu::CommandBuffer>>>,
+    commands: ShareRefCell<Option<ShareRefCell<wgpu::CommandEncoder>>>,
 }
