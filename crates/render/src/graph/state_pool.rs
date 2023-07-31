@@ -1,32 +1,35 @@
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
-    sync::Arc,
 };
 
-use pi_share::{Share, ShareCell};
+use pi_share::{Share, ShareMutex};
 
 /// 目的: 提升性能
 /// 系统状态池，用于存放 渲染节点的 SystemState
 /// 好处是 创建相同 struct 的 SystemState 时候，可以从缓存中获取，而不是每次都创建
 /// TODO: 目前不考虑 释放问题，假设不会太多，待之后实验决定要不要管理；
 #[derive(Default)]
-pub struct SystemStatePool(Share<ShareCell<SystemStatePoolImpl>>);
+pub struct SystemStatePool {
+    data: Share<ShareMutex<SystemStatePoolImpl>>,
+}
 
 impl Clone for SystemStatePool {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self {
+            data: self.data.clone(),
+        }
     }
 }
 
 impl SystemStatePool {
     pub fn set<T: 'static + Send + Sync>(&mut self, state: T) {
-        self.0.borrow_mut().set(state);
+        self.data.lock().set(state);
     }
 
     /// 从缓存中获取，如果没有，则返回 None
     pub fn get<T: 'static + Send + Sync>(&mut self) -> Option<T> {
-        let r = self.0.borrow_mut().get();
+        let r = self.data.lock().get();
 
         log::debug!(
             "SystemStatePool::get, type: {:?}, is_some: {}",
@@ -87,7 +90,6 @@ fn test_system_state_pool() {
     let a = state.unwrap();
     assert_eq!(a.a, 1);
     assert_eq!(a.b, 2.0);
-
 
     let state = pool.get::<A>();
     assert!(state.is_none());

@@ -43,6 +43,13 @@ lazy_static = "1.4"
 trace = []
 
 [dev-dependencies]
-bevy = { version = "0.10", default-features = false, features = ["bevy_winit"] }
+bevy = { version = "0.10", default-features = false}
 winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
 pi_bevy_winit_window = { path = "../winit_window" }
+
+[target.'cfg(target_os = "android")'.dev-dependencies]
+ndk-glue = "0.7"
+
+[[example]]
+crate-type = ["cdylib"]
+name = "app_android"

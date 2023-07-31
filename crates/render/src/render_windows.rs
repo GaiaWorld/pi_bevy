@@ -9,8 +9,8 @@ use wgpu::{Surface, TextureFormat};
 pub struct RenderWindow {
     pub width: u32,
     pub height: u32,
-    handle: RawHandleWrapper,
-    present_mode: PresentMode,
+    pub handle: RawHandleWrapper,
+    pub present_mode: PresentMode,
 }
 
 impl RenderWindow {
