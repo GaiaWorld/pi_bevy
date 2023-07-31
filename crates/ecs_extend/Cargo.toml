@@ -61,3 +61,6 @@ pi-async-rt = "0.1"
 # [net]
 # git-fetch-with-cli = true
 # offline = true
+[features]
+default = ["debug"]
+debug = []
