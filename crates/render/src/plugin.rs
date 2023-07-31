@@ -81,13 +81,13 @@ impl Plugin for PiRenderPlugin {
         #[cfg(not(target_arch = "wasm32"))]
         let rt = {
             app.add_system(
-                run_frame_system::<SingleTaskRuntime>
+                run_frame_system::<MultiTaskRuntime>
                     .in_set(PiRenderSystemSet)
                     .run_if(should_run),
             );
 
-            // create_multi_runtime()
-            create_single_runtime()
+            create_multi_runtime()
+            // create_single_runtime()
         };
 
         let (
