@@ -1,9 +1,10 @@
 use bevy::app::Plugin;
-use bevy::prelude::{IVec2, Events};
-use bevy::window::{RawHandleWrapper, WindowResolution, WindowPosition, PrimaryWindow, WindowCreated};
+use bevy::prelude::*;
+use bevy::window::{
+    PrimaryWindow, RawHandleWrapper, WindowCreated, WindowPosition, WindowResolution,
+};
 use raw_window_handle::HasRawDisplayHandle;
 use raw_window_handle::HasRawWindowHandle;
-use winit::event::Event;
 use std::sync::Arc;
 use winit::{dpi::PhysicalSize, window::Window};
 
@@ -57,10 +58,7 @@ unsafe impl Sync for WinitPlugin {}
 #[cfg(target_arch = "wasm32")]
 impl WinitPlugin {
     pub fn new(canvas: web_sys::HtmlCanvasElement) -> Self {
-        Self {
-            canvas,
-            size: None,
-        }
+        Self { canvas, size: None }
     }
 
     pub fn with_size(mut self, width: u32, height: u32) -> Self {
@@ -95,10 +93,7 @@ pub struct WindowDescribe {
 
 impl WindowDescribe {
     pub fn new(window: Arc<Window>) -> Self {
-        Self {
-            window,
-            size: None,
-        }
+        Self { window, size: None }
     }
 
     pub fn with_size(mut self, width: u32, height: u32) -> Self {
@@ -116,32 +111,46 @@ impl WindowDescribe {
         }
 
         let inner_size = winit_window.inner_size();
-		let scale_factor = winit_window.scale_factor();
+        let scale_factor = winit_window.scale_factor();
         let raw_handle = RawHandleWrapper {
             window_handle: winit_window.raw_window_handle(),
             display_handle: winit_window.raw_display_handle(),
         };
         let mut window = bevy::prelude::Window::default();
-		window.resolution = WindowResolution::new(inner_size.width as f32 / scale_factor as f32, inner_size.height as f32 / scale_factor as f32);
-		window.resolution.set_scale_factor(scale_factor);
-		window.position = match winit_window.outer_position().map(|r| {IVec2::new(r.x, r.y)}) {
-			Ok(r) => WindowPosition::At(r),
-			_ => WindowPosition::Automatic,
-		};
-		let primary = app.world.spawn((window, raw_handle, PrimaryWindow)).id();
+        window.resolution = WindowResolution::new(
+            inner_size.width as f32 / scale_factor as f32,
+            inner_size.height as f32 / scale_factor as f32,
+        );
+        window.resolution.set_scale_factor(scale_factor);
+        window.position = match winit_window.outer_position().map(|r| IVec2::new(r.x, r.y)) {
+            Ok(r) => WindowPosition::At(r),
+            _ => WindowPosition::Automatic,
+        };
+        let primary = app.world.spawn((window, raw_handle, PrimaryWindow)).id();
 
-
-		// TODO?
-		#[cfg(not(any(target_os = "windows", target_feature = "x11")))]
+        // TODO?
+        #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
         app.world.send_event(bevy::window::WindowResized {
             window: primary,
             width: inner_size.width as f32,
             height: inner_size.height as f32,
         });
-		
 
         // windows.add(window);
-		app.world.send_event(WindowCreated { window: primary });
+        app.world.send_event(WindowCreated { window: primary });
         // world.send_event(bevy::window::WindowCreated { id: self.window_id });
     }
+}
+
+pub fn update_window_handle(app: &mut bevy::app::App, window: &Window) -> RawHandleWrapper {
+    let mut primary_window = app
+        .world
+        .query_filtered::<&mut RawHandleWrapper, With<PrimaryWindow>>();
+
+    let mut r = primary_window.single_mut(&mut app.world);
+
+    r.window_handle = window.raw_window_handle();
+    r.display_handle = window.raw_display_handle();
+
+    r.clone()
 }

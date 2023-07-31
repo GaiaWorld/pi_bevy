@@ -4,6 +4,7 @@ use crate::{
     PiSafeAtlasAllocator, PiScreenTexture,
 };
 use bevy::app::{App, Plugin};
+
 use bevy::ecs::system::Res;
 use bevy::prelude::{IntoSystemConfig, Resource, SystemSet};
 use pi_assets::asset::GarbageEmpty;
@@ -65,7 +66,7 @@ impl Plugin for PiRenderPlugin {
         // app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel().with_run_criteria(should_run));
 
         #[cfg(target_arch = "wasm32")]
-        let (rt, runner) = {
+        let rt = {
             app.add_system(
                 run_frame_system::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
@@ -78,14 +79,15 @@ impl Plugin for PiRenderPlugin {
         };
 
         #[cfg(not(target_arch = "wasm32"))]
-        let (rt, _runner) = {
+        let rt = {
             app.add_system(
-                run_frame_system::<MultiTaskRuntime>
+                run_frame_system::<SingleTaskRuntime>
                     .in_set(PiRenderSystemSet)
                     .run_if(should_run),
             );
 
-            create_multi_runtime()
+            // create_multi_runtime()
+            create_single_runtime()
         };
 
         let (
@@ -216,23 +218,25 @@ impl Plugin for PiRenderPlugin {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn create_single_runtime() -> (
-    pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
-    Option<pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRunner<()>>,
-) {
+fn create_single_runtime() -> pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime
+{
     let mut runner = pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRunner::new();
+    let rt = runner.get_runtime();
 
-    let runtime = runner.get_runtime();
-
-    (runtime, Some(runner))
+    rt
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn create_multi_runtime() -> (
-    MultiTaskRuntime,
-    Option<pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRunner<()>>,
-) {
+fn create_multi_runtime() -> MultiTaskRuntime {
     let rt = AsyncRuntimeBuilder::default_multi_thread(Some("pi_bevy_render"), None, None, None);
 
-    (rt, None)
+    rt
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn create_single_runtime() -> SingleTaskRuntime {
+    let runner = SingleTaskRunner::default();
+    let rt = runner.into_local();
+
+    rt
 }
