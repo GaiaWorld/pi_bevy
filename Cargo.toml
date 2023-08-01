@@ -18,6 +18,9 @@ resolver = "2"
 # [patch."https://github.com/GaiaWorld/pi_render"]
 # pi_render = { path = "../pi_render" }
 
+# [patch."https://github.com/GaiaWorld/pi_hal"]
+# pi_hal = { path = "../pi_hal" }
+
 # [patch.crates-io]
 # pi_async_graph = { path = "../pi_async_graph" }
 # pi_map = { path = "../pi_map" }

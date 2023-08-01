@@ -52,6 +52,20 @@ pub struct PiRenderPlugin {
 
 impl Plugin for PiRenderPlugin {
     fn build(&self, app: &mut App) {
+		// std::thread::spawn(move || {
+		// 	loop {
+		// 		{
+		// 			let mut l = pi_hal::runtime::LOGS.lock();
+		// 			if l.0.len() > 0 {
+		// 				log::warn!("{}", l.0.join("\n"));
+		// 				l.0.clear();
+		// 			}
+		// 		}
+				
+		// 		std::thread::sleep(std::time::Duration::from_millis(2000));
+		// 	}
+		// });
+
         app.insert_resource(self.frame_init_state);
 
         app.insert_resource(PiScreenTexture::default());
