@@ -8,18 +8,18 @@
 
 mod async_queue;
 mod clear_node;
+pub mod component;
+pub mod constant;
 mod graph;
 mod init_render;
 mod plugin;
 mod render_windows;
 mod resource;
 mod system;
-pub mod component;
-pub mod constant;
 
 /// 渲染图
 pub use graph::*;
-use pi_render::components::view::target_alloc::{ShareTargetView, GetTargetView, TargetView};
+use pi_render::components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView};
 /// 渲染 插件
 pub use plugin::*;
 use render_derive::NodeParam;
@@ -35,11 +35,13 @@ pub struct SimpleInOut {
 }
 
 impl GetTargetView for SimpleInOut {
-    fn get_target_view(&self) -> Option<&TargetView> { return self.target.as_ref().map(|r| &**r); }
+    fn get_target_view(&self) -> Option<&TargetView> {
+        return self.target.as_ref().map(|r| &**r);
+    }
 }
 
 pub mod asset_config {
-    use bevy::prelude::{Resource};
+    use bevy::prelude::Resource;
     use pi_bevy_asset::AssetCapacity;
 
     /// Asset 资源管理
@@ -58,7 +60,7 @@ pub mod asset_config {
         GLTF,
         File,
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgRenderResTextureView(pub AssetCapacity);
     impl Default for AssetCfgRenderResTextureView {
@@ -112,7 +114,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgTextureRes(pub AssetCapacity);
     impl Default for AssetCfgTextureRes {
@@ -130,7 +132,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgImageTexture(pub AssetCapacity);
     impl Default for AssetCfgImageTexture {
@@ -148,7 +150,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgImageTextureView(pub AssetCapacity);
     impl Default for AssetCfgImageTextureView {
@@ -166,7 +168,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgBindGroup(pub AssetCapacity);
     impl Default for AssetCfgBindGroup {
@@ -184,7 +186,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgVertexBuffer3D(pub AssetCapacity);
     impl Default for AssetCfgVertexBuffer3D {
@@ -202,7 +204,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgShaderMeta3D(pub AssetCapacity);
     impl Default for AssetCfgShaderMeta3D {
@@ -220,7 +222,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgShader3D(pub AssetCapacity);
     impl Default for AssetCfgShader3D {
@@ -238,7 +240,7 @@ pub mod asset_config {
             &self.0
         }
     }
-    
+
     #[derive(Resource)]
     pub struct AssetCfgRenderPipeline(pub AssetCapacity);
     impl Default for AssetCfgRenderPipeline {
@@ -256,5 +258,4 @@ pub mod asset_config {
             &self.0
         }
     }
-    
 }

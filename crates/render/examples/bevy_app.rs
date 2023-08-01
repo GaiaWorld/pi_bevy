@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use bevy::app::App;
+use bevy::{app::App, log::LogPlugin};
 use pi_bevy_asset::{AssetConfig, PiAssetPlugin};
 use pi_bevy_render_plugin::{ClearOptions, PiClearOptions, PiRenderPlugin};
 use pi_bevy_winit_window::WinitPlugin;
@@ -15,6 +15,7 @@ fn main() {
     let window = winit::window::Window::new(&event_loop).unwrap();
 
     app
+    .add_plugin(LogPlugin::default())
     .add_plugin(WinitPlugin::new(Arc::new(window)))
     .insert_resource(PiClearOptions(ClearOptions {
         color: wgpu::Color::GREEN,
@@ -33,6 +34,7 @@ fn main() {
 
         match event {
             winit::event::Event::MainEventsCleared => {
+                // println!("App.update, thread id = {:?}", std::thread::current().id());
                 app.update();
             }
             winit::event::Event::WindowEvent { event, .. } => match event {

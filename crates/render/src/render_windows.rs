@@ -22,6 +22,10 @@ impl RenderWindow {
             height: 0,
         }
     }
+
+    pub fn update_handle(&mut self, handle: RawHandleWrapper) {
+        self.handle = handle;
+    }
 }
 
 pub fn prepare_window(
@@ -36,7 +40,10 @@ pub fn prepare_window(
     let is_first = view.is_none();
     if is_first {
         let surface = if first_surface.is_none() {
-            log::info!("prepare_window, first_surface is none, create new surface");
+            log::info!(
+                "prepare_window, first_surface is none, create new surface, , thread id = {:?}",
+                std::thread::current().id()
+            );
 
             let handle = unsafe { window.handle.get_handle() };
             unsafe { instance.create_surface(&handle).unwrap() }
