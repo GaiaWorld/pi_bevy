@@ -1,8 +1,10 @@
+use std::sync::atomic::Ordering;
+
 use crate::{
     graph::graph::RenderGraph,
     render_windows::{prepare_window, RenderWindow},
     PiAsyncRuntime, PiFirstSurface, PiRenderDevice, PiRenderGraph, PiRenderInstance,
-    PiRenderWindow, PiScreenTexture,
+    PiRenderWindow, PiScreenTexture, IS_RESUMED,
 };
 use bevy::{
     ecs::world::World,
@@ -23,6 +25,9 @@ use tracing::Instrument;
 //   + 否则 是 MultiTaskRuntime
 //
 pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World) {
+    if !IS_RESUMED.load(Ordering::Relaxed){
+        return;
+    }
     let mut primary_window = world.query_filtered::<&Window, With<PrimaryWindow>>();
 
     let (width, height) = match primary_window.get_single(world) {

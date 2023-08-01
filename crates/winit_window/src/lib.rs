@@ -142,12 +142,10 @@ impl WindowDescribe {
     }
 }
 
-pub fn update_window_handle(app: &mut bevy::app::App, window: &Window) -> RawHandleWrapper {
-    let mut primary_window = app
-        .world
-        .query_filtered::<&mut RawHandleWrapper, With<PrimaryWindow>>();
+pub fn update_window_handle(world: &mut World, window: &Window) -> RawHandleWrapper {
+    let mut primary_window = world.query_filtered::<&mut RawHandleWrapper, With<PrimaryWindow>>();
 
-    let mut r = primary_window.single_mut(&mut app.world);
+    let mut r = primary_window.single_mut(world);
 
     r.window_handle = window.raw_window_handle();
     r.display_handle = window.raw_display_handle();

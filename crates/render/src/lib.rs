@@ -6,6 +6,9 @@
 //! pi_render 的 bevy 封装
 //!
 
+#[macro_use]
+extern crate lazy_static;
+
 mod async_queue;
 mod clear_node;
 pub mod component;
@@ -17,6 +20,8 @@ mod render_windows;
 mod resource;
 mod system;
 
+use std::sync::atomic::AtomicBool;
+
 /// 渲染图
 pub use graph::*;
 use pi_render::components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView};
@@ -25,6 +30,10 @@ pub use plugin::*;
 use render_derive::NodeParam;
 /// 单例
 pub use resource::*;
+
+lazy_static! {
+    pub static ref IS_RESUMED: AtomicBool = AtomicBool::new(true);
+}
 
 /// 标签
 pub use clear_node::CLEAR_WIDNOW_NODE;
