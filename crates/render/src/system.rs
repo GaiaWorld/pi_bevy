@@ -88,9 +88,13 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
 
         // ============ 2. 执行渲染图 ============
         rg.build().unwrap();
+		// log::warn!("run before====================");
+		// pi_hal::runtime::LOGS.lock().0.push("system run before".to_string());
         rg.run(&rt_clone, world).await.unwrap();
+		// pi_hal::runtime::LOGS.lock().0.push("system run after".to_string());
         
         // ============ 3. 呈现 ============
+		// log::warn!("take_surface_texture before====================");
         if let Some(view) = view.as_mut().unwrap().take_surface_texture() {
             view.present();
         }
@@ -121,11 +125,12 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
             .instrument(take_texture_span)
             .await;
         if let Some(view) = view {
-            async move {
+            let r = async move {
                 view.present();
             }
             .instrument(system_present_span)
-            .await
+            .await;
+			r
         }
     }
     .instrument(frame_render_span);

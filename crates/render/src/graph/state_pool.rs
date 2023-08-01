@@ -24,7 +24,9 @@ impl Clone for SystemStatePool {
 
 impl SystemStatePool {
     pub fn set<T: 'static + Send + Sync>(&mut self, state: T) {
+		// log::warn!("SystemStatePool lock before===========");
         self.data.lock().set(state);
+		// log::warn!("SystemStatePool lock after===========");
     }
 
     /// 从缓存中获取，如果没有，则返回 None

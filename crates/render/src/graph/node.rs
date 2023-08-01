@@ -182,6 +182,7 @@ where
             #[cfg(feature = "webgl")]
             let commands = self.context.commands.borrow().as_ref().unwrap().clone();
 
+			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
             let output = self.node.run(
                 c.world(),
                 self.state.as_mut().unwrap(),
@@ -195,6 +196,7 @@ where
             let output = output.instrument(tracing::info_span!("GraphNode run"));
 
             let output = output.await.unwrap();
+			// pi_hal::runtime::LOGS.lock().0.push("node run end".to_string());
 
             #[cfg(not(feature = "webgl"))]
             {
@@ -206,7 +208,11 @@ where
                 let queue = self.context.queue.clone();
 
                 let submit_task = async move {
+					// pi_hal::runtime::LOGS.lock().0.push("submit before".to_string());
+					// log::warn!("submit before===========");
                     queue.submit(vec![commands.finish()]);
+					// pi_hal::runtime::LOGS.lock().0.push("submit end".to_string());
+					// log::warn!("submit after===========");
                 };
 
                 #[cfg(feature = "trace")]
@@ -214,10 +220,8 @@ where
 
                 c.async_tasks.push(Box::pin(submit_task));
             }
-
             Ok(output)
         };
-
         Box::pin(task)
     }
 }
@@ -240,40 +244,58 @@ pub struct TaskQueue(pub Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>);
 unsafe impl Send for TaskQueue {}
 unsafe impl Sync for TaskQueue {}
 
+
 impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
     // 扔任务 到 异步库
     fn push(&self, task: BoxFuture<'static, ()>) {
         // 依次 处理 队列
-        fn run<A: AsyncRuntime>(queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
-            let t = queue.0.lock().pop_front();
-
-            if let Some(task) = t {
-                let rt1 = rt.clone();
-                // 运行时 处理，但 不等待
-                let _ = rt.spawn(async move {
-                    task.await;
-                    run(queue, rt1, is_runing);
-                });
-            } else {
-                // 队列为空时，设置为 false
-                is_runing.store(false, Ordering::Relaxed);
-            }
+        fn run<A: AsyncRuntime>(mut queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
+			// log::warn!("AsyncQueue lock before===========");
+			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue lock before".to_string());
+            
+			// pi_hal::runtime::LOGS.lock().0.push(format!("AsyncQueue lock after".to_string(), t.is_some()));
+			// log::warn!("AsyncQueue lock after===========");
+			let task = {
+				let mut t1 = queue.0.lock();
+				let t = t1.pop_front();
+				match t {
+					Some(r) => r,
+					None => {
+						// 队列为空时，设置为 false
+						is_runing.store(false, Ordering::Relaxed);
+						return;
+					}
+				}
+			};
+            let rt1 = rt.clone();
+			// 运行时 处理，但 不等待
+			let _ = rt.spawn(async move {
+				// pi_hal::runtime::LOGS.lock().0.push("t lock before".to_string());
+				// log::warn!("t before===========");
+				task.await;
+				// pi_hal::runtime::LOGS.lock().0.push("t lock after".to_string());
+				// log::warn!("t after===========");
+				run(queue, rt1, is_runing);
+			});
         }
 
         // 当 队列为空，而且 里面的东西已经执行完的时候，才会去 推 队列
+		// pi_hal::runtime::LOGS.lock().0.push("AAsyncQueue1 push_back before".to_string());
         let is_start_run = {
+			
+			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock before".to_string());
             let mut lock = self.queue.0.lock();
-
+			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock after".to_string());
             let is_start_run = lock.is_empty()
                 && self
                     .is_runing
                     .compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed)
                     .is_ok();
-
             lock.push_back(task);
 
             is_start_run
         };
+		// pi_hal::runtime::LOGS.lock().0.push(format!("AAsyncQueue1 push_back after, {:?}", is_start_run));
 
         if is_start_run {
             // 第一个元素，挨个 执行一次
