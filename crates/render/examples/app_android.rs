@@ -50,7 +50,7 @@ fn main() {
                 is_resume = true;
                 println!("Resumed, thread id = {:?}", std::thread::current().id());
                 if !is_first {
-                    let w = update_window_handle(&mut app, &window);
+                    let w = update_window_handle(&mut app.world, &window);
 
                     app.world
                         .resource_mut::<PiRenderWindow>()
