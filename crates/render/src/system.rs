@@ -92,7 +92,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
 
         // ============ 2. 执行渲染图 ============
-        rg.build().unwrap();
+        // rg.build().unwrap();
 		// log::warn!("run before====================");
 		// pi_hal::runtime::LOGS.lock().0.push("system run before".to_string());
         rg.run(&rt_clone, world).await.unwrap();

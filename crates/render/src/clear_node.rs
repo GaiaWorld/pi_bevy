@@ -6,6 +6,7 @@ use bevy::ecs::{
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::ParamUsage;
 use pi_share::ShareRefCell;
+use pi_render::depend_graph::NodeId;
 
 /// 窗口清屏
 /// 注：此节点 只清屏窗口
@@ -26,6 +27,9 @@ impl Node for ClearNode {
         commands: ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,
         _usage: &'a ParamUsage,
+		_id: NodeId,
+		_from: &'a [NodeId],
+		_to: &'a [NodeId],
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let (view, clear) = {
             let (s, clear) = param.get(world);

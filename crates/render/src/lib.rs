@@ -41,11 +41,12 @@ pub use clear_node::CLEAR_WIDNOW_NODE;
 #[derive(Default, Clone, NodeParam)]
 pub struct SimpleInOut {
     pub target: Option<ShareTargetView>,
+	pub valid_rect: Option<(u32, u32, u32, u32)>, // x, y, w, h
 }
 
 impl GetTargetView for SimpleInOut {
     fn get_target_view(&self) -> Option<&TargetView> {
-        return self.target.as_ref().map(|r| &**r);
+        return self.target.as_ref().map(|r| &***r);
     }
 }
 

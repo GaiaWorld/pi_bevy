@@ -252,6 +252,9 @@ impl Node for WindowRendererNode {
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _: &'a Self::Input,
         _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: NodeId,
+		_from: &'a [NodeId],
+		_to: &'a [NodeId],
     ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
 
         let (screen, final_render) = param.get(world);
@@ -302,6 +305,9 @@ impl Node for WindowRendererClearNode {
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         input: &'a Self::Input,
         usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: NodeId,
+		_from: &'a [NodeId],
+		_to: &'a [NodeId],
     ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
         let final_render = param.get(world);
         if let (Some(view), Some(depth_view)) = (final_render.view(), &final_render.depth_view) {

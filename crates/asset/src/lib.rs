@@ -66,13 +66,13 @@ pub struct AssetConfig (XHashMap<TypeId, AssetDesc>);
 impl AssetConfig {
 	// 为某类型的资产管理器配置容量和超时时间
 	#[inline]
-    pub fn insert<T: Asset>(&mut self, cfg: AssetDesc) {
+    pub fn insert<T: Size>(&mut self, cfg: AssetDesc) {
         self.0.insert(std::any::TypeId::of::<T>(), cfg);
     }
 
 	// 取到某类型的资产管理器的容量、超时配置
 	#[inline]
-    pub fn get<T: Asset>(&self) -> Option<&AssetDesc> {
+    pub fn get<T: Size>(&self) -> Option<&AssetDesc> {
 		self.0.get(&std::any::TypeId::of::<T>())
     }
 }

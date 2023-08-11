@@ -57,6 +57,9 @@ pub trait Node: 'static + ThreadSync {
         commands: ShareRefCell<CommandEncoder>,
         input: &'a Self::Input,
         usage: &'a ParamUsage,
+		id: NodeId,
+		from: &'a [NodeId],
+		to: &'a [NodeId],
     ) -> BoxFuture<'a, Result<Self::Output, String>>;
 }
 
@@ -163,6 +166,9 @@ where
         c: &'a NodeContext,
         input: &'a Self::Input,
         usage: &'a ParamUsage,
+		id: NodeId,
+		from: &'a [NodeId],
+		to: &'a [NodeId],
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let context = self.context.clone();
         let task = async move {
@@ -190,6 +196,9 @@ where
                 commands.clone(),
                 input,
                 usage,
+				id,
+				from,
+				to,
             );
 
             #[cfg(feature = "trace")]
