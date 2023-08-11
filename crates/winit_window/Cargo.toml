@@ -10,7 +10,7 @@ keywords = ["pi", "bevy", "window", "winit"]
 
 [dependencies]
 bevy = {version="0.10", default-features = false}
-winit = {git = "http://ser.yinengyun.com:10082/tech/winit.git"}
+winit = { registry = "yn", version = "0.27"}
 glam="0.23"
 raw-window-handle = "0.5"
 log = "0.4"

@@ -45,7 +45,7 @@ webgl = ["pi_render/webgl"]
 
 [dev-dependencies]
 bevy = { version = "0.10", default-features = false}
-winit = { git = "http://ser.yinengyun.com:10082/tech/winit.git" }
+winit = { registry = "yn", version = "0.27"}
 pi_bevy_winit_window = { path = "../winit_window" }
 lazy_static = '1.4'
 
