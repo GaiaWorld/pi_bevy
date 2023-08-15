@@ -114,11 +114,11 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         .await;
 
         // ============ 2. 执行渲染图 ============
-        async {
-            rg.build().unwrap();
-        }
-        .instrument(rg_build_span)
-        .await;
+        // async {
+        //     rg.build().unwrap();
+        // }
+        // .instrument(rg_build_span)
+        // .await;
 
         rg.run(&rt_clone, world)
             .instrument(rg_run_span)
