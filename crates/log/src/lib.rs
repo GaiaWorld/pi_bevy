@@ -1,5 +1,6 @@
 #![allow(clippy::type_complexity)]
 #![warn(missing_docs)]
+#![feature(stmt_expr_attributes)]
 //! This crate provides logging functions and configuration for [Bevy](https://bevyengine.org)
 //! apps, and automatically configures platform specific log handlers (i.e. WASM or Android).
 //!
@@ -12,6 +13,7 @@
 //! For more fine-tuned control over logging behavior, set up the [`LogPlugin`] or
 //! `DefaultPlugins` during app initialization.
 
+use std::io::Write;
 #[cfg(feature = "trace")]
 use std::panic;
 
@@ -26,18 +28,18 @@ static GLOBAL: tracy_client::ProfiledAllocator<std::alloc::System> =
 pub mod prelude {
     //! The Bevy Log Prelude.
     #[doc(hidden)]
-    pub use bevy_utils::tracing::{
+    pub use bevy::utils::tracing::{
         debug, debug_span, error, error_span, info, info_span, trace, trace_span, warn, warn_span,
     };
 }
 
-use bevy_ecs::system::Resource;
-pub use bevy_utils::tracing::{
+use bevy::ecs::system::Resource;
+pub use bevy::utils::tracing::{
     debug, debug_span, error, error_span, info, info_span, trace, trace_span, warn, warn_span,
     Level,
 };
 
-use bevy_app::{App, Plugin};
+use bevy::app::{App, Plugin};
 use tracing_log::LogTracer;
 #[cfg(feature = "tracing-chrome")]
 use tracing_subscriber::fmt::{format::DefaultFields, FormattedFields};
@@ -54,9 +56,9 @@ use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
 ///
 /// You can configure this plugin.
 /// ```no_run
-/// # use bevy_app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
+/// # use bevy::app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
 /// # use bevy_log::LogPlugin;
-/// # use bevy_utils::tracing::Level;
+/// # use bevy::utils::tracing::Level;
 /// fn main() {
 ///     App::new()
 ///         .add_plugins(DefaultPlugins.set(LogPlugin {
@@ -77,7 +79,7 @@ use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
 /// If you want to setup your own tracing collector, you should disable this
 /// plugin from `DefaultPlugins`:
 /// ```no_run
-/// # use bevy_app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
+/// # use bevy::app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
 /// # use bevy_log::LogPlugin;
 /// fn main() {
 ///     App::new()
@@ -91,28 +93,33 @@ use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
 /// This plugin should not be added multiple times in the same process. This plugin
 /// sets up global logging configuration for **all** Apps in a given process, and
 /// rerunning the same initialization multiple times will lead to a panic.
-pub struct LogPlugin {
+pub struct LogPlugin<T: Write + Send + Sync + 'static> {
     /// Filters logs using the [`EnvFilter`] format
     pub filter: String,
 
     /// Filters out logs that are "less than" the given level.
     /// This can be further filtered using the `filter` setting.
     pub level: Level,
+	pub chrome_write: Option<T>,
 }
+
+
+
 
 #[derive(Resource)]
 pub struct LogFilterHandle(pub tracing_subscriber::reload::Handle<EnvFilter, Registry>);
 
-impl Default for LogPlugin {
+impl<T: Write + Send + Sync + 'static> Default for LogPlugin<T> {
     fn default() -> Self {
         Self {
             filter: "wgpu=error,naga=warn".to_string(),
             level: Level::INFO,
+			chrome_write: None,
         }
     }
 }
 
-impl Plugin for LogPlugin {
+impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
     #[cfg_attr(not(feature = "tracing-chrome"), allow(unused_variables))]
     fn build(&self, app: &mut App) {
         #[cfg(feature = "trace")]
@@ -188,9 +195,45 @@ impl Plugin for LogPlugin {
         #[cfg(target_arch = "wasm32")]
         {
             console_error_panic_hook::set_once();
-            finished_subscriber = subscriber.with(tracing_wasm::WASMLayer::new(
-                tracing_wasm::WASMLayerConfig::default(),
-            ));
+            // finished_subscriber = subscriber.with(tracing_wasm::BrowserLayer::new(
+            //     tracing_wasm::WASMLayerConfig::default(),
+            // ));
+			// finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
+			// tracing_browser_subscriber::configure_as_global_default();
+			#[cfg(feature = "tracing_chrome_wasm")]
+			if let Some(chrome_write) = unsafe {&mut *(self as *const Self as usize as *mut Self)}.chrome_write.take() {
+				let chrome_layer = {
+					let mut layer = tracing_chrome_wasm::ChromeLayerBuilder::new();
+					layer = layer.writer(chrome_write);
+					let (chrome_layer, guard) = layer
+						.name_fn(Box::new(|event_or_span| match event_or_span {
+							tracing_chrome_wasm::EventOrSpan::Event(event) => event.metadata().name().into(),
+							tracing_chrome_wasm::EventOrSpan::Span(span) => {
+								if let Some(fields) =
+									span.extensions().get::<tracing_subscriber::fmt::FormattedFields<tracing_subscriber::fmt::format::DefaultFields>>()
+								{
+									format!("{}: {}", span.metadata().name(), fields.fields.as_str())
+								} else {
+									span.metadata().name().into()
+								}
+							}
+						}))
+						.build();
+					app.world.insert_non_send_resource(guard);
+					chrome_layer
+				};
+				let subscriber = subscriber.with(chrome_layer);
+				finished_subscriber = subscriber;
+			} else {
+				panic!("need chrome Writer!");
+				// finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
+			}
+
+			#[cfg(not(feature="tracing_chrome_wasm"))] 
+			{
+				finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
+			}
+			
         }
 
         #[cfg(target_os = "android")]
@@ -200,7 +243,7 @@ impl Plugin for LogPlugin {
 
         let logger_already_set = LogTracer::init().is_err();
         let subscriber_already_set =
-            bevy_utils::tracing::subscriber::set_global_default(finished_subscriber).is_err();
+            bevy::utils::tracing::subscriber::set_global_default(finished_subscriber).is_err();
 
         match (logger_already_set, subscriber_already_set) {
             (true, true) => warn!(
