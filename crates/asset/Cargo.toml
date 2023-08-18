@@ -23,4 +23,4 @@ crossbeam="0.8"
 pi_time = "0.3"
 
 pi_atom = { version="0.2", features = ["serde"] }
-pi_render = { git = "https://github.com/GaiaWorld/pi_render.git", branch="bevy_shader" }
+pi_render = { version = "0.1", registry = "yn" }
