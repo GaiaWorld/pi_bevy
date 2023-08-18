@@ -3,7 +3,7 @@ name = "pi_bevy_log"
 version = "0.1.0"
 edition = "2021"
 description = "Provides logging for Bevy Engine"
-repository = "https://github.com/GaiaWorld/pi_render_bevy"
+repository = "https://github.com/GaiaWorld/pi_bevy"
 license = "MIT OR Apache-2.0"
 keywords = ["bevy", "log"]
 

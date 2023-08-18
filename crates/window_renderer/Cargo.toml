@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["bp0002 <bp950722@outlook.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
-repository = "https://github.com/GaiaWorld/pi_render_bevy"
+repository = "https://github.com/GaiaWorld/pi_bevy"
 license = "MIT OR Apache-2.0"
 keywords = ["pi", "window_renderer"]
 
