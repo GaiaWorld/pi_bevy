@@ -26,5 +26,6 @@ pub struct RenderContext {
     pub queue: RenderQueue,
 
     /// webgl 环境下 使用
+	#[allow(dead_code)]
     commands: ShareRefCell<Option<ShareRefCell<wgpu::CommandEncoder>>>,
 }

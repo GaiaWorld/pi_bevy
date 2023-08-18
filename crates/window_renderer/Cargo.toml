@@ -13,15 +13,15 @@ keywords = ["pi", "window_renderer"]
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 # bevy_window = "0.9"
-bevy = {version="0.10", default-features = false}
+bevy = {version="0.11", default-features = false}
 raw-window-handle = "0.5"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = { version = "0.15", default-features = false, features = ["glsl"] }
+wgpu = { version = "0.16", default-features = false, features = ["glsl"] }
 crossbeam="0.8"
 futures="0.3"
-naga = { version = "0.11"}
+naga = { version = "0.12"}
 bytemuck = { version = "1.4", features = ["derive"] }
 
 pi_hash = "0.1"
@@ -29,8 +29,8 @@ pi_futures = "0.1"
 pi-async-rt = "0.1"
 pi_share = "0.4"
 pi_render = { git = "https://github.com/GaiaWorld/pi_render.git", branch = "bevy_shader" }
-pi_bevy_asset = { path = "../asset", version = "0.1" }
-pi_bevy_render_plugin = { path = "../render" }
+pi_bevy_asset = { path = "../asset", version = "0.1", registry = "yn" }
+pi_bevy_render_plugin = { path = "../render", version = "0.1", registry = "yn" }
 pi_assets = "0.13"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 
@@ -38,4 +38,4 @@ tracing = { version = "0.1", default-features = false, features = ["std"] }
 trace = []
 
 [dev-dependencies]
-bevy = {version="0.10", default-features = false, features=["bevy_winit"]}
+bevy = {version="0.11", default-features = false, features=["bevy_winit"]}

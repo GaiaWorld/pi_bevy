@@ -1,4 +1,4 @@
-use bevy::ecs::{world::{FromWorld, World}, system::{Resource, SystemMeta, ReadOnlySystemParam, SystemParam, Res, ResMut}, component::ComponentId};
+use bevy::ecs::{world::{FromWorld, World, unsafe_world_cell::UnsafeWorldCell}, system::{Resource, SystemMeta, ReadOnlySystemParam, SystemParam, Res, ResMut}, component::{ComponentId, Tick}};
 use derive_deref::{DerefMut, Deref};
 
 #[derive(Debug, Deref)]
@@ -17,8 +17,8 @@ unsafe impl<T: Resource + FromWorld> SystemParam for OrInitRes<'_, T> {
     unsafe fn get_param<'w, 's>(
         component_id: &'s mut Self::State,
         system_meta: &SystemMeta,
-        world: &'w World,
-        change_tick: u32,
+        world: UnsafeWorldCell<'w>,
+        change_tick: Tick,
     ) -> Self::Item<'w, 's> {
 		OrInitRes(Res::<T>::get_param(component_id, system_meta, world, change_tick))
     }
@@ -42,8 +42,8 @@ unsafe impl<T: Resource + FromWorld> SystemParam for OrInitResMut<'_, T> {
     unsafe fn get_param<'w, 's>(
         component_id: &'s mut Self::State,
         system_meta: &SystemMeta,
-        world: &'w World,
-        change_tick: u32,
+        world: UnsafeWorldCell<'w>,
+        change_tick: Tick,
     ) -> Self::Item<'w, 's> {
 		OrInitResMut(ResMut::<T>::get_param(component_id, system_meta, world, change_tick))
     }

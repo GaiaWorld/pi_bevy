@@ -100,12 +100,14 @@ pub struct LogPlugin<T: Write + Send + Sync + 'static> {
     /// Filters out logs that are "less than" the given level.
     /// This can be further filtered using the `filter` setting.
     pub level: Level,
+
+	/// 
 	pub chrome_write: Option<T>,
 }
 
 
 
-
+/// 日志过滤处理器，如果添加LogPlugin，该类型的一个实例会被放置在Resource中， 外部可通过该单例，重设过滤条件
 #[derive(Resource)]
 pub struct LogFilterHandle(pub tracing_subscriber::reload::Handle<EnvFilter, Registry>);
 
@@ -195,44 +197,44 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
         #[cfg(target_arch = "wasm32")]
         {
             console_error_panic_hook::set_once();
-            // finished_subscriber = subscriber.with(tracing_wasm::BrowserLayer::new(
+            // finished_subscriber = subscriber.with(tracing_wasm::WASMLayer::new(
             //     tracing_wasm::WASMLayerConfig::default(),
             // ));
 			// finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
 			// tracing_browser_subscriber::configure_as_global_default();
-			#[cfg(feature = "tracing_chrome_wasm")]
-			if let Some(chrome_write) = unsafe {&mut *(self as *const Self as usize as *mut Self)}.chrome_write.take() {
-				let chrome_layer = {
-					let mut layer = tracing_chrome_wasm::ChromeLayerBuilder::new();
-					layer = layer.writer(chrome_write);
-					let (chrome_layer, guard) = layer
-						.name_fn(Box::new(|event_or_span| match event_or_span {
-							tracing_chrome_wasm::EventOrSpan::Event(event) => event.metadata().name().into(),
-							tracing_chrome_wasm::EventOrSpan::Span(span) => {
-								if let Some(fields) =
-									span.extensions().get::<tracing_subscriber::fmt::FormattedFields<tracing_subscriber::fmt::format::DefaultFields>>()
-								{
-									format!("{}: {}", span.metadata().name(), fields.fields.as_str())
-								} else {
-									span.metadata().name().into()
-								}
-							}
-						}))
-						.build();
-					app.world.insert_non_send_resource(guard);
-					chrome_layer
-				};
-				let subscriber = subscriber.with(chrome_layer);
-				finished_subscriber = subscriber;
-			} else {
-				panic!("need chrome Writer!");
-				// finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
-			}
+			// #[cfg(feature = "tracing_chrome_wasm")]
+			// if let Some(chrome_write) = unsafe {&mut *(self as *const Self as usize as *mut Self)}.chrome_write.take() {
+			// 	let chrome_layer = {
+			// 		let mut layer = tracing_chrome_wasm::ChromeLayerBuilder::new();
+			// 		layer = layer.writer(chrome_write);
+			// 		let (chrome_layer, guard) = layer
+			// 			.name_fn(Box::new(|event_or_span| match event_or_span {
+			// 				tracing_chrome_wasm::EventOrSpan::Event(event) => event.metadata().name().into(),
+			// 				tracing_chrome_wasm::EventOrSpan::Span(span) => {
+			// 					if let Some(fields) =
+			// 						span.extensions().get::<tracing_subscriber::fmt::FormattedFields<tracing_subscriber::fmt::format::DefaultFields>>()
+			// 					{
+			// 						format!("{}: {}", span.metadata().name(), fields.fields.as_str())
+			// 					} else {
+			// 						span.metadata().name().into()
+			// 					}
+			// 				}
+			// 			}))
+			// 			.build();
+			// 		app.world.insert_non_send_resource(guard);
+			// 		chrome_layer
+			// 	};
+			// 	let subscriber = subscriber.with(chrome_layer);
+			// 	finished_subscriber = subscriber;
+			// } else {
+			// 	panic!("need chrome Writer!");
+			// 	// finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
+			// }
 
-			#[cfg(not(feature="tracing_chrome_wasm"))] 
-			{
-				finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
-			}
+			// #[cfg(all(not(feature="tracing_chrome_wasm"), feature = "tracing-wasm"))] 
+			finished_subscriber = subscriber.with(tracing_wasm::WASMLayer::new(
+				tracing_wasm::WASMLayerConfig::default(),
+			));
 			
         }
 

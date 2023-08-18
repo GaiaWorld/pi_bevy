@@ -1,7 +1,7 @@
 //! 实体树
 
 use std::mem::transmute;
-use bevy::{ecs::{prelude::{Entity, Component, EventWriter}, system::{Query, Commands, SystemParam, SystemMeta}, query::Changed, archetype::Archetype}, prelude::World};
+use bevy::{ecs::{prelude::{Entity, Component, EventWriter}, system::{Query, Commands, SystemParam, SystemMeta}, query::Changed, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell, component::Tick}, prelude::World};
 use derive_deref::{Deref, DerefMut};
 use pi_null::Null;
 use pi_slotmap_tree::{Up as Up1, Down as Down1, Storage, StorageMut, Tree, Layer as Layer1, ChildrenIterator as ChildrenIterator1, RecursiveIterator as RecursiveIterator1, InsertType};
@@ -273,8 +273,8 @@ unsafe impl bevy::ecs::system::SystemParam for EntityTreeMut<'_, '_> {
 	unsafe fn get_param<'w, 's>(
         state: &'s mut Self::State,
         system_meta: &SystemMeta,
-        world: &'w World,
-        change_tick: u32,
+        world: UnsafeWorldCell<'w>,
+        change_tick: Tick,
     ) -> Self::Item<'w, 's> {
 		EntityTreeMut{
 			tree: Tree::new(

@@ -1,16 +1,13 @@
 use std::any::TypeId;
 
 use bevy::ecs::system::Resource;
-use bevy::prelude::{DerefMut, Deref, App, Local, IntoSystemConfig, ResMut, CoreSet, Plugin};
+use bevy::prelude::{DerefMut, Deref, App, Local, ResMut, Plugin, Last};
 use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer, Size}, homogeneous::HomogeneousMgr};
 use pi_hash::XHashMap;
 use pi_share::Share;
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
 use pi_null::Null;
-
-pub mod texure_sampler;
-pub mod sync_load;
 
 /// 资产功能插件， 负责添加容量分配器`Allocator`作为单例， 添加容量配置单例`AssetConfig`, 添加system `collect`负责定时整理资产
 pub struct PiAssetPlugin {
@@ -34,7 +31,7 @@ impl Plugin for PiAssetPlugin {
 		app.insert_resource(self.asset_config.clone());
 
 		// 帧推结束前，整理资产（这里采用在帧推结束前整理资产， 而不是利用容量分配器自带的定时整理， 可以防止整理立即打断正在进行的其他system）
-		app.add_system(collect.in_base_set(CoreSet::Last));
+		app.add_systems(Last, collect);
 	}
 }
 
@@ -49,7 +46,6 @@ impl Default for LastCollectTime {
 /// 整理容量
 pub fn collect(mut allocator: ResMut<Allocator>, last_collect_time: Local<LastCollectTime>) {
 	// 暂时设置为每秒整理， 这里间隔配置？TODO
-	let now = now_millisecond();
 	if now_millisecond() - last_collect_time.0 > 1000 {
 		allocator.collect(now_millisecond())
 	}

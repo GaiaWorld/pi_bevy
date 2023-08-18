@@ -1,7 +1,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use bevy::{prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfig, CoreSet, Commands, Deref, Entity}, ecs::system::CommandQueue};
+use bevy::{prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfigs, Commands, Deref, Entity, First}, ecs::system::CommandQueue};
 use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, ClearOptions, CLEAR_WIDNOW_NODE, component::GraphId, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::{Texture, TextureView, PiRenderDefault}, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
@@ -390,7 +390,7 @@ impl Plugin for PluginWindowRender {
 
             let node = WindowRenderer::new(&device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default(), id_clear, node_clear, id_render, node_render);
             app.insert_resource(node);
-            app.add_system(sys_changesize.in_base_set(CoreSet::First));
+            app.add_systems(First, sys_changesize);
         // }
     }
 }

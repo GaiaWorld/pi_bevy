@@ -6,8 +6,8 @@ use bevy::{ecs::{
     prelude::{Component, Entity, Events},
     query::{Added, Changed, Or, WorldQuery},
     system::{Local, Res, SystemParam, SystemMeta},
-	component::ComponentId, archetype::Archetype,
-}, prelude::World};
+	component::{ComponentId, Tick}, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell,
+}, prelude::{World, Event}};
 use bevy::utils::synccell::SyncCell;
 use pi_bevy_ecs_macro::all_tuples;
 use pi_dirty::{
@@ -94,8 +94,8 @@ unsafe impl<F: Dirty> SystemParam for LayerDirty<'_, '_, F> {
     unsafe fn get_param<'w, 's>(
         state: &'s mut Self::State,
         system_meta: &SystemMeta,
-        world: &'w World,
-        change_tick: u32,
+        world: UnsafeWorldCell<'w>,
+        change_tick: Tick,
     ) -> Self::Item<'w, 's> {
 		LayerDirty {
 			entity_tree: <EntityTree<'static, 'static> as SystemParam>::get_param(&mut state.0, system_meta, world, change_tick), 
@@ -376,6 +376,10 @@ pub struct ComponentEvent<T: Dirty> {
     mark: PhantomData<T>,
 }
 
+impl<T: Dirty> Event for ComponentEvent<T> {
+
+}
+
 impl<T: Dirty> ComponentEvent<T> {
     pub fn new(id: Entity) -> Self {
         Self {
@@ -485,16 +489,16 @@ unsafe impl<F: Dirty> SystemParam for ComponentEventReader<'_, '_, F> {
 
 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
 		(
-			Local::<'_, ManualEventReader<ComponentEvent<F>>>::init_state(world, system_meta),
-			Res::<'_, Events<ComponentEvent<F>>>::init_state(world, system_meta)
+			<Local::<'_, ManualEventReader<ComponentEvent<F>>> as SystemParam>::init_state(world, system_meta),
+			<Res::<'_, Events<ComponentEvent<F>>> as SystemParam>::init_state(world, system_meta)
 		)
 	}
 
 	unsafe fn get_param<'w, 's>(
         state: &'s mut Self::State,
         system_meta: &SystemMeta,
-        world: &'w World,
-        change_tick: u32,
+        world: UnsafeWorldCell<'w>,
+        change_tick: Tick,
     ) -> Self::Item<'w, 's> {
         ComponentEventReader { 
 			reader : <Local<'s , ManualEventReader<ComponentEvent<F>>> as bevy::ecs :: system :: SystemParam>::get_param(& mut state.0 , system_meta, world, change_tick) , 

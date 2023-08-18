@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy", "window", "winit"]
 
 [dependencies]
-bevy = {version="0.10", default-features = false}
+bevy = {version="0.11", default-features = false}
 winit = { registry = "yn", version = "0.27"}
 glam="0.23"
 raw-window-handle = "0.5"

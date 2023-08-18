@@ -12,17 +12,17 @@ keywords = ["pi", "bevy", "ecs"]
 log="0.4"
 pi_null="0.1"
 derive_deref = "1.1"
-pi_hash="0.1"
-pi_map="0.1"
-pi_print_any="0.1"
+pi_hash = "0.1"
+pi_map = "0.1"
+pi_print_any = "0.1"
 # pi_ecs_macros="0.1"
-pi_dirty="0.1"
+pi_dirty = "0.1"
 pi_share = "0.4"
 pi_time = "0.3"
 # pi_ecs="0.1"
-pi_slotmap_tree="0.3"
+pi_slotmap_tree = "0.3"
 # bevy_ecs="0.9"
-bevy = {version="0.10", default-features = false}
+bevy = {version="0.11", default-features = false}
 pi_slotmap = "0.1"
 fixedbitset = "0.4"
 pi_graph = "0.1"
@@ -36,31 +36,10 @@ pi_assets = "0.13"
 serde = { version = "1.0", features = ["derive"], option=true }
 
 
-# pi_share = {path="../pi_share"}
-
-# [patch."https://github.com/GaiaWorld/pi_ecs"]
-# pi_ecs = { path = "../pi_ecs" }
-# pi_ecs_macros = { path = "../pi_ecs/macros" }
-
 [dev-dependencies]
-pi_async_graph = "0.6"
+pi_async_graph = "0.7"
 pi-async-rt = "0.1"
 
-# [patch."https://github.com/GaiaWorld/pi_slotmap_tree"]
-# pi_slotmap_tree = { path = "../pi_slotmap_tree" }
-
-# [patch."https://github.com/GaiaWorld/pi_ecs"]
-# pi_ecs = { path = "../pi_ecs" }
-[patch.crates-io]
-# pi_slotmap_tree = { path="../pi_slotmap_tree"}
-# pi_async_graph = { path="../pi_async_graph" }
-# pi_ecs_macros = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
-# pi_ecs = { git = "https://github.com/GaiaWorld/pi_ecs.git" }
-# pi_dirty = { git = "https://github.com/GaiaWorld/pi_dirty.git" }
-
-# [net]
-# git-fetch-with-cli = true
-# offline = true
 [features]
 default = ["debug"]
 debug = []

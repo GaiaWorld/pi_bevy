@@ -12,7 +12,7 @@ keywords = ["pi", "bevy"]
 # bevy_app = "0.9"
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
-bevy = {version="0.10", default-features = false}
+bevy = {version="0.11", default-features = false}
 pi_postprocess = {git="https://github.com/GaiaWorld/pi_post_process.git"}
 pi_render = {git="https://github.com/GaiaWorld/pi_render.git", branch="bevy_shader"}
 

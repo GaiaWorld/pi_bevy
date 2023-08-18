@@ -1,6 +1,5 @@
 
 use pi_render::rhi::sampler::{EAddressMode, EFilterMode, EAnisotropyClamp, SamplerDesc};
-use wasm_bindgen::prelude::wasm_bindgen;
 
 use super::render_state::CompareFunction;
 

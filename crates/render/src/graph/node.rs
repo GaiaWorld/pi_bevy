@@ -1,7 +1,7 @@
 //! 利用 DependGraph 实现 渲染图
 use std::{
     collections::VecDeque,
-    sync::atomic::{AtomicBool, Ordering}, borrow::Borrow,
+    sync::atomic::{AtomicBool, Ordering}
 };
 
 use crate::state_pool::SystemStatePool;
@@ -258,7 +258,7 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
     // 扔任务 到 异步库
     fn push(&self, task: BoxFuture<'static, ()>) {
         // 依次 处理 队列
-        fn run<A: AsyncRuntime>(mut queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
+        fn run<A: AsyncRuntime>(queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
 			// log::warn!("AsyncQueue lock before===========");
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue lock before".to_string());
             

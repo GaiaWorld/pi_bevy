@@ -6,7 +6,7 @@ use crate::{
 use bevy::app::{App, Plugin};
 
 use bevy::ecs::system::Res;
-use bevy::prelude::{IntoSystemConfig, Resource, SystemSet};
+use bevy::prelude::{IntoSystemConfigs, Resource, SystemSet, PostUpdate};
 use pi_assets::asset::GarbageEmpty;
 use pi_async_rt::prelude::*;
 use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr};
@@ -81,7 +81,8 @@ impl Plugin for PiRenderPlugin {
 
         #[cfg(target_arch = "wasm32")]
         let rt = {
-            app.add_system(
+            app.add_systems(
+				PostUpdate,
                 run_frame_system::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
                 >
@@ -93,16 +94,14 @@ impl Plugin for PiRenderPlugin {
         };
 
         #[cfg(not(target_arch = "wasm32"))]
-        let rt = {
-            app.add_system(
-                run_frame_system::<MultiTaskRuntime>
-                    .in_set(PiRenderSystemSet)
-                    .run_if(should_run),
-            );
-
-            create_multi_runtime()
-            // create_single_runtime()
-        };
+		let rt = create_multi_runtime();
+		#[cfg(not(target_arch = "wasm32"))]
+		app.add_systems(
+			PostUpdate,
+			run_frame_system::<MultiTaskRuntime>
+				.in_set(PiRenderSystemSet)
+				.run_if(should_run),
+		);
 
         let (
             share_texture_res,
@@ -247,10 +246,10 @@ fn create_multi_runtime() -> MultiTaskRuntime {
     rt
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-fn create_single_runtime() -> SingleTaskRuntime {
-    let runner = SingleTaskRunner::default();
-    let rt = runner.into_local();
+// #[cfg(not(target_arch = "wasm32"))]
+// fn create_single_runtime() -> SingleTaskRuntime {
+//     let runner = SingleTaskRunner::default();
+//     let rt = runner.into_local();
 
-    rt
-}
+//     rt
+// }

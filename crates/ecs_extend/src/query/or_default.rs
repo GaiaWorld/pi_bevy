@@ -2,7 +2,7 @@
 
 use std::marker::PhantomData;
 
-use bevy::ecs::{query::{Access, FilteredAccess, WorldQuery, ReadFetch, ReadOnlyWorldQuery}, component::{StorageType, ComponentStorage, ComponentId}, archetype::{Archetype, ArchetypeComponentId}, world::{ World, FromWorld}, storage::{Table, TableRow}, prelude::{Component, Entity}, system::Resource};
+use bevy::ecs::{query::{Access, FilteredAccess, WorldQuery, ReadFetch, ReadOnlyWorldQuery}, component::{StorageType, ComponentStorage, ComponentId, Tick}, archetype::{Archetype, ArchetypeComponentId}, world::{ World, FromWorld, unsafe_world_cell::UnsafeWorldCell}, storage::{Table, TableRow}, prelude::{Component, Entity}, system::Resource};
 use derive_deref::{Deref, DerefMut};
 
 /// 不存在T时，使用默认值。
@@ -46,10 +46,10 @@ unsafe impl<T: Component + FromWorld> WorldQuery for OrDefault<T> {
     const IS_ARCHETYPAL: bool = true;
 
     unsafe fn init_fetch<'w>(
-        world: &'w World,
+        world: UnsafeWorldCell<'w>,
         state: &Self::State,
-        last_change_tick: u32,
-        change_tick: u32,
+        last_change_tick: Tick,
+        change_tick: Tick,
     ) -> OrDefaultFetch<'w, T> {
         OrDefaultFetch {
             inner: <&T>::init_fetch(world, &state.component_state, last_change_tick, change_tick),
