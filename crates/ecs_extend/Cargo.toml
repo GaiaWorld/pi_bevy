@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_ecs_extend"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -31,7 +31,7 @@ pi-async-rt = "0.1"
 thiserror = "1.0"
 pi_futures = "0.1"
 flume = "0.10"
-pi_bevy_ecs_macro = {path = "./macro", version="0.1"}
+pi_bevy_ecs_macro = {path = "./macro", version="0.1", register = "yn"}
 pi_assets = "0.13"
 serde = { version = "1.0", features = ["derive"], option=true }
 
