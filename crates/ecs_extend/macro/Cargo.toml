@@ -1,8 +1,12 @@
 [package]
 name = "pi_bevy_ecs_macro"
 version = "0.1.0"
-authors = ["suncy <suncy@gmail.com>"]
+authors = ["suncy <@gmail.com>"]
 edition = "2021"
+description = "Renderer for PI Engine"
+repository = "https://github.com/GaiaWorld/pi_bevy"
+license = "MIT OR Apache-2.0"
+keywords = ["pi", "bevy", "ecs", "ecs_macro"]
 
 [dependencies]
 toml = "0.5.8"
