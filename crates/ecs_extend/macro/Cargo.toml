@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_ecs_macro"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
