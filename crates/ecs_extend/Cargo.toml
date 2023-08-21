@@ -1,7 +1,7 @@
 [package]
 name = "pi_bevy_ecs_extend"
 # version = "0.1.0"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
