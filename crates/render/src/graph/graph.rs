@@ -7,12 +7,12 @@ use super::{
 };
 use crate::{
     clear_node::ClearNode,
-    node::{AsyncQueue, AsyncTaskQueue, NodeContext, TaskQueue},
+    node::{AsyncTaskQueue, NodeContext, TaskQueue},
     state_pool::SystemStatePool,
     CLEAR_WIDNOW_NODE,
 };
 use bevy::ecs::{system::SystemParam, world::World};
-use pi_async_rt::prelude::{AsyncRuntime, AsyncValueNonBlocking};
+use pi_async_rt::prelude::AsyncRuntime;
 use pi_render::{
     depend_graph::graph::DependGraph,
     rhi::{device::RenderDevice, RenderQueue},
@@ -33,6 +33,10 @@ pub struct RenderGraph {
 
     async_submit_queue: TaskQueue,
 }
+#[cfg(not(feature = "webgl"))]
+use crate::node::AsyncQueue;
+#[cfg(not(feature = "webgl"))]
+use pi_async_rt::prelude::AsyncValueNonBlocking;
 
 /// 渲染图的 拓扑信息 相关 方法
 impl RenderGraph {
@@ -214,7 +218,7 @@ impl RenderGraph {
         #[cfg(feature = "webgl")]
         {
             let mut cmd_ref = self.commands.0.borrow_mut();
-			let r = replace(&mut *cmd_ref, None);
+			let r = std::mem::replace(&mut *cmd_ref, None);
 			let cmd = Share::into_inner(r.unwrap().0).unwrap().into_inner();
             self.queue.submit(vec![cmd.finish()]);
         }

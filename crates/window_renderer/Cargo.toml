@@ -29,6 +29,7 @@ pi_futures = "0.1"
 pi-async-rt = "0.1"
 pi_share = "0.4"
 render_derive = { version = "0.1", registry = "yn" }
+pi_render = { version = "0.1", registry = "yn" }
 pi_bevy_asset = { path = "../asset", version = "0.1", registry = "yn" }
 pi_bevy_render_plugin = { path = "../render", version = "0.1", registry = "yn" }
 pi_assets = "0.13"

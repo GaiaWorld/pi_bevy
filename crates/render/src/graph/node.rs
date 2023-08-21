@@ -186,7 +186,7 @@ where
             };
 
             #[cfg(feature = "webgl")]
-            let commands = self.context.commands.borrow().as_ref().unwrap().clone();
+            let commands = self.context.commands.0.borrow().as_ref().unwrap().clone();
 
 			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
             let output = self.node.run(

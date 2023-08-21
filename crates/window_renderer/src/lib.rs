@@ -1,9 +1,9 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use bevy::{prelude::{Res, Plugin, Resource, ResMut, IntoSystemConfigs, Commands, Deref, Entity, First}, ecs::system::CommandQueue};
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, ClearOptions, CLEAR_WIDNOW_NODE, component::GraphId, NodeId};
-use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::{Texture, TextureView, PiRenderDefault}, buffer::Buffer}, renderer::sampler::SamplerRes};
+use bevy::{prelude::{Res, Plugin, Resource, ResMut, Commands, Entity, First}, ecs::system::CommandQueue};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, component::GraphId, NodeId};
+use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
 
 #[derive(Resource)]
@@ -299,51 +299,51 @@ impl Node for WindowRendererClearNode {
 
     fn run<'a>(
         &'a mut self,
-        world: &'a bevy::prelude::World,
-        param: &'a mut bevy::ecs::system::SystemState<Self::Param>,
-        context: pi_bevy_render_plugin::RenderContext,
-        mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
-        input: &'a Self::Input,
-        usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+        _world: &'a bevy::prelude::World,
+        _param: &'a mut bevy::ecs::system::SystemState<Self::Param>,
+        _context: pi_bevy_render_plugin::RenderContext,
+        _commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
+        _input: &'a Self::Input,
+        _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
 		_id: NodeId,
 		_from: &'a [NodeId],
 		_to: &'a [NodeId],
     ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
-        let final_render = param.get(world);
-        if let (Some(view), Some(depth_view)) = (final_render.view(), &final_render.depth_view) {
-            let mut rpass = commands.begin_render_pass(
-                &wgpu::RenderPassDescriptor {
-                    label: Some(WindowRenderer::CLEAR_KEY),
-                    color_attachments: &[
-                        Some(wgpu::RenderPassColorAttachment {
-                            view: view,
-                            resolve_target: None,
-                            ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(final_render.clearcolor),
-                                store: true,
-                            },
-                        })
-                    ],
-                    depth_stencil_attachment: Some(
-                        wgpu::RenderPassDepthStencilAttachment {
-                            view: depth_view,
-                            depth_ops: Some(
-                                wgpu::Operations {
-                                    load: wgpu::LoadOp::Clear(final_render.cleardepth),
-                                    store: true,
-                                }
-                            ),
-                            stencil_ops: Some(
-                                wgpu::Operations {
-                                    load: wgpu::LoadOp::Clear(final_render.clearstencil),
-                                    store: true,
-                                }
-                            )
-                        }
-                    ),
-                }
-            );
-        }
+        // let final_render = param.get(world);
+        // if let (Some(view), Some(depth_view)) = (final_render.view(), &final_render.depth_view) {
+        //     let rpass = commands.begin_render_pass(
+        //         &wgpu::RenderPassDescriptor {
+        //             label: Some(WindowRenderer::CLEAR_KEY),
+        //             color_attachments: &[
+        //                 Some(wgpu::RenderPassColorAttachment {
+        //                     view: view,
+        //                     resolve_target: None,
+        //                     ops: wgpu::Operations {
+        //                         load: wgpu::LoadOp::Clear(final_render.clearcolor),
+        //                         store: true,
+        //                     },
+        //                 })
+        //             ],
+        //             depth_stencil_attachment: Some(
+        //                 wgpu::RenderPassDepthStencilAttachment {
+        //                     view: depth_view,
+        //                     depth_ops: Some(
+        //                         wgpu::Operations {
+        //                             load: wgpu::LoadOp::Clear(final_render.cleardepth),
+        //                             store: true,
+        //                         }
+        //                     ),
+        //                     stencil_ops: Some(
+        //                         wgpu::Operations {
+        //                             load: wgpu::LoadOp::Clear(final_render.clearstencil),
+        //                             store: true,
+        //                         }
+        //                     )
+        //                 }
+        //             ),
+        //         }
+        //     );
+        // }
 
         Box::pin(async move {
             Ok(())
