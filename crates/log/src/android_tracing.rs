@@ -1,4 +1,4 @@
-use bevy_utils::tracing::{
+use bevy::utils::tracing::{
     field::Field,
     span::{Attributes, Record},
     Event, Id, Level, Subscriber,
