@@ -13,7 +13,7 @@ use thiserror::Error;
 
 use pi_async_graph::{async_graph, Runnble, Runner};
 use pi_graph::{DirectedGraph, DirectedGraphNode, NGraph, NGraphBuilder};
-use bevy::ecs::{
+use bevy_ecs::{
 	query::Access,
 	archetype::ArchetypeComponentId,
 	world::World,

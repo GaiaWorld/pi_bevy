@@ -1,5 +1,5 @@
-use bevy::app::{Plugin, App};
-use bevy::ecs::system::Resource;
+use bevy_app::{Plugin, App};
+use bevy_ecs::system::Resource;
 use pi_assets::mgr::AssetMgr;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{PiRenderDevice, PiRenderQueue};

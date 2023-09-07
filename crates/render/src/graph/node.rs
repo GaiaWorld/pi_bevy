@@ -10,11 +10,11 @@ use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
-use bevy::ecs::{
+use bevy_ecs::{
     system::{SystemParam, SystemState},
     world::World,
 };
-use bevy::prelude::{Deref, DerefMut};
+use derive_deref::{Deref, DerefMut};
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;

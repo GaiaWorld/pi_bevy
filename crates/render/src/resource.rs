@@ -1,10 +1,10 @@
 use crate::render_windows::RenderWindow;
-use bevy::prelude::{Deref, DerefMut, FromWorld};
-use bevy::ecs::system::Resource;
+use bevy_ecs::prelude::FromWorld;
+use bevy_ecs::system::Resource;
 use pi_async_rt::prelude::*;
 use pi_render::rhi::buffer_alloc::BufferAlloter;
 use wgpu::BufferUsages;
-
+use derive_deref::{Deref, DerefMut};
 /// ================ 单例 ================
 
 #[derive(Resource, Deref, DerefMut)]
@@ -32,7 +32,7 @@ pub type PiIndexBufferAlloter = PiBufferAlloter<{INDEX_USAGES}>;
 pub struct PiBufferAlloter<const B: u32>(BufferAlloter);
 
 impl<const B: u32> FromWorld for PiBufferAlloter<B> {
-    fn from_world(world: &mut bevy::prelude::World) -> Self {
+    fn from_world(world: &mut bevy_ecs::prelude::World) -> Self {
         let device = world.get_resource::<PiRenderDevice>().unwrap();
         let queue = world.get_resource::<PiRenderQueue>().unwrap();
 		Self(BufferAlloter::new((**device).clone(), (**queue).clone(), 4096, BufferUsages::from_bits_truncate(B)))

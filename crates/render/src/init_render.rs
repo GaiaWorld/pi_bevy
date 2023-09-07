@@ -3,9 +3,9 @@ use crate::{
     graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderOptions, PiRenderQueue,
 };
-use bevy::ecs::world::World;
-use bevy::prelude::With;
-use bevy::window::{PrimaryWindow, RawHandleWrapper};
+use bevy_ecs::world::World;
+use bevy_ecs::prelude::With;
+use bevy_window::{PrimaryWindow, RawHandleWrapper};
 use log::{debug, warn};
 use pi_async_rt::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::{

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use bevy::{app::App, log::LogPlugin};
+use bevy_app::App;
+use bevy_log::LogPlugin;
 use pi_bevy_asset::{AssetConfig, PiAssetPlugin};
 use pi_bevy_render_plugin::{ClearOptions, PiClearOptions, PiRenderPlugin};
 use pi_bevy_winit_window::WinitPlugin;
@@ -15,19 +16,19 @@ fn main() {
     let window = winit::window::Window::new(&event_loop).unwrap();
 
     app
-    .add_plugin(LogPlugin::default())
-    .add_plugin(WinitPlugin::new(Arc::new(window)))
+    .add_plugins(LogPlugin::default())
+    .add_plugins(WinitPlugin::new(Arc::new(window)))
     .insert_resource(PiClearOptions(ClearOptions {
         color: wgpu::Color::GREEN,
         ..Default::default()
     }))
-    .add_plugin(bevy::a11y::AccessibilityPlugin)
-    .add_plugin(bevy::input::InputPlugin::default())
-    .add_plugin(PiAssetPlugin {
+    .add_plugins(bevy_a11y::AccessibilityPlugin)
+    .add_plugins(bevy_input::InputPlugin::default())
+    .add_plugins(PiAssetPlugin {
         total_capacity: 256 * 1024 * 1024,
         asset_config: AssetConfig::default(),
     })
-    .add_plugin(PiRenderPlugin::default());
+    .add_plugins(PiRenderPlugin::default());
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = winit::event_loop::ControlFlow::Poll;

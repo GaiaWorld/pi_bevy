@@ -1,13 +1,14 @@
 use std::any::TypeId;
 
-use bevy::ecs::system::Resource;
-use bevy::prelude::{DerefMut, Deref, App, Local, ResMut, Plugin, Last};
+use bevy_ecs::system::{Resource, ResMut, Local};
+use bevy_app::prelude::{App, Plugin, Last};
 use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer, Size}, homogeneous::HomogeneousMgr};
 use pi_hash::XHashMap;
 use pi_share::Share;
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
 use pi_null::Null;
+use derive_deref::{Deref, DerefMut};
 
 /// 资产功能插件， 负责添加容量分配器`Allocator`作为单例， 添加容量配置单例`AssetConfig`, 添加system `collect`负责定时整理资产
 pub struct PiAssetPlugin {

@@ -1,8 +1,9 @@
-use bevy::app::Plugin;
-use bevy::prelude::*;
-use bevy::window::{
+use bevy_app::Plugin;
+use bevy_ecs::prelude::*;
+use bevy_window::{
     PrimaryWindow, RawHandleWrapper, WindowCreated, WindowPosition, WindowResolution,
 };
+use glam::IVec2;
 use raw_window_handle::HasRawDisplayHandle;
 use raw_window_handle::HasRawWindowHandle;
 use std::sync::Arc;
@@ -38,7 +39,7 @@ impl WinitPlugin {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Plugin for WinitPlugin {
-    fn build(&self, app: &mut bevy::app::App) {
+    fn build(&self, app: &mut bevy_app::App) {
         self.descript.build(app);
     }
 }
@@ -69,7 +70,7 @@ impl WinitPlugin {
 
 #[cfg(target_arch = "wasm32")]
 impl Plugin for WinitPlugin {
-    fn build(&self, app: &mut bevy::app::App) {
+    fn build(&self, app: &mut bevy_app::App) {
         let event_loop = winit::event_loop::EventLoop::new();
         let window = Arc::new(
             winit::window::WindowBuilder::new()
@@ -101,7 +102,7 @@ impl WindowDescribe {
         self
     }
 
-    fn build(&self, app: &mut bevy::app::App) {
+    fn build(&self, app: &mut bevy_app::App) {
         let winit_window = &*self.window;
         if let Some(size) = self.size {
             winit_window.set_inner_size(PhysicalSize {
@@ -116,7 +117,7 @@ impl WindowDescribe {
             window_handle: winit_window.raw_window_handle(),
             display_handle: winit_window.raw_display_handle(),
         };
-        let mut window = bevy::prelude::Window::default();
+        let mut window = bevy_window::prelude::Window::default();
         window.resolution = WindowResolution::new(
             inner_size.width as f32 / scale_factor as f32,
             inner_size.height as f32 / scale_factor as f32,
@@ -130,7 +131,7 @@ impl WindowDescribe {
 
         // TODO?
         #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
-        app.world.send_event(bevy::window::WindowResized {
+        app.world.send_event(bevy_window::WindowResized {
             window: primary,
             width: inner_size.width as f32,
             height: inner_size.height as f32,
@@ -138,7 +139,7 @@ impl WindowDescribe {
 
         // windows.add(window);
         app.world.send_event(WindowCreated { window: primary });
-        // world.send_event(bevy::window::WindowCreated { id: self.window_id });
+        // world.send_event(bevy_window::WindowCreated { id: self.window_id });
     }
 }
 

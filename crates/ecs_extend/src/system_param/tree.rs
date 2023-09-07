@@ -1,7 +1,7 @@
 //! 实体树
 
 use std::mem::transmute;
-use bevy::{ecs::{prelude::{Entity, Component, EventWriter}, system::{Query, Commands, SystemParam, SystemMeta}, query::Changed, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell, component::Tick}, prelude::World};
+use bevy_ecs::{{prelude::{Entity, Component, EventWriter}, system::{Query, Commands, SystemParam, SystemMeta}, query::Changed, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell, component::Tick}, prelude::World};
 use derive_deref::{Deref, DerefMut};
 use pi_null::Null;
 use pi_slotmap_tree::{Up as Up1, Down as Down1, Storage, StorageMut, Tree, Layer as Layer1, ChildrenIterator as ChildrenIterator1, RecursiveIterator as RecursiveIterator1, InsertType};
@@ -230,30 +230,30 @@ pub struct TreeStorageMut<'w, 's> {
 	layer_notify: EventWriter<'w, ComponentEvent<Changed<Layer>>>, // 用于通知Layer修改
 }
 
-unsafe impl bevy::ecs::system::SystemParam for EntityTreeMut<'_, '_> {
+unsafe impl bevy_ecs::system::SystemParam for EntityTreeMut<'_, '_> {
 	type State = (
-		<Query<'static, 'static, &'static mut Layer> as bevy::ecs::system::SystemParam>::State,
-		<Query<'static, 'static, &'static mut Up> as bevy::ecs::system::SystemParam>::State,
-		<Query<'static, 'static, &'static mut Down> as bevy::ecs::system::SystemParam>::State,
-		<Commands<'static, 'static> as bevy::ecs::system::SystemParam>::State,
-		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::State,
+		<Query<'static, 'static, &'static mut Layer> as bevy_ecs::system::SystemParam>::State,
+		<Query<'static, 'static, &'static mut Up> as bevy_ecs::system::SystemParam>::State,
+		<Query<'static, 'static, &'static mut Down> as bevy_ecs::system::SystemParam>::State,
+		<Commands<'static, 'static> as bevy_ecs::system::SystemParam>::State,
+		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::State,
 	);
 	type Item<'world, 'state> = EntityTreeMut<'world, 'state>;
 	// type Fetch = FetchState<(
-	//     <Query<'w, 's, &'static mut Layer> as bevy::ecs::system::SystemParam>::Fetch,
-	//     <Query<'w, 's, &'static mut Up> as bevy::ecs::system::SystemParam>::Fetch,
-	//     <Query<'w, 's, &'static mut Down> as bevy::ecs::system::SystemParam>::Fetch,
-	//     <Commands<'w, 's> as bevy::ecs::system::SystemParam>::Fetch,
-	// 	<EventWriter <'w, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::Fetch,
+	//     <Query<'w, 's, &'static mut Layer> as bevy_ecs::system::SystemParam>::Fetch,
+	//     <Query<'w, 's, &'static mut Up> as bevy_ecs::system::SystemParam>::Fetch,
+	//     <Query<'w, 's, &'static mut Down> as bevy_ecs::system::SystemParam>::Fetch,
+	//     <Commands<'w, 's> as bevy_ecs::system::SystemParam>::Fetch,
+	// 	<EventWriter <'w, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::Fetch,
 	// )>;
 
-	fn init_state(world: &mut bevy::prelude::World, system_meta: &mut bevy::ecs::system::SystemMeta) -> Self::State {
+	fn init_state(world: &mut bevy_ecs::prelude::World, system_meta: &mut bevy_ecs::system::SystemMeta) -> Self::State {
 		(
-			<Query<'static, 'static, &'static mut Layer> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
-			<Query<'static, 'static, &'static mut Up> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
-			<Query<'static, 'static, &'static mut Down> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
-			<Commands<'static, 'static> as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
-			<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::init_state(world, system_meta),
+			<Query<'static, 'static, &'static mut Layer> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
+			<Query<'static, 'static, &'static mut Up> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
+			<Query<'static, 'static, &'static mut Down> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
+			<Commands<'static, 'static> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
+			<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
 		)
 	}
 	fn new_archetype(state: &mut Self::State, archetype: &Archetype, _system_meta: &mut SystemMeta) {
@@ -263,11 +263,11 @@ unsafe impl bevy::ecs::system::SystemParam for EntityTreeMut<'_, '_> {
 	}
 
 	fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
-		<Query<'static, 'static, &'static mut Layer> as bevy::ecs::system::SystemParam>::apply(&mut state.0, system_meta, world);
-		<Query<'static, 'static, &'static mut Up> as bevy::ecs::system::SystemParam>::apply(&mut state.1, system_meta, world);
-		<Query<'static, 'static, &'static mut Down> as bevy::ecs::system::SystemParam>::apply(&mut state.2, system_meta, world);
-		<Commands<'static, 'static> as bevy::ecs::system::SystemParam>::apply(&mut state.3, system_meta, world);
-		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy::ecs::system::SystemParam>::apply(&mut state.4, system_meta, world);
+		<Query<'static, 'static, &'static mut Layer> as bevy_ecs::system::SystemParam>::apply(&mut state.0, system_meta, world);
+		<Query<'static, 'static, &'static mut Up> as bevy_ecs::system::SystemParam>::apply(&mut state.1, system_meta, world);
+		<Query<'static, 'static, &'static mut Down> as bevy_ecs::system::SystemParam>::apply(&mut state.2, system_meta, world);
+		<Commands<'static, 'static> as bevy_ecs::system::SystemParam>::apply(&mut state.3, system_meta, world);
+		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::apply(&mut state.4, system_meta, world);
 	}
 
 	unsafe fn get_param<'w, 's>(

@@ -12,16 +12,19 @@
 members = ["crates/*"]
 resolver = "2"
 
-[patch."https://github.com/GaiaWorld/pi_post_process"]
+
+[patch.crates-io]
+# bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
+# bevy_app = { path = "../bevy/crates/bevy_app" }
+# bevy_window = { path = "../bevy/crates/bevy_window" }
+# bevy_utils = { path = "../bevy/crates/bevy_utils" }
+# bevy_a11y = { path = "../bevy/crates/bevy_a11y" }
+# bevy_input = { path = "../bevy/crates/bevy_input" }
+
+[patch.yn]
+pi_render = { path = "../pi_render" }
 pi_postprocess = { path = "../pi_post_process"}
-
-# [patch."https://github.com/GaiaWorld/pi_render"]
-# pi_render = { path = "../pi_render" }
-
-# [patch."https://github.com/GaiaWorld/pi_hal"]
-# pi_hal = { path = "../pi_hal" }
-
-# [patch.crates-io]
+pi_hal = { path = "../pi_hal" }
 # pi_async_graph = { path = "../pi_async_graph" }
 # pi_graph = { path = "../pi_graph" }
 # pi_map = { path = "../pi_map" }

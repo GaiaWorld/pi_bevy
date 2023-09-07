@@ -1,4 +1,4 @@
-use bevy::ecs::{world::{FromWorld, World, unsafe_world_cell::UnsafeWorldCell}, system::{Resource, SystemMeta, ReadOnlySystemParam, SystemParam, Res, ResMut}, component::{ComponentId, Tick}};
+use bevy_ecs::{world::{FromWorld, World, unsafe_world_cell::UnsafeWorldCell}, system::{Resource, SystemMeta, ReadOnlySystemParam, SystemParam, Res, ResMut}, component::{ComponentId, Tick}};
 use derive_deref::{DerefMut, Deref};
 
 #[derive(Debug, Deref)]
@@ -8,6 +8,7 @@ unsafe impl<T: Resource + FromWorld> SystemParam for OrInitRes<'_, T> {
     type State = ComponentId;
 	type Item<'world, 'state> = OrInitRes<'world, T>;
 
+	#[inline(never)]
 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
 		world.init_resource::<T>();
         Res::<T>::init_state(world, system_meta)
@@ -33,6 +34,7 @@ unsafe impl<T: Resource + FromWorld> SystemParam for OrInitResMut<'_, T> {
     type State = ComponentId;
 	type Item<'world, 'state> = OrInitResMut<'world, T>;
 
+	#[inline(never)]
 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
 		world.init_resource::<T>();
         ResMut::<T>::init_state(world, system_meta)

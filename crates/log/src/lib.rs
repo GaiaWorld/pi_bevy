@@ -25,21 +25,21 @@ mod android_tracing;
 static GLOBAL: tracy_client::ProfiledAllocator<std::alloc::System> =
     tracy_client::ProfiledAllocator::new(std::alloc::System, 100);
 
-pub mod prelude {
-    //! The Bevy Log Prelude.
-    #[doc(hidden)]
-    pub use bevy::utils::tracing::{
-        debug, debug_span, error, error_span, info, info_span, trace, trace_span, warn, warn_span,
-    };
-}
+// pub mod prelude {
+//     //! The Bevy Log Prelude.
+//     #[doc(hidden)]
+//     pub use bevy::utils::tracing::{
+//         debug, debug_span, error, error_span, info, info_span, trace, trace_span, warn, warn_span,
+//     };
+// }
 
-use bevy::ecs::system::Resource;
-pub use bevy::utils::tracing::{
-    debug, debug_span, error, error_span, info, info_span, trace, trace_span, warn, warn_span,
-    Level,
-};
+use bevy_ecs::system::Resource;
+// pub use bevy::utils::tracing::{
+//     debug, debug_span, error, error_span, info, info_span, trace, trace_span, warn, warn_span,
+//     Level,
+// };
 
-use bevy::app::{App, Plugin};
+use bevy_app::{App, Plugin};
 use tracing_log::LogTracer;
 #[cfg(feature = "tracing-chrome")]
 use tracing_subscriber::fmt::{format::DefaultFields, FormattedFields};
@@ -56,7 +56,7 @@ use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
 ///
 /// You can configure this plugin.
 /// ```no_run
-/// # use bevy::app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
+/// # use bevy_app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
 /// # use bevy_log::LogPlugin;
 /// # use bevy::utils::tracing::Level;
 /// fn main() {
@@ -79,7 +79,7 @@ use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
 /// If you want to setup your own tracing collector, you should disable this
 /// plugin from `DefaultPlugins`:
 /// ```no_run
-/// # use bevy::app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
+/// # use bevy_app::{App, NoopPluginGroup as DefaultPlugins, PluginGroup};
 /// # use bevy_log::LogPlugin;
 /// fn main() {
 ///     App::new()
@@ -99,7 +99,7 @@ pub struct LogPlugin<T: Write + Send + Sync + 'static> {
 
     /// Filters out logs that are "less than" the given level.
     /// This can be further filtered using the `filter` setting.
-    pub level: Level,
+    pub level: tracing::Level,
 
 	/// 
 	pub chrome_write: Option<T>,
@@ -115,7 +115,7 @@ impl<T: Write + Send + Sync + 'static> Default for LogPlugin<T> {
     fn default() -> Self {
         Self {
             filter: "wgpu=error,naga=warn".to_string(),
-            level: Level::INFO,
+            level: tracing::Level::INFO,
 			chrome_write: None,
         }
     }
@@ -245,14 +245,14 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
 
         let logger_already_set = LogTracer::init().is_err();
         let subscriber_already_set =
-            bevy::utils::tracing::subscriber::set_global_default(finished_subscriber).is_err();
+            tracing::subscriber::set_global_default(finished_subscriber).is_err();
 
         match (logger_already_set, subscriber_already_set) {
-            (true, true) => warn!(
+            (true, true) => tracing::warn!(
                 "Could not set global logger and tracing subscriber as they are already set. Consider disabling LogPlugin."
             ),
-            (true, _) => warn!("Could not set global logger as it is already set. Consider disabling LogPlugin."),
-            (_, true) => warn!("Could not set global tracing subscriber as it is already set. Consider disabling LogPlugin."),
+            (true, _) => tracing::warn!("Could not set global logger as it is already set. Consider disabling LogPlugin."),
+            (_, true) => tracing::warn!("Could not set global tracing subscriber as it is already set. Consider disabling LogPlugin."),
             _ => (),
         }
     }

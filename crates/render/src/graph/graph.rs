@@ -11,7 +11,7 @@ use crate::{
     state_pool::SystemStatePool,
     CLEAR_WIDNOW_NODE,
 };
-use bevy::ecs::{system::SystemParam, world::World};
+use bevy_ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_render::{
     depend_graph::graph::DependGraph,

@@ -11,7 +11,8 @@
 // #[macro_use]
 // extern crate pi_ecs_macros;
 
-use bevy::prelude::{World, App};
+use bevy_ecs::prelude::World;
+use bevy_app::prelude::App;
 
 pub mod system_param;
 pub mod query;

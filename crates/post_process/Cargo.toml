@@ -12,7 +12,8 @@ keywords = ["pi", "bevy"]
 # bevy_app = "0.9"
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
-bevy = {version="0.11", default-features = false}
+bevy_ecs = "0.11"
+bevy_app = {version = "0.11", default-features = false}
 pi_postprocess = { version = "0.1", registry = "yn"}
 pi_render = { version = "0.1", registry = "yn"}
 

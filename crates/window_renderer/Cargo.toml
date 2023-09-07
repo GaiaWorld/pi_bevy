@@ -13,12 +13,13 @@ keywords = ["pi", "window_renderer"]
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 # bevy_window = "0.9"
-bevy = {version="0.11", default-features = false}
+bevy_ecs = "0.11"
+bevy_app = {version = "0.11", default-features = false}
 raw-window-handle = "0.5"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = { version = "0.16", default-features = false, features = ["glsl"] }
+wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
 crossbeam="0.8"
 futures="0.3"
 naga = { version = "0.12"}
@@ -39,4 +40,5 @@ tracing = { version = "0.1", default-features = false, features = ["std"] }
 trace = []
 
 [dev-dependencies]
-bevy = {version="0.11", default-features = false, features=["bevy_winit"]}
+bevy_ecs = "0.11"
+bevy_winit = {version="0.11"}

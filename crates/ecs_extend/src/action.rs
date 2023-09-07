@@ -1,6 +1,6 @@
 use std::mem::replace;
 
-use bevy::prelude::Resource;
+use bevy_ecs::prelude::Resource;
 
 #[derive(Resource)]
 pub struct ActionList<T: Send + Sync + 'static>(Vec<T>);

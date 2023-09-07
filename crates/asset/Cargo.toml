@@ -12,8 +12,10 @@ keywords = ["pi", "bevy"]
 # bevy_app = "0.9"
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
+derive_deref = "1.1"
 pi_assets = "0.13"
-bevy = {version="0.11", default-features = false}
+bevy_ecs = "0.11"
+bevy_app = {version = "0.11", default_features = false}
 pi_share = "0.4"
 pi_hash = "0.1"
 pi_null = "0.1"

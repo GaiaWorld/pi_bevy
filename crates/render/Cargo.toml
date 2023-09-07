@@ -13,12 +13,15 @@ keywords = ["pi", "bevy", "plugin"]
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 # bevy_window = "0.9"
-bevy = { version = "0.11", default-features = false }
+bevy_ecs = "0.11"
+bevy_app = {version = "0.11", default-features = false}
+bevy_window = "0.11"
 raw-window-handle = "0.5"
+derive_deref = "1.1"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = { version = "0.16", default-features = false, features = ["glsl"] }
+wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
 crossbeam = "0.8"
 futures = "0.3"
 
@@ -44,10 +47,13 @@ trace = []
 webgl = ["pi_render/webgl"]
 
 [dev-dependencies]
-bevy = { version = "0.11", default-features = false}
+bevy_ecs = { version = "0.11", default-features = false}
 winit = { registry = "yn", version = "0.27"}
 pi_bevy_winit_window = { path = "../winit_window", varsion = "0.1", registry = "yn" }
 lazy_static = '1.4'
+bevy_log = "0.11"
+bevy_a11y = "0.11"
+bevy_input = "0.11"
 
 [target.'cfg(target_os = "android")'.dev-dependencies]
 ndk-glue = "0.7"

@@ -1,5 +1,5 @@
 use crate::{node::Node, PiClearOptions, PiScreenTexture, RenderContext};
-use bevy::ecs::{
+use bevy_ecs::{
     system::{Res, SystemState},
     world::World,
 };

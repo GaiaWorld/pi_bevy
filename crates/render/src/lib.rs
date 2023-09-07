@@ -49,7 +49,7 @@ impl GetTargetView for SimpleInOut {
 }
 
 pub mod asset_config {
-    use bevy::prelude::Resource;
+    use bevy_ecs::prelude::Resource;
     use pi_bevy_asset::AssetCapacity;
 
     /// Asset 资源管理

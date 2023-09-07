@@ -6,11 +6,8 @@ use crate::{
     PiAsyncRuntime, PiFirstSurface, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderWindow, PiScreenTexture, IS_RESUMED,
 };
-use bevy::{
-    ecs::world::World,
-    prelude::With,
-    window::{PrimaryWindow, Window},
-};
+use bevy_ecs::prelude::{World, With};
+use bevy_window::{PrimaryWindow, Window};
 use pi_async_rt::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
 #[cfg(feature = "trace")]

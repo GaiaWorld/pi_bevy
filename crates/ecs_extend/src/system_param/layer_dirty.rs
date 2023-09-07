@@ -1,14 +1,15 @@
 //! 层脏
 
 use super::tree::{EntityTree, RecursiveIterator};
-use bevy::{ecs::{
+use bevy_ecs::{
+	prelude::{World, Event},
     event::ManualEventReader,
     prelude::{Component, Entity, Events},
     query::{Added, Changed, Or, WorldQuery},
     system::{Local, Res, SystemParam, SystemMeta},
 	component::{ComponentId, Tick}, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell,
-}, prelude::{World, Event}};
-use bevy::utils::synccell::SyncCell;
+};
+use bevy_utils::synccell::SyncCell;
 use pi_bevy_ecs_macro::all_tuples;
 use pi_dirty::{
     DirtyIterator, LayerDirty as LayerDirty1, NextDirty, PreDirty, ReverseDirtyIterator,
@@ -501,13 +502,13 @@ unsafe impl<F: Dirty> SystemParam for ComponentEventReader<'_, '_, F> {
         change_tick: Tick,
     ) -> Self::Item<'w, 's> {
         ComponentEventReader { 
-			reader : <Local<'s , ManualEventReader<ComponentEvent<F>>> as bevy::ecs :: system :: SystemParam>::get_param(& mut state.0 , system_meta, world, change_tick) , 
-			events : <Res <'w, Events< ComponentEvent<F> >> as bevy::ecs :: system :: SystemParam >::get_param(& mut state.1, system_meta, world, change_tick) ,
+			reader : <Local<'s , ManualEventReader<ComponentEvent<F>>> as bevy_ecs :: system :: SystemParam>::get_param(& mut state.0 , system_meta, world, change_tick) , 
+			events : <Res <'w, Events< ComponentEvent<F> >> as bevy_ecs :: system :: SystemParam >::get_param(& mut state.1, system_meta, world, change_tick) ,
 		}
     }
 }
 
-unsafe impl<F: Dirty> bevy::ecs::system::ReadOnlySystemParam for ComponentEventReader<'_, '_, F> {}
+unsafe impl<F: Dirty> bevy_ecs::system::ReadOnlySystemParam for ComponentEventReader<'_, '_, F> {}
 
 pub trait EventList: SystemParam {
     fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity>;

@@ -1,18 +1,14 @@
 use std::sync::Arc;
 
-use bevy::{
-    app::App,
-    log::LogPlugin,
-    prelude::{Resource, With},
-    window::{PrimaryWindow, RawHandleWrapper},
-};
+use bevy_ecs::prelude::Resource;
+use bevy_log::LogPlugin;
+use bevy_app::App;
 use pi_bevy_asset::{AssetConfig, PiAssetPlugin};
 use pi_bevy_render_plugin::{
     ClearOptions, PiClearOptions, PiRenderOptions, PiRenderPlugin, PiRenderWindow, PiScreenTexture,
 };
 use pi_bevy_winit_window::{update_window_handle, WinitPlugin};
 use pi_render::rhi::options::RenderOptions;
-use raw_window_handle::HasRawWindowHandle;
 use winit::event::{Event, WindowEvent};
 
 pub const FILTER: &'static str = "wgpu=warn";
@@ -24,7 +20,7 @@ pub struct CheckSurfaceCmd(Vec<u32>);
 fn main() {
     let mut app = App::default();
 
-    app.add_plugin(LogPlugin::default());
+    app.add_plugins(LogPlugin::default());
     app.insert_resource(CheckSurfaceCmd::default());
 
     let event_loop = winit::event_loop::EventLoop::new();
@@ -67,17 +63,17 @@ fn main() {
                         ..Default::default()
                     });
 
-                    app.add_plugin(WinitPlugin::new(window.clone()))
+                    app.add_plugins(WinitPlugin::new(window.clone()))
                         .insert_resource(option)
                         .insert_resource(PiClearOptions(ClearOptions {
                             color: wgpu::Color::GREEN,
                             ..Default::default()
                         }))
-                        .add_plugin(PiAssetPlugin {
+                        .add_plugins(PiAssetPlugin {
                             total_capacity: 256 * 1024 * 1024,
                             asset_config: AssetConfig::default(),
                         })
-                        .add_plugin(PiRenderPlugin::default());
+                        .add_plugins(PiRenderPlugin::default());
                 }
             }
             Event::Suspended => {

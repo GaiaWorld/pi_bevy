@@ -3,10 +3,10 @@ use crate::{
     PiAsyncRuntime, PiClearOptions, PiRenderDevice, PiRenderOptions, PiRenderWindow,
     PiSafeAtlasAllocator, PiScreenTexture,
 };
-use bevy::app::{App, Plugin};
+use bevy_app::{App, Plugin, PostUpdate};
 
-use bevy::ecs::system::Res;
-use bevy::prelude::{IntoSystemConfigs, Resource, SystemSet, PostUpdate};
+use bevy_ecs::system::Res;
+use bevy_ecs::prelude::{IntoSystemConfigs, Resource, SystemSet};
 use pi_assets::asset::GarbageEmpty;
 use pi_async_rt::prelude::*;
 use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr};

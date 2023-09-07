@@ -1,7 +1,9 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use bevy::{prelude::{Res, Plugin, Resource, ResMut, Commands, Entity, First}, ecs::system::CommandQueue};
+use bevy_ecs::prelude::{Res, Resource, ResMut, Commands, Entity};
+use bevy_ecs::system::CommandQueue;
+use bevy_app:: {Plugin, First};
 use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, component::GraphId, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
@@ -43,68 +45,69 @@ impl WindowRenderer {
         render_entity: Entity,
         render_node: NodeId,
     ) -> Self {
-        let points: [f32; 12] = [-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
-        let vertex = device.create_buffer_with_data(
-            &BufferInitDescriptor {
-                label: Some("FinalRender"),
-                contents: bytemuck::cast_slice(&points),
-                usage: wgpu::BufferUsages::VERTEX,
-            }
-        );
+        // let points: [f32; 12] = [-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
+        // let vertex = device.create_buffer_with_data(
+        //     &BufferInitDescriptor {
+        //         label: Some("FinalRender"),
+        //         contents: bytemuck::cast_slice(&points),
+        //         usage: wgpu::BufferUsages::VERTEX,
+        //     }
+        // );
 
-        let vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Final-VS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./pass.vert")),
-                stage: naga::ShaderStage::Vertex,
-                defines: naga::FastHashMap::default(),
-            },
-        });
+        // let vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        //     label: Some("Final-VS"),
+        //     source: wgpu::ShaderSource::Glsl {
+        //         shader: std::borrow::Cow::Borrowed(include_str!("./pass.vert")),
+        //         stage: naga::ShaderStage::Vertex,
+        //         defines: naga::FastHashMap::default(),
+        //     },
+        // });
 
-        let fs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Final-FS"),
-            source: wgpu::ShaderSource::Glsl {
-                shader: std::borrow::Cow::Borrowed(include_str!("./pass.frag")),
-                stage: naga::ShaderStage::Fragment,
-                defines: naga::FastHashMap::default(),
-            },
-        });
+        // let fs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        //     label: Some("Final-FS"),
+        //     source: wgpu::ShaderSource::Glsl {
+        //         shader: std::borrow::Cow::Borrowed(include_str!("./pass.frag")),
+        //         stage: naga::ShaderStage::Fragment,
+        //         defines: naga::FastHashMap::default(),
+        //     },
+        // });
 
 
-        let bindgroup_layout = device.create_bind_group_layout(
-            &wgpu::BindGroupLayoutDescriptor {
-                label: None,
-                entries: &[
-                    wgpu::BindGroupLayoutEntry { binding: 0, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: false }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false }, count: None  },
-                    wgpu::BindGroupLayoutEntry { binding: 1, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering), count: None }
-                ] 
-            }
-        );
+        // let bindgroup_layout = device.create_bind_group_layout(
+        //     &wgpu::BindGroupLayoutDescriptor {
+        //         label: None,
+        //         entries: &[
+        //             wgpu::BindGroupLayoutEntry { binding: 0, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: false }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false }, count: None  },
+        //             wgpu::BindGroupLayoutEntry { binding: 1, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering), count: None }
+        //         ] 
+        //     }
+        // );
 
-        Self {
-            format,
-            surface_format,
-            size: Extent3d::default(),
-            vertex,
-            vs,
-            fs,
-            bindgroup_layout,
-            sampler: None,
-            bindgroup: None,
-            pipeline: None,
-            texture: None,
-            view: None,
-            depth_texture: None,
-            depth_view: None,
-            clearcolor: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
-            cleardepth: 1.0,
-            clearstencil: 0,
-            active: false,
-            clear_entity,
-            clear_node,
-            render_entity,
-            render_node,
-        }
+        // Self {
+        //     format,
+        //     surface_format,
+        //     size: Extent3d::default(),
+        //     vertex,
+        //     vs,
+        //     fs,
+        //     bindgroup_layout,
+        //     sampler: None,
+        //     bindgroup: None,
+        //     pipeline: None,
+        //     texture: None,
+        //     view: None,
+        //     depth_texture: None,
+        //     depth_view: None,
+        //     clearcolor: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
+        //     cleardepth: 1.0,
+        //     clearstencil: 0,
+        //     active: false,
+        //     clear_entity,
+        //     clear_node,
+        //     render_entity,
+        //     render_node,
+        // }
+		todo!();
 
     }
     pub fn change(
@@ -246,8 +249,8 @@ impl Node for WindowRendererNode {
 
     fn run<'a>(
         &'a mut self,
-        world: &'a bevy::prelude::World,
-        param: &'a mut bevy::ecs::system::SystemState<Self::Param>,
+        world: &'a bevy_ecs::prelude::World,
+        param: &'a mut bevy_ecs::system::SystemState<Self::Param>,
         _context: pi_bevy_render_plugin::RenderContext,
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _: &'a Self::Input,
@@ -299,8 +302,8 @@ impl Node for WindowRendererClearNode {
 
     fn run<'a>(
         &'a mut self,
-        _world: &'a bevy::prelude::World,
-        _param: &'a mut bevy::ecs::system::SystemState<Self::Param>,
+        _world: &'a bevy_ecs::prelude::World,
+        _param: &'a mut bevy_ecs::system::SystemState<Self::Param>,
         _context: pi_bevy_render_plugin::RenderContext,
         _commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,
@@ -365,7 +368,7 @@ fn sys_changesize(
 #[derive(Debug, Default)]
 pub struct PluginWindowRender;
 impl Plugin for PluginWindowRender {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut bevy_app::App) {
         
         // #[cfg(not(target_arch="wasm32"))]
         // {
