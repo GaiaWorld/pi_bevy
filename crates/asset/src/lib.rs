@@ -4,6 +4,13 @@ use bevy_ecs::system::{Resource, ResMut, Local};
 use bevy_app::prelude::{App, Plugin, Last};
 use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer, Size}, homogeneous::HomogeneousMgr};
 use pi_hash::XHashMap;
+use pi_render::render_3d::shader::{Shader3D, ShaderEffectMeta};
+use pi_render::renderer::bind_group::{BindGroup, BindGroupLayout};
+use pi_render::renderer::sampler::SamplerRes;
+use pi_render::renderer::texture::{ImageTexture, ImageTextureView};
+use pi_render::renderer::vertex_buffer::EVertexBufferRange;
+use pi_render::rhi::asset::{TextureRes, RenderRes};
+use pi_render::rhi::pipeline::RenderPipeline;
 use pi_share::Share;
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
@@ -169,4 +176,65 @@ impl AssetMgrConfigs {
 			T::capacity()
 		}
     }
+}
+
+impl TAssetCapacity for ImageTexture {
+	const ASSET_TYPE: &'static str = "IMAGE_TEXTURE";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 10 * 1024 * 1024, timeout: 10 * 1000 }
+	}
+}
+impl TAssetCapacity for ImageTextureView {
+	const ASSET_TYPE: &'static str = "IMAGE_TEXTURE_VIEW";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 10 * 1024 * 1024, timeout: 10 * 1000 }
+	}
+}
+impl TAssetCapacity for SamplerRes {
+	const ASSET_TYPE: &'static str = "SAMPLER_RES";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 10 * 1024, max: 100 * 1024, timeout: 1000 * 1000 }
+	}
+}
+impl TAssetCapacity for TextureRes {
+	const ASSET_TYPE: &'static str = "TEXTURE_RES";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 10 * 1024 * 1024, timeout: 10 * 1000 }
+	}
+}
+impl TAssetCapacity for EVertexBufferRange {
+	const ASSET_TYPE: &'static str = "VERTEX_BUFFER_RANGE";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 256, max: 1024, timeout: 1000 }
+	}
+}
+impl TAssetCapacity for ShaderEffectMeta {
+	const ASSET_TYPE: &'static str = "SHADER_EFFECT_META";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 4 * 1024 * 1024, max: 6 * 1024 * 1024, timeout: 60 * 60 * 1000 }
+	}
+}
+impl TAssetCapacity for BindGroup {
+	const ASSET_TYPE: &'static str = "BIND_GROUP";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 32 * 1024, max: 64 * 1024, timeout: 1000 }
+	}
+}
+impl TAssetCapacity for BindGroupLayout {
+	const ASSET_TYPE: &'static str = "BIND_GROUP_LAYOUT";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 32 * 1024, max: 64 * 1024, timeout: 1000 }
+	}
+}
+impl TAssetCapacity for RenderRes<RenderPipeline> {
+	const ASSET_TYPE: &'static str = "RENDER_PIPELINE";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 1024 * 1024, max: 2 * 1024 * 1024, timeout: 10 * 1000 }
+	}
+}
+impl TAssetCapacity for Shader3D {
+	const ASSET_TYPE: &'static str = "SHADER_3D";
+	fn capacity() -> AssetCapacity {
+        AssetCapacity { flag: false, min: 64 * 1024, max: 128 * 1024, timeout: 10 * 1000 }
+	}
 }
