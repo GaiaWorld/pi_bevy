@@ -45,70 +45,68 @@ impl WindowRenderer {
         render_entity: Entity,
         render_node: NodeId,
     ) -> Self {
-        // let points: [f32; 12] = [-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
-        // let vertex = device.create_buffer_with_data(
-        //     &BufferInitDescriptor {
-        //         label: Some("FinalRender"),
-        //         contents: bytemuck::cast_slice(&points),
-        //         usage: wgpu::BufferUsages::VERTEX,
-        //     }
-        // );
+        let points: [f32; 12] = [-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
+        let vertex = device.create_buffer_with_data(
+            &BufferInitDescriptor {
+                label: Some("FinalRender"),
+                contents: bytemuck::cast_slice(&points),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
 
-        // let vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-        //     label: Some("Final-VS"),
-        //     source: wgpu::ShaderSource::Glsl {
-        //         shader: std::borrow::Cow::Borrowed(include_str!("./pass.vert")),
-        //         stage: naga::ShaderStage::Vertex,
-        //         defines: naga::FastHashMap::default(),
-        //     },
-        // });
+        let vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Final-VS"),
+            source: wgpu::ShaderSource::Glsl {
+                shader: std::borrow::Cow::Borrowed(include_str!("./pass.vert")),
+                stage: naga::ShaderStage::Vertex,
+                defines: naga::FastHashMap::default(),
+            },
+        });
 
-        // let fs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-        //     label: Some("Final-FS"),
-        //     source: wgpu::ShaderSource::Glsl {
-        //         shader: std::borrow::Cow::Borrowed(include_str!("./pass.frag")),
-        //         stage: naga::ShaderStage::Fragment,
-        //         defines: naga::FastHashMap::default(),
-        //     },
-        // });
+        let fs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Final-FS"),
+            source: wgpu::ShaderSource::Glsl {
+                shader: std::borrow::Cow::Borrowed(include_str!("./pass.frag")),
+                stage: naga::ShaderStage::Fragment,
+                defines: naga::FastHashMap::default(),
+            },
+        });
 
 
-        // let bindgroup_layout = device.create_bind_group_layout(
-        //     &wgpu::BindGroupLayoutDescriptor {
-        //         label: None,
-        //         entries: &[
-        //             wgpu::BindGroupLayoutEntry { binding: 0, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: false }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false }, count: None  },
-        //             wgpu::BindGroupLayoutEntry { binding: 1, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering), count: None }
-        //         ] 
-        //     }
-        // );
+        let bindgroup_layout = device.create_bind_group_layout(
+            &wgpu::BindGroupLayoutDescriptor {
+                label: None,
+                entries: &[
+                    wgpu::BindGroupLayoutEntry { binding: 0, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: false }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false }, count: None  },
+                    wgpu::BindGroupLayoutEntry { binding: 1, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering), count: None }
+                ] 
+            }
+        );
 
-        // Self {
-        //     format,
-        //     surface_format,
-        //     size: Extent3d::default(),
-        //     vertex,
-        //     vs,
-        //     fs,
-        //     bindgroup_layout,
-        //     sampler: None,
-        //     bindgroup: None,
-        //     pipeline: None,
-        //     texture: None,
-        //     view: None,
-        //     depth_texture: None,
-        //     depth_view: None,
-        //     clearcolor: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
-        //     cleardepth: 1.0,
-        //     clearstencil: 0,
-        //     active: false,
-        //     clear_entity,
-        //     clear_node,
-        //     render_entity,
-        //     render_node,
-        // }
-		todo!();
-
+        Self {
+            format,
+            surface_format,
+            size: Extent3d::default(),
+            vertex,
+            vs,
+            fs,
+            bindgroup_layout,
+            sampler: None,
+            bindgroup: None,
+            pipeline: None,
+            texture: None,
+            view: None,
+            depth_texture: None,
+            depth_view: None,
+            clearcolor: wgpu::Color { r: 0., g: 0., b: 0., a: 0.  },
+            cleardepth: 1.0,
+            clearstencil: 0,
+            active: false,
+            clear_entity,
+            clear_node,
+            render_entity,
+            render_node,
+        }
     }
     pub fn change(
         &mut self,
