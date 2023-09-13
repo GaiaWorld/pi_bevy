@@ -16,7 +16,7 @@ keywords = ["pi", "bevy", "plugin"]
 bevy_ecs = "0.11"
 bevy_app = {version = "0.11", default-features = false}
 # bevy_window = "0.11"
-bevy_window = {path = "../window", package = "pi_bevy_window" }
+bevy_window = {path = "../window", version = "0.1", registry = "yn", package = "pi_bevy_window" }
 raw-window-handle = "0.5"
 derive_deref = "1.1"
 
