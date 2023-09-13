@@ -128,6 +128,7 @@ impl WindowDescribe {
             _ => WindowPosition::Automatic,
         };
         let primary = app.world.spawn((window, raw_handle, PrimaryWindow)).id();
+		log::warn!("zzzzzzzzzzzzzz==================");
 
         // TODO?
         #[cfg(not(any(target_os = "windows", target_feature = "x11")))]

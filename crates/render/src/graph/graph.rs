@@ -121,7 +121,7 @@ impl RenderGraph {
 
     /// 移除 节点
     #[inline]
-    pub fn remove_node(&mut self, label: impl Into<NodeLabel>) -> Result<(), GraphError> {
+    pub fn remove_node(&mut self, label: impl Into<NodeLabel>) -> Result<NodeId, GraphError> {
         let r = self.imp.remove_node(label);
         if r.is_ok() {
             self.node_count -= 1;

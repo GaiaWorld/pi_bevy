@@ -9,13 +9,8 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "window_renderer"]
 
 [dependencies]
-# bevy_app = "0.9"
-# bevy_ecs = "0.9"
-# bevy_derive = "0.9"
-# bevy_window = "0.9"
 bevy_ecs = "0.11"
 bevy_app = {version = "0.11", default-features = false}
-raw-window-handle = "0.5"
 
 log = "0.4"
 thiserror = "1.0"

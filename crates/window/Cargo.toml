@@ -1,23 +1,21 @@
 [package]
-name = "pi_bevy_winit_window"
-version = "0.1.1"
+name = "pi_bevy_window"
+version = "0.1.0"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
 repository = "https://github.com/GaiaWorld/pi_bevy"
 license = "MIT OR Apache-2.0"
-keywords = ["pi", "bevy", "window", "winit"]
+keywords = ["pi", "bevy", "window"]
 
 [dependencies]
 bevy_ecs = "0.11"
+bevy_math = "0.11"
 bevy_app = {version = "0.11", default-features = false}
-bevy_window = {path = "../window", package = "pi_bevy_window" }
-winit = { registry = "yn", version = "0.27"}
-glam="0.24"
 raw-window-handle = "0.5"
 log = "0.4"
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = {version="0.3", features = [
-	"HtmlCanvasElement"
-]}
+# web-sys = {version="0.3", features = [
+# 	"HtmlCanvasElement"
+# ]}

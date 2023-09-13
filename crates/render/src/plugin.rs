@@ -93,12 +93,22 @@ impl Plugin for PiRenderPlugin {
             create_single_runtime()
         };
 
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
 		let rt = create_multi_runtime();
-		#[cfg(not(target_arch = "wasm32"))]
+		#[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
+		let rt = create_single_runtime();
+		#[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
 		app.add_systems(
 			PostUpdate,
 			run_frame_system::<MultiTaskRuntime>
+				.in_set(PiRenderSystemSet)
+				.run_if(should_run),
+		);
+
+		#[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
+		app.add_systems(
+			PostUpdate,
+			run_frame_system::<SingleTaskRuntime>
 				.in_set(PiRenderSystemSet)
 				.run_if(should_run),
 		);
@@ -246,10 +256,10 @@ fn create_multi_runtime() -> MultiTaskRuntime {
     rt
 }
 
-// #[cfg(not(target_arch = "wasm32"))]
-// fn create_single_runtime() -> SingleTaskRuntime {
-//     let runner = SingleTaskRunner::default();
-//     let rt = runner.into_local();
+#[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
+fn create_single_runtime() -> SingleTaskRuntime {
+    let runner = SingleTaskRunner::default();
+    let rt = runner.into_local();
 
-//     rt
-// }
+    rt
+}
