@@ -40,6 +40,9 @@ impl Plugin for PiAssetPlugin {
 
 		// 帧推结束前，整理资产（这里采用在帧推结束前整理资产， 而不是利用容量分配器自带的定时整理， 可以防止整理立即打断正在进行的其他system）
 		app.add_systems(Last, collect);
+
+		#[cfg(feature="account_info")]
+		app.add_systems(Last, account);
 	}
 }
 
@@ -236,5 +239,18 @@ impl TAssetCapacity for Shader3D {
 	const ASSET_TYPE: &'static str = "SHADER_3D";
 	fn capacity() -> AssetCapacity {
         AssetCapacity { flag: false, min: 64 * 1024, max: 128 * 1024, timeout: 10 * 1000 }
+	}
+}
+
+#[cfg(feature="account_info")]
+fn account(allotor: ResMut<Allocator>, mut pre_time: Local<u64>) {
+	if *pre_time == 0 {
+		*pre_time = now_millisecond();
+		return;
+	}
+
+	if now_millisecond() - *pre_time > 10000 {
+		log::warn!("asset account: {:?}", allotor.account());
+		*pre_time = now_millisecond();
 	}
 }

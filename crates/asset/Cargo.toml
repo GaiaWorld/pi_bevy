@@ -1,12 +1,15 @@
 [package]
 name = "pi_bevy_asset"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
 repository = "https://github.com/GaiaWorld/pi_bevy"
 license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy"]
+
+[features]
+account_info = [] # 每20秒打印一次资产管理器的统计信息
 
 [dependencies]
 # bevy_app = "0.9"
@@ -23,6 +26,7 @@ serde = { version = "1.0", features = ["derive"], option=true }
 
 crossbeam="0.8"
 pi_time = "0.3"
+log = "0.4"
 
 pi_atom = { version="0.2", features = ["serde"] }
 pi_render = { version = "0.1", registry = "yn" }

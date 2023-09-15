@@ -20,6 +20,7 @@ resolver = "2"
 # bevy_utils = { path = "../bevy/crates/bevy_utils" }
 # bevy_a11y = { path = "../bevy/crates/bevy_a11y" }
 # bevy_input = { path = "../bevy/crates/bevy_input" }
+pi_assets = {path="../pi_assets"}
 
 [patch.yn]
 pi_render = { path = "../pi_render" }
