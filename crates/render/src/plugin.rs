@@ -89,14 +89,15 @@ impl Plugin for PiRenderPlugin {
                     .in_set(PiRenderSystemSet)
                     .run_if(should_run),
             );
-
-            create_single_runtime()
+			let rt = pi_hal::runtime::RENDER_RUNTIME.clone();
+            // create_single_runtime()
         };
 
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
-		let rt = create_multi_runtime();
+		let rt = pi_hal::runtime::RENDER_RUNTIME.clone();
 		#[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
-		let rt = create_single_runtime();
+		let rt = pi_hal::runtime::RENDER_RUNTIME.clone();
+		// let rt = create_single_runtime();
 		#[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
 		app.add_systems(
 			PostUpdate,
@@ -108,7 +109,7 @@ impl Plugin for PiRenderPlugin {
 		#[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
 		app.add_systems(
 			PostUpdate,
-			run_frame_system::<SingleTaskRuntime>
+			run_frame_system::<pi_async_rt::prelude::SingleTaskRuntime>
 				.in_set(PiRenderSystemSet)
 				.run_if(should_run),
 		);
@@ -252,7 +253,6 @@ fn create_single_runtime() -> pi_async_rt::rt::serial_local_compatible_wasm_runt
 #[cfg(not(target_arch = "wasm32"))]
 fn create_multi_runtime() -> MultiTaskRuntime {
     let rt = AsyncRuntimeBuilder::default_multi_thread(Some("pi_bevy_render"), None, None, None);
-
     rt
 }
 
