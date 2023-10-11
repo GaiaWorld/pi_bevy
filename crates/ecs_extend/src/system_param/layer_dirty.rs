@@ -15,6 +15,7 @@ use pi_dirty::{
     DirtyIterator, LayerDirty as LayerDirty1, NextDirty, PreDirty, ReverseDirtyIterator,
 };
 use pi_map::vecmap::VecMap;
+use pi_null::Null;
 use std::ops::{Index, IndexMut};
 use std::slice::Iter;
 use std::{marker::PhantomData, mem::transmute};
@@ -40,10 +41,10 @@ pub fn marked<'w, 's, 'a, T: Eq + Clone>(
     dirty: &'a mut LayerDirty1<T>,
     layer: usize,
 ) {
-    if layer != 0 {
+    if !layer.is_null() {
         let layer1 = dirty_mark_list.get_mut_or_default(id);
         if *layer1 != layer {
-            if *layer1 != 0 {
+            if !layer1.is_null() {
                 dirty.delete(v.clone(), *layer1);
             }
             *layer1 = layer;
