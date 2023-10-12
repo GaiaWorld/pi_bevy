@@ -89,7 +89,7 @@ impl Plugin for PiRenderPlugin {
                     .in_set(PiRenderSystemSet)
                     .run_if(should_run),
             );
-			let rt = pi_hal::runtime::RENDER_RUNTIME.clone();
+			pi_hal::runtime::RENDER_RUNTIME.clone()
             // create_single_runtime()
         };
 
