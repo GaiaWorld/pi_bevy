@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_log"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "Provides logging for Bevy Engine"
 repository = "https://github.com/GaiaWorld/pi_bevy"
@@ -8,6 +8,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["bevy", "log"]
 
 [features]
+# default = ["tracing-chrome"]
 trace = [ "tracing-error" ]
 trace_tracy_memory = ["dep:tracy-client"]
 

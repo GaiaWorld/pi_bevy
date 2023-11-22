@@ -81,7 +81,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
     let system_present_span = tracing::info_span!("present");
     #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
-    let frame_render_span = tracing::warn_span!("frame_render");
+    let frame_render_span = tracing::info_span!("frame_render");
 
     #[cfg(not(feature = "trace"))]
     let task = async move {

@@ -149,6 +149,7 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
         {
             #[cfg(feature = "tracing-chrome")]
             let chrome_layer = {
+				extern crate tracing_chrome;
                 let mut layer = tracing_chrome::ChromeLayerBuilder::new();
                 if let Ok(path) = std::env::var("TRACE_CHROME") {
                     layer = layer.file(path);

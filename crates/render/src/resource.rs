@@ -84,14 +84,14 @@ pub struct PiRenderGraph(pub super::graph::graph::RenderGraph);
 pub struct PiScreenTexture(pub Option<pi_render::rhi::texture::ScreenTexture>);
 
 /// 清屏 参数
-#[derive(Default, Resource, Deref, DerefMut)]
+#[derive(Default, Resource, Deref, DerefMut, Debug, Clone)]
 pub struct PiClearOptions(pub ClearOptions);
 
 /// 用于处理 初始化 的Surface 和 prepare_windows 的 关系
 #[derive(Resource, Deref, DerefMut)]
 pub(crate) struct PiFirstSurface(pub(crate) Option<wgpu::Surface>);
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ClearOptions {
     pub color: wgpu::Color,
     pub depth: Option<f32>,
