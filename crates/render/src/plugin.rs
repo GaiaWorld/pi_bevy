@@ -5,8 +5,7 @@ use crate::{
 };
 use bevy_app::{App, Plugin, PostUpdate};
 
-use bevy_ecs::system::Res;
-use bevy_ecs::prelude::{IntoSystemConfigs, Resource, SystemSet};
+use bevy_ecs::prelude::IntoSystemConfigs;
 use pi_assets::asset::GarbageEmpty;
 use pi_async_rt::prelude::*;
 use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr};
@@ -22,26 +21,11 @@ use pi_render::{
 };
 use std::mem::size_of;
 use wgpu::TextureView;
+pub use bevy_window::{should_run, FrameState};
 
 /// ================ 阶段标签 ================
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
-pub struct PiRenderSystemSet;
-
-#[derive(Debug, Default, Resource, Clone, Copy)]
-pub enum FrameState {
-    #[default]
-    Active,
-    UnActive,
-}
-
-pub fn should_run(state: Res<FrameState>) -> bool {
-    if let FrameState::Active = *state {
-        true
-    } else {
-        false
-    }
-}
+pub use bevy_window::FrameSet as PiRenderSystemSet;
 
 /// ================ 插件 ================
 

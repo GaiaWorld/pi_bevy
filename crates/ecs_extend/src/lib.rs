@@ -11,8 +11,9 @@
 // #[macro_use]
 // extern crate pi_ecs_macros;
 
-use bevy_ecs::prelude::World;
+use bevy_ecs::prelude::{World, Resource};
 use bevy_app::prelude::App;
+use derive_deref::Deref;
 
 pub mod system_param;
 pub mod query;
@@ -38,3 +39,6 @@ pub trait TShell {
 	fn app(&self) -> &App;
 	fn app_mut(&mut self) -> &mut App;
 }
+
+#[derive(Resource, Debug, Deref, Default)]
+pub struct IsNotRun(pub bool);

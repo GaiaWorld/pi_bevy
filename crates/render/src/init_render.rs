@@ -3,11 +3,12 @@ use crate::{
     graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderOptions, PiRenderQueue,
 };
-use bevy_ecs::world::World;
 use bevy_ecs::prelude::With;
+use bevy_ecs::world::World;
 use bevy_window::{PrimaryWindow, RawHandleWrapper};
-use log::{debug, warn};
+use log::debug;
 use pi_async_rt::prelude::{AsyncRuntime, AsyncRuntimeExt};
+use pi_render::rhi::texture::PiRenderDefault;
 use pi_render::rhi::{
     device::RenderDevice,
     options::{RenderOptions, RenderPriority},
@@ -110,6 +111,18 @@ async fn setup_render_context(
     let (device, queue, adapter_info) =
         initialize_renderer(&instance, &options, &request_adapter_options).await;
 
+    let config = wgpu::SurfaceConfiguration {
+        format: wgpu::TextureFormat::pi_render_default(),
+        width: 1,
+        height: 1,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        present_mode: wgpu::PresentMode::Fifo,
+        alpha_mode: wgpu::CompositeAlphaMode::Auto,
+        view_formats: vec![],
+    };
+
+    surface.configure(&device, &config);
+
     debug!("Configured wgpu adapter Limits: {:#?}", device.limits());
     debug!("Configured wgpu adapter Features: {:#?}", device.features());
 
@@ -135,7 +148,7 @@ async fn initialize_renderer(
         .expect("Unable to find a GPU! Make sure you have installed required drivers!");
 
     let adapter_info = adapter.get_info();
-    warn!("initialize_renderer {:?}", adapter_info);
+    println!("initialize_renderer {:?}", adapter_info);
 
     // #[cfg(feature = "trace")]
     // let trace_path = {

@@ -9,6 +9,7 @@ mod window;
 
 pub use crate::raw_handle::*;
 
+use bevy_ecs::{event::{Event, Events}, system::{Resource, Res}, schedule::{IntoSystemConfigs, SystemSet}};
 pub use cursor::*;
 pub use event::*;
 pub use system::*;
@@ -70,26 +71,59 @@ pub struct WindowPlugin {
     pub close_when_requested: bool,
 }
 
+#[derive(Debug, Default, Resource, Clone, Copy)]
+pub enum FrameState {
+    #[default]
+    Active,
+    UnActive,
+}
+
+pub fn should_run(state: Res<FrameState>) -> bool {
+    if let FrameState::Active = *state {
+        true
+    } else {
+        false
+    }
+}
+
+#[derive(Debug, Clone, Hash, SystemSet, PartialEq, Eq)]
+pub struct FrameSet;
+
+pub trait AddFrameEvent {
+    // 添加事件， 该实现每帧清理一次
+    fn add_frame_event<T: Event>(&mut self) -> &mut Self;
+}
+
+impl AddFrameEvent for App {
+    fn add_frame_event<T: Event>(&mut self) -> &mut Self {
+        if !self.world.contains_resource::<Events<T>>() {
+            self.init_resource::<Events<T>>()
+                .add_systems(Update, Events::<T>::update_system.run_if(should_run).after(FrameSet)); // 在每帧结束时清理事件
+        }
+        self
+    }
+}
+
 impl Plugin for WindowPlugin {
     fn build(&self, app: &mut App) {
         // User convenience events
-        app.add_event::<WindowResized>()
-            .add_event::<WindowCreated>()
-            .add_event::<WindowClosed>()
-            .add_event::<WindowCloseRequested>()
-            .add_event::<WindowDestroyed>()
-            .add_event::<RequestRedraw>()
-            // .add_event::<CursorMoved>()
-            // .add_event::<CursorEntered>()
-            // .add_event::<CursorLeft>()
-            // .add_event::<ReceivedCharacter>()
-            .add_event::<Ime>()
-            // .add_event::<WindowFocused>()
-            // .add_event::<WindowScaleFactorChanged>()
-            // .add_event::<WindowBackendScaleFactorChanged>()
-            // .add_event::<FileDragAndDrop>()
-            // .add_event::<WindowMoved>()
-            // .add_event::<WindowThemeChanged>()
+        app.add_frame_event::<WindowResized>()
+            .add_frame_event::<WindowCreated>()
+            .add_frame_event::<WindowClosed>()
+            .add_frame_event::<WindowCloseRequested>()
+            .add_frame_event::<WindowDestroyed>()
+            .add_frame_event::<RequestRedraw>()
+            // .add_frame_event::<CursorMoved>()
+            // .add_frame_event::<CursorEntered>()
+            // .add_frame_event::<CursorLeft>()
+            // .add_frame_event::<ReceivedCharacter>()
+            .add_frame_event::<Ime>()
+            // .add_frame_event::<WindowFocused>()
+            // .add_frame_event::<WindowScaleFactorChanged>()
+            // .add_frame_event::<WindowBackendScaleFactorChanged>()
+            // .add_frame_event::<FileDragAndDrop>()
+            // .add_frame_event::<WindowMoved>()
+            // .add_frame_event::<WindowThemeChanged>()
 			;
 
         if let Some(primary_window) = &self.primary_window {

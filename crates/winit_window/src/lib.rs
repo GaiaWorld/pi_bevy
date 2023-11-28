@@ -46,7 +46,7 @@ impl Plugin for WinitPlugin {
 
 #[cfg(target_arch = "wasm32")]
 pub struct WinitPlugin {
-    canvas: web_sys::HtmlCanvasElement,
+    canvas: Arc<Window>,
     size: Option<(u32, u32)>,
 }
 
@@ -58,8 +58,8 @@ unsafe impl Sync for WinitPlugin {}
 
 #[cfg(target_arch = "wasm32")]
 impl WinitPlugin {
-    pub fn new(canvas: web_sys::HtmlCanvasElement) -> Self {
-        Self { canvas, size: None }
+    pub fn new(window: Arc<Window>) -> Self {
+        Self { canvas: window, size: None }
     }
 
     pub fn with_size(mut self, width: u32, height: u32) -> Self {
@@ -71,16 +71,16 @@ impl WinitPlugin {
 #[cfg(target_arch = "wasm32")]
 impl Plugin for WinitPlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        let event_loop = winit::event_loop::EventLoop::new();
-        let window = Arc::new(
-            winit::window::WindowBuilder::new()
-                .with_canvas(Some(self.canvas.clone()))
-                .build(&event_loop)
-                .unwrap(),
-        );
+        // let event_loop = winit::event_loop::EventLoop::new();
+        // let window = Arc::new(
+        //     winit::window::WindowBuilder::new()
+        //         .with_canvas(Some(self.canvas.clone()))
+        //         .build(&event_loop)
+        //         .unwrap(),
+        // );
 
         let describe = WindowDescribe {
-            window,
+            window: self.canvas.clone(),
             size: self.size.clone(),
         };
         describe.build(app);
