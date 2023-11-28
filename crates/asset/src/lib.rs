@@ -4,7 +4,6 @@ use bevy_ecs::system::{Resource, ResMut, Local};
 use bevy_app::prelude::{App, Plugin, Last};
 use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer, Size}, homogeneous::HomogeneousMgr};
 use pi_hash::XHashMap;
-use pi_render::render_3d::shader::{Shader3D, ShaderEffectMeta};
 use pi_render::renderer::bind_group::{BindGroup, BindGroupLayout};
 use pi_render::renderer::sampler::SamplerRes;
 use pi_render::renderer::texture::{ImageTexture, ImageTextureView};
@@ -211,12 +210,6 @@ impl TAssetCapacity for EVertexBufferRange {
         AssetCapacity { flag: false, min: 256, max: 1024, timeout: 1000 }
 	}
 }
-impl TAssetCapacity for ShaderEffectMeta {
-	const ASSET_TYPE: &'static str = "SHADER_EFFECT_META";
-	fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 4 * 1024 * 1024, max: 6 * 1024 * 1024, timeout: 60 * 60 * 1000 }
-	}
-}
 impl TAssetCapacity for BindGroup {
 	const ASSET_TYPE: &'static str = "BIND_GROUP";
 	fn capacity() -> AssetCapacity {
@@ -233,12 +226,6 @@ impl TAssetCapacity for RenderRes<RenderPipeline> {
 	const ASSET_TYPE: &'static str = "RENDER_PIPELINE";
 	fn capacity() -> AssetCapacity {
         AssetCapacity { flag: false, min: 1024 * 1024, max: 2 * 1024 * 1024, timeout: 10 * 1000 }
-	}
-}
-impl TAssetCapacity for Shader3D {
-	const ASSET_TYPE: &'static str = "SHADER_3D";
-	fn capacity() -> AssetCapacity {
-        AssetCapacity { flag: false, min: 64 * 1024, max: 128 * 1024, timeout: 10 * 1000 }
 	}
 }
 
