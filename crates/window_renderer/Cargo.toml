@@ -12,6 +12,7 @@ keywords = ["pi", "window_renderer"]
 bevy_ecs = "0.11"
 bevy_app = {version = "0.11", default-features = false}
 
+pi_null = "0.1"
 log = "0.4"
 thiserror = "1.0"
 wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}

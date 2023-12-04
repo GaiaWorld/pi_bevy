@@ -23,7 +23,7 @@ resolver = "2"
 pi_assets = {path="../pi_assets"}
 
 [patch.yn]
-pi_render = { path = "../pi_render" }
+pi_render = { path = "../pi_render_new_graph" }
 pi_postprocess = { path = "../pi_post_process"}
 pi_hal = { path = "../pi_hal" }
 # pi_async_graph = { path = "../pi_async_graph" }

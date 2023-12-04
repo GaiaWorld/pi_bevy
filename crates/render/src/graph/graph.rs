@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     clear_node::ClearNode,
-    node::{AsyncTaskQueue, NodeContext, TaskQueue},
+    node::{AsyncTaskQueue, NodeContext, ShareTaskQueue, TaskQueue},
     state_pool::SystemStatePool,
     CLEAR_WIDNOW_NODE,
 };
@@ -18,7 +18,8 @@ use pi_render::{
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareMutex, ShareRefCell};
-use std::{borrow::Cow, collections::VecDeque, mem::transmute, sync::atomic::AtomicBool};
+use std::{borrow::Cow, mem::transmute, sync::atomic::AtomicBool};
+use pi_null::Null;
 /// 渲染图
 pub struct RenderGraph {
     device: RenderDevice,
@@ -31,7 +32,7 @@ pub struct RenderGraph {
 
     imp: DependGraph<NodeContext>,
 
-    async_submit_queue: TaskQueue,
+    async_submit_queue: ShareTaskQueue,
 }
 #[cfg(not(feature = "webgl"))]
 use crate::node::AsyncQueue;
@@ -59,13 +60,13 @@ impl RenderGraph {
             node_count: 0,
             imp: Default::default(),
             state_pool: SystemStatePool::default(),
-            async_submit_queue: TaskQueue(Share::new(ShareMutex::new(VecDeque::new()))),
+            async_submit_queue: ShareTaskQueue(Share::new(ShareMutex::new(TaskQueue::new()))),
         };
 
         // 一开始，就将 Clear 扔到 graph
         // 注：每帧 必须运行一次 窗口的 清屏，否则 wgpu 会报错
         let clear_node = ClearNode;
-        graph.add_node(CLEAR_WIDNOW_NODE, clear_node).unwrap();
+        graph.add_node(CLEAR_WIDNOW_NODE, clear_node, NodeId::null()).unwrap();
         graph.set_finish(CLEAR_WIDNOW_NODE, true).unwrap();
 
         graph
@@ -85,16 +86,18 @@ impl RenderGraph {
 
     /// 添加 名为 name 的 节点
     #[inline]
-    pub fn add_node<I, O, R, P>(
+    pub fn add_node<I, O, R, BP, RP>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         node: R,
+		parent_graph_id: NodeId,
     ) -> Result<NodeId, GraphError>
     where
         I: InParam + Default,
         O: OutParam + Default + Clone,
-        R: Node<Param = P, Input = I, Output = O>,
-        P: SystemParam + 'static,
+        R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+        BP: SystemParam + 'static,
+		RP: SystemParam + 'static,
     {
         let context = RenderContext {
             device: self.device.clone(),
@@ -102,8 +105,8 @@ impl RenderGraph {
             commands: self.commands.clone(),
         };
 
-        let node = NodeImpl::<I, O, R, P>::new(node, context, self.state_pool.clone());
-        let r = self.imp.add_node(name, node);
+        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone());
+        let r = self.imp.add_node(name, node, parent_graph_id);
 
         if r.is_ok() {
             self.node_count += 1;
@@ -119,10 +122,34 @@ impl RenderGraph {
         r
     }
 
+	/// 添加 名为 name 的 节点
+	#[inline]
+	pub fn add_sub_graph<I, O, R, BP, RP>(
+		&mut self,
+		name: impl Into<Cow<'static, str>>,
+	) -> Result<NodeId, GraphError>{
+		let r = self.imp.add_sub_graph(name);
+		if r.is_ok() {
+			let id = *r.as_ref().unwrap();
+			// 清屏节点 在 所有节点 之前
+			self.add_depend(CLEAR_WIDNOW_NODE, id).unwrap();
+		}
+		r
+	}
+
+	/// 设置子图的父图， 只能在该图与其他节点创建连接关系之前设置， 否则设置不成功
+	pub fn set_sub_graph_parent(&mut self, k: NodeId, parent_graph_id: NodeId) {
+		if !parent_graph_id.is_null() {
+			let _ = self.remove_depend(CLEAR_WIDNOW_NODE, k);
+		}
+
+		self.imp.set_sub_graph_parent(k, parent_graph_id);
+	}
+
     /// 移除 节点
     #[inline]
     pub fn remove_node(&mut self, label: impl Into<NodeLabel>) -> Result<NodeId, GraphError> {
-        let r = self.imp.remove_node(label);
+        let r = self.imp.remove(label);
         if r.is_ok() {
             self.node_count -= 1;
             if self.node_count == 1 {
@@ -203,13 +230,14 @@ impl RenderGraph {
                 transmute::<_, &'static NodeContext>(&context)
             })
             .await;
-
+		
+		let node_count = self.imp.node_count();
         // 用 异步值 等待 队列的 提交 全部完成
         #[cfg(not(feature = "webgl"))]
         {
             let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
             let wait1 = wait.clone();
-            task_queue.push(Box::pin(async move {
+            task_queue.push(node_count, Box::pin(async move {
                 wait1.set(());
             }));
             wait.await;

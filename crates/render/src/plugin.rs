@@ -250,11 +250,11 @@ fn create_single_runtime() -> pi_async_rt::rt::serial_local_compatible_wasm_runt
     rt
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-fn create_multi_runtime() -> MultiTaskRuntime {
-    let rt = AsyncRuntimeBuilder::default_multi_thread(Some("pi_bevy_render"), None, None, None);
-    rt
-}
+// #[cfg(not(target_arch = "wasm32"))]
+// fn create_multi_runtime() -> MultiTaskRuntime {
+//     let rt = AsyncRuntimeBuilder::default_multi_thread(Some("pi_bevy_render"), None, None, None);
+//     rt
+// }
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
 fn create_single_runtime() -> SingleTaskRuntime {

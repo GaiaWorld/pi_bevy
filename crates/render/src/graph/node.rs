@@ -1,8 +1,5 @@
 //! 利用 DependGraph 实现 渲染图
-use std::{
-    collections::VecDeque,
-    sync::atomic::{AtomicBool, Ordering}
-};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::state_pool::SystemStatePool;
 
@@ -15,6 +12,7 @@ use bevy_ecs::{
     world::World,
 };
 use derive_deref::{Deref, DerefMut};
+use pi_map::vecmap::VecMap;
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
@@ -33,26 +31,29 @@ pub trait Node: 'static + ThreadSync {
     /// 输出参数
     type Output: OutParam + Default + Clone;
 
-    /// Bevy 系统参数
-    type Param: SystemParam + 'static;
+    /// Bevy Build 系统参数
+    type BuildParam: SystemParam + 'static;
 
-    /// 构建，当渲染图 构建时候，会调用一次
-    /// 一般 用于 准备 渲染 资源的 创建
-    fn build<'a>(
+	/// Bevy Run 系统参数
+    type RunParam: SystemParam + 'static;
+
+	fn build<'a>(
         &'a mut self,
-        _world: &'a World,
-        _param: &'a mut SystemState<Self::Param>,
-        _context: RenderContext,
-        _usage: &'a ParamUsage,
-    ) -> Result<(), String> {
-        Ok(())
-    }
+        world: &'a World,
+        param: &'a mut SystemState<Self::BuildParam>,
+        context: RenderContext,
+		input: &'a Self::Input,
+        usage: &'a ParamUsage,
+		id: NodeId,
+		from: &'a [NodeId],
+		to: &'a [NodeId],
+    ) -> Result<Self::Output, String>;
 
     /// 执行，每帧会调用一次
     fn run<'a>(
         &'a mut self,
         world: &'a World,
-        param: &'a mut SystemState<Self::Param>,
+        param: &'a mut SystemState<Self::RunParam>,
         context: RenderContext,
         commands: ShareRefCell<CommandEncoder>,
         input: &'a Self::Input,
@@ -60,30 +61,33 @@ pub trait Node: 'static + ThreadSync {
 		id: NodeId,
 		from: &'a [NodeId],
 		to: &'a [NodeId],
-    ) -> BoxFuture<'a, Result<Self::Output, String>>;
+    ) -> BoxFuture<'a, Result<(), String>>;
 }
 
 // ====================== crate内 使用的 数据结构
 
-pub(crate) struct NodeImpl<I, O, R, P>
+pub(crate) struct NodeImpl<I, O, R, BP, RP>
 where
     I: InParam + Default,
     O: OutParam + Default + Clone,
-    R: Node<Param = P, Input = I, Output = O>,
-    P: SystemParam + 'static,
+    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    BP: SystemParam + 'static,
+	RP: SystemParam + 'static,
 {
     node: R,
     state_pool: SystemStatePool,
-    state: Option<SystemState<P>>,
+    build_state: Option<SystemState<BP>>,
+	run_state: Option<SystemState<RP>>,
     context: RenderContext,
 }
 
-impl<I, O, R, P> NodeImpl<I, O, R, P>
+impl<I, O, R, BP, RP> NodeImpl<I, O, R, BP, RP>
 where
     I: InParam + Default,
     O: OutParam + Default + Clone,
-    R: Node<Param = P, Input = I, Output = O>,
-    P: SystemParam + 'static,
+    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    BP: SystemParam + 'static,
+	RP: SystemParam + 'static,
 {
     #[inline]
     pub(crate) fn new(node: R, context: RenderContext, state_pool: SystemStatePool) -> Self {
@@ -91,7 +95,8 @@ where
             node,
             context,
             state_pool,
-            state: None,
+            build_state: None,
+			run_state: None,
         }
     }
 }
@@ -111,27 +116,32 @@ impl NodeContext {
     }
 }
 
-impl<I, O, R, P> Drop for NodeImpl<I, O, R, P>
+impl<I, O, R, BP, RP> Drop for NodeImpl<I, O, R, BP, RP>
 where
     I: InParam + Default,
     O: OutParam + Default + Clone,
-    R: Node<Param = P, Input = I, Output = O>,
-    P: SystemParam + 'static,
+    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    BP: SystemParam + 'static,
+	RP: SystemParam + 'static,
 {
     fn drop(&mut self) {
         // 将 state 拿出来，扔到 state_pool 中
-        if let Some(state) = self.state.take() {
+        if let Some(state) = self.build_state.take() {
+            self.state_pool.set(state);
+        }
+		if let Some(state) = self.run_state.take() {
             self.state_pool.set(state);
         }
     }
 }
 
-impl<I, O, R, P> DependNode<NodeContext> for NodeImpl<I, O, R, P>
+impl<I, O, R, BP, RP> DependNode<NodeContext> for NodeImpl<I, O, R, BP, RP>
 where
     I: InParam + Default,
     O: OutParam + Default + Clone,
-    R: Node<Param = P, Input = I, Output = O>,
-    P: SystemParam + 'static,
+    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    BP: SystemParam + 'static,
+	RP: SystemParam + 'static,
 {
     type Input = I;
     type Output = O;
@@ -140,36 +150,55 @@ where
     fn build<'a>(
         &'a mut self,
         context: &'a NodeContext,
+		input: &'a Self::Input,
         usage: &'a ParamUsage,
-    ) -> Result<(), String> {
-        if self.state.is_none() {
-            let w_ptr = context.world() as *const World as usize;
-            let world = unsafe { std::mem::transmute(w_ptr) };
-
-            self.state = self.state_pool.get();
-            if self.state.is_none() {
-                self.state = Some(SystemState::new(world));
+		id: NodeId,
+		from: &'a [NodeId],
+		to: &'a [NodeId],
+    ) -> Result<O, String> {
+        if self.build_state.is_none() {
+			let w_ptr = context.world() as *const World as usize;
+			let world: &mut World = unsafe { std::mem::transmute(w_ptr) };
+            self.build_state = self.state_pool.get();
+            if self.build_state.is_none() {
+                self.build_state = Some(SystemState::new(world));
             }
         }
 
+		if self.run_state.is_none() {
+			let w_ptr = context.world() as *const World as usize;
+			let world: &mut World = unsafe { std::mem::transmute(w_ptr) };
+            self.run_state = self.state_pool.get();
+            if self.run_state.is_none() {
+                self.run_state = Some(SystemState::new(world));
+            }
+        }
+
+		let c = self.context.clone();
+
         self.node.build(
-            context.world,
-            self.state.as_mut().unwrap(),
-            self.context.clone(),
-            usage,
+			context.world(),
+			self.build_state.as_mut().unwrap(),
+			c,
+			input,
+			usage,
+			id,
+			from,
+			to,
         )
     }
 
     #[inline]
     fn run<'a>(
         &'a mut self,
+		index: usize,
         c: &'a NodeContext,
         input: &'a Self::Input,
         usage: &'a ParamUsage,
 		id: NodeId,
 		from: &'a [NodeId],
 		to: &'a [NodeId],
-    ) -> BoxFuture<'a, Result<Self::Output, String>> {
+    ) -> BoxFuture<'a, Result<(), String>> {
         let context = self.context.clone();
         let task = async move {
             #[cfg(not(feature = "webgl"))]
@@ -191,7 +220,7 @@ where
 			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
             let output = self.node.run(
                 c.world(),
-                self.state.as_mut().unwrap(),
+                self.run_state.as_mut().unwrap(),
                 context,
                 commands.clone(),
                 input,
@@ -227,7 +256,7 @@ where
                 #[cfg(feature = "trace")]
                 let submit_task = submit_task.instrument(tracing::info_span!("submite"));
 
-                c.async_tasks.push(Box::pin(submit_task));
+                c.async_tasks.push(index, Box::pin(submit_task));
             }
             Ok(output)
         };
@@ -236,29 +265,46 @@ where
 }
 
 pub trait AsyncQueue: Send + Sync + 'static {
-    fn push(&self, task: BoxFuture<'static, ()>);
+	/// 在指定索引处添加一个任务
+    fn push(&self, index: usize, task: BoxFuture<'static, ()>);
 }
 
 #[derive(Clone)]
 pub struct AsyncTaskQueue<A: AsyncRuntime> {
-    pub queue: TaskQueue,
+    pub queue: ShareTaskQueue,
     pub is_runing: Share<AtomicBool>,
     pub rt: A,
 }
 
+pub struct TaskQueue {
+	list: VecMap<BoxFuture<'static, ()>>,
+	index: usize, // 下一次要执行的任务索引
+}
+
+impl TaskQueue {
+	pub fn new() -> Self {
+		Self {
+			list: VecMap::new(),
+			index: 0,
+		}
+	}
+}
+
 #[derive(Clone, Deref, DerefMut)]
-pub struct TaskQueue(pub Share<ShareMutex<VecDeque<BoxFuture<'static, ()>>>>);
+pub struct ShareTaskQueue(pub Share<ShareMutex<TaskQueue>>);
 
 // 强制实现send和sync， 否则wasm上不能运行 TODO
-unsafe impl Send for TaskQueue {}
-unsafe impl Sync for TaskQueue {}
+unsafe impl Send for ShareTaskQueue {}
+unsafe impl Sync for ShareTaskQueue {}
 
 
 impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
-    // 扔任务 到 异步库
-    fn push(&self, task: BoxFuture<'static, ()>) {
+    /// 在指定索引处添加一个任务
+	/// 任务从索引0处开始从小到大按顺序运行
+	/// 若添加的任务索引高于下一个要执行的任务索引， 则将任务放入队列，但不立即执行， 等待前置任务就绪
+    fn push(&self, index: usize, task: BoxFuture<'static, ()>) {
         // 依次 处理 队列
-        fn run<A: AsyncRuntime>(queue: TaskQueue, rt: A, is_runing: Share<AtomicBool>) {
+        fn run<A: AsyncRuntime>(queue: ShareTaskQueue, rt: A, is_runing: Share<AtomicBool>) {
 			// log::warn!("AsyncQueue lock before===========");
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue lock before".to_string());
             
@@ -266,15 +312,20 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
 			// log::warn!("AsyncQueue lock after===========");
 			let task = {
 				let mut t1 = queue.0.lock();
-				let t = t1.pop_front();
+				let index = t1.index;
+				let t = t1.list.remove(index);
 				match t {
-					Some(r) => r,
+					Some(r) => {
+						t1.index += 1;
+						r
+					},
 					None => {
-						// 队列为空时，设置为 false
+						// 当前位置不存在任务， 则停止执行
 						is_runing.store(false, Ordering::Relaxed);
 						return;
 					}
 				}
+				
 			};
             let rt1 = rt.clone();
 			// 运行时 处理，但 不等待
@@ -294,13 +345,12 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
 			
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock before".to_string());
             let mut lock = self.queue.0.lock();
+			lock.list.insert(index, task);
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock after".to_string());
-            let is_start_run = lock.is_empty()
-                && self
-                    .is_runing
-                    .compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed)
-                    .is_ok();
-            lock.push_back(task);
+            let is_start_run = lock.index == index && self
+				.is_runing
+				.compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed)
+				.is_ok();
 
             is_start_run
         };
