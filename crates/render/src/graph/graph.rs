@@ -203,7 +203,7 @@ impl RenderGraph {
     pub async fn run<'a, A: AsyncRuntime>(
         &'a mut self,
         rt: &'a A,
-        world: &'static World,
+        world: &'static mut World,
     ) -> Result<(), GraphError> {
         let async_submit_queue = self.async_submit_queue.clone();
 
@@ -223,11 +223,11 @@ impl RenderGraph {
 		}
 
         // 运行 渲染图
-        let context = NodeContext::new(world, Box::new(task_queue.clone()));
+        let mut context = NodeContext::new(world, Box::new(task_queue.clone()));
         let ret = self
             .imp
             .run(rt, unsafe {
-                transmute::<_, &'static NodeContext>(&context)
+                transmute::<_, &'static mut NodeContext>(&mut context)
             })
             .await;
 		

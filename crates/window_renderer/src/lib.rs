@@ -249,7 +249,7 @@ impl Node for WindowRendererNode {
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a bevy_ecs::world::World,
+		_world: &'a mut bevy_ecs::world::World,
 		_param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
 		_context: pi_bevy_render_plugin::RenderContext,
 		_input: &'a Self::Input,
@@ -319,7 +319,7 @@ impl Node for WindowRendererClearNode {
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a bevy_ecs::world::World,
+		_world: &'a mut bevy_ecs::world::World,
 		_param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
 		_context: pi_bevy_render_plugin::RenderContext,
 		_input: &'a Self::Input,

@@ -43,10 +43,11 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         w.resource_mut::<PiFirstSurface>().0.take()
     };
 
-    let world: &'static World = unsafe { std::mem::transmute(world) };
-    let rt = &world.resource::<PiAsyncRuntime<A>>().0;
-    let instance = &world.resource::<PiRenderInstance>().0;
-    let device = &world.resource::<PiRenderDevice>().0;
+    let world_ref: &'static World = unsafe { std::mem::transmute(world) };
+	let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
+    let rt = &world_ref.resource::<PiAsyncRuntime<A>>().0;
+    let instance = &world_ref.resource::<PiRenderInstance>().0;
+    let device = &world_ref.resource::<PiRenderDevice>().0;
 
     // 跨 异步运行时 的 引用 必须 声明 是 'static 的
     let view: &'static mut Option<ScreenTexture> = unsafe {
@@ -92,7 +93,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         // rg.build().unwrap();
 		// log::warn!("run before====================");
 		// pi_hal::runtime::LOGS.lock().0.push("system run before".to_string());
-        rg.run(&rt_clone, world).await.unwrap();
+        rg.run(&rt_clone, world_mut).await.unwrap();
 		// pi_hal::runtime::LOGS.lock().0.push("system run after".to_string());
         
         // ============ 3. 呈现 ============
@@ -117,7 +118,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         // .instrument(rg_build_span)
         // .await;
 
-        rg.run(&rt_clone, world)
+        rg.run(&rt_clone, world_mut)
             .instrument(rg_run_span)
             .await
             .unwrap();

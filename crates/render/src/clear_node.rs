@@ -22,7 +22,7 @@ impl Node for ClearNode {
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a World,
+		_world: &'a mut World,
 		_param: &'a mut SystemState<Self::BuildParam>,
 		_context: RenderContext,
 		_input: &'a Self::Input,

@@ -39,7 +39,7 @@ pub trait Node: 'static + ThreadSync {
 
 	fn build<'a>(
         &'a mut self,
-        world: &'a World,
+        world: &'a mut World,
         param: &'a mut SystemState<Self::BuildParam>,
         context: RenderContext,
 		input: &'a Self::Input,
@@ -102,17 +102,21 @@ where
 }
 
 pub struct NodeContext {
-    world: &'static World,
+    world: &'static mut World,
     pub async_tasks: Box<dyn AsyncQueue>,
 }
 
 impl NodeContext {
-    pub fn new(world: &'static World, async_tasks: Box<dyn AsyncQueue>) -> Self {
+    pub fn new(world: &'static mut World, async_tasks: Box<dyn AsyncQueue>) -> Self {
         NodeContext { world, async_tasks }
     }
 
     pub fn world(&self) -> &World {
         &*self.world
+    }
+
+	pub fn world_mut(&mut self) -> &mut World {
+        &mut *self.world
     }
 }
 
@@ -149,16 +153,15 @@ where
     #[inline]
     fn build<'a>(
         &'a mut self,
-        context: &'a NodeContext,
+        context: &'a mut NodeContext,
 		input: &'a Self::Input,
         usage: &'a ParamUsage,
 		id: NodeId,
 		from: &'a [NodeId],
 		to: &'a [NodeId],
     ) -> Result<O, String> {
+		let world = context.world_mut();
         if self.build_state.is_none() {
-			let w_ptr = context.world() as *const World as usize;
-			let world: &mut World = unsafe { std::mem::transmute(w_ptr) };
             self.build_state = self.state_pool.get();
             if self.build_state.is_none() {
                 self.build_state = Some(SystemState::new(world));
@@ -166,8 +169,6 @@ where
         }
 
 		if self.run_state.is_none() {
-			let w_ptr = context.world() as *const World as usize;
-			let world: &mut World = unsafe { std::mem::transmute(w_ptr) };
             self.run_state = self.state_pool.get();
             if self.run_state.is_none() {
                 self.run_state = Some(SystemState::new(world));
@@ -177,7 +178,7 @@ where
 		let c = self.context.clone();
 
         self.node.build(
-			context.world(),
+			world,
 			self.build_state.as_mut().unwrap(),
 			c,
 			input,
