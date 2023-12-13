@@ -160,6 +160,53 @@ impl ColorFormat {
             Self::Rgba32Float => wgpu::TextureFormat::Rgba32Float,
         }
     }
+    pub fn new(format: wgpu::TextureFormat ) -> Option<Self> {
+        match format {
+            wgpu::TextureFormat::R8Unorm        => Some(ColorFormat::R8Unorm),
+            wgpu::TextureFormat::R8Snorm        => Some(ColorFormat::R8Snorm),
+            wgpu::TextureFormat::R8Uint         => Some(ColorFormat::R8Uint),
+            wgpu::TextureFormat::R8Sint         => Some(ColorFormat::R8Sint),
+            wgpu::TextureFormat::R16Uint        => Some(ColorFormat::R16Uint),
+            wgpu::TextureFormat::R16Sint        => Some(ColorFormat::R16Sint),
+            wgpu::TextureFormat::R16Unorm       => Some(ColorFormat::R16Unorm),
+            wgpu::TextureFormat::R16Snorm       => Some(ColorFormat::R16Snorm),
+            wgpu::TextureFormat::R16Float       => Some(ColorFormat::R16Float),
+            wgpu::TextureFormat::Rg8Unorm       => Some(ColorFormat::Rg8Unorm),
+            wgpu::TextureFormat::Rg8Snorm       => Some(ColorFormat::Rg8Snorm),
+            wgpu::TextureFormat::Rg8Uint        => Some(ColorFormat::Rg8Uint),
+            wgpu::TextureFormat::Rg8Sint        => Some(ColorFormat::Rg8Sint),
+            wgpu::TextureFormat::R32Uint        => Some(ColorFormat::R32Uint),
+            wgpu::TextureFormat::R32Sint        => Some(ColorFormat::R32Sint),
+            wgpu::TextureFormat::R32Float       => Some(ColorFormat::R32Float),
+            wgpu::TextureFormat::Rg16Uint       => Some(ColorFormat::Rg16Uint),
+            wgpu::TextureFormat::Rg16Sint       => Some(ColorFormat::Rg16Sint),
+            wgpu::TextureFormat::Rg16Unorm      => Some(ColorFormat::Rg16Unorm),
+            wgpu::TextureFormat::Rg16Snorm      => Some(ColorFormat::Rg16Snorm),
+            wgpu::TextureFormat::Rg16Float      => Some(ColorFormat::Rg16Float),
+            wgpu::TextureFormat::Rgba8Unorm     => Some(ColorFormat::Rgba8Unorm),
+            wgpu::TextureFormat::Rgba8UnormSrgb => Some(ColorFormat::Rgba8UnormSrgb),
+            wgpu::TextureFormat::Rgba8Snorm     => Some(ColorFormat::Rgba8Snorm),
+            wgpu::TextureFormat::Rgba8Uint      => Some(ColorFormat::Rgba8Uint),
+            wgpu::TextureFormat::Rgba8Sint      => Some(ColorFormat::Rgba8Sint),
+            wgpu::TextureFormat::Bgra8Unorm     => Some(ColorFormat::Bgra8Unorm),
+            wgpu::TextureFormat::Bgra8UnormSrgb => Some(ColorFormat::Bgra8UnormSrgb),
+            wgpu::TextureFormat::Rgb9e5Ufloat   => Some(ColorFormat::Rgb9e5Ufloat),
+            wgpu::TextureFormat::Rgb10a2Unorm   => Some(ColorFormat::Rgb10a2Unorm),
+            wgpu::TextureFormat::Rg11b10Float   => Some(ColorFormat::Rg11b10Float),
+            wgpu::TextureFormat::Rg32Uint       => Some(ColorFormat::Rg32Uint),
+            wgpu::TextureFormat::Rg32Sint       => Some(ColorFormat::Rg32Sint),
+            wgpu::TextureFormat::Rg32Float      => Some(ColorFormat::Rg32Float),
+            wgpu::TextureFormat::Rgba16Uint     => Some(ColorFormat::Rgba16Uint),
+            wgpu::TextureFormat::Rgba16Sint     => Some(ColorFormat::Rgba16Sint),
+            wgpu::TextureFormat::Rgba16Unorm    => Some(ColorFormat::Rgba16Unorm),
+            wgpu::TextureFormat::Rgba16Snorm    => Some(ColorFormat::Rgba16Snorm),
+            wgpu::TextureFormat::Rgba16Float    => Some(ColorFormat::Rgba16Float),
+            wgpu::TextureFormat::Rgba32Uint     => Some(ColorFormat::Rgba32Uint),
+            wgpu::TextureFormat::Rgba32Sint     => Some(ColorFormat::Rgba32Sint),
+            wgpu::TextureFormat::Rgba32Float    => Some(ColorFormat::Rgba32Float),
+            _ => { None }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]

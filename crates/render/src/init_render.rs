@@ -6,7 +6,7 @@ use crate::{
 use bevy_ecs::prelude::With;
 use bevy_ecs::world::World;
 use bevy_window::{PrimaryWindow, RawHandleWrapper};
-use log::{debug, warn};
+use log::debug;
 use pi_async_rt::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::texture::PiRenderDefault;
 use pi_render::rhi::{
@@ -148,7 +148,7 @@ async fn initialize_renderer(
         .expect("Unable to find a GPU! Make sure you have installed required drivers!");
 
     let adapter_info = adapter.get_info();
-    warn!("initialize_renderer {:?}", adapter_info);
+    println!("initialize_renderer {:?}", adapter_info);
 
     // #[cfg(feature = "trace")]
     // let trace_path = {
