@@ -268,6 +268,7 @@ where
 pub trait AsyncQueue: Send + Sync + 'static {
 	/// 在指定索引处添加一个任务
     fn push(&self, index: usize, task: BoxFuture<'static, ()>);
+	fn reset(&self);
 }
 
 #[derive(Clone)]
@@ -300,21 +301,25 @@ unsafe impl Sync for ShareTaskQueue {}
 
 
 impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
+	fn reset(&self) {
+		let mut lock = self.queue.0.lock();
+		lock.index = 0;
+	}
     /// 在指定索引处添加一个任务
 	/// 任务从索引0处开始从小到大按顺序运行
 	/// 若添加的任务索引高于下一个要执行的任务索引， 则将任务放入队列，但不立即执行， 等待前置任务就绪
     fn push(&self, index: usize, task: BoxFuture<'static, ()>) {
         // 依次 处理 队列
         fn run<A: AsyncRuntime>(queue: ShareTaskQueue, rt: A, is_runing: Share<AtomicBool>) {
-			// log::warn!("AsyncQueue lock before===========");
+			
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue lock before".to_string());
             
 			// pi_hal::runtime::LOGS.lock().0.push(format!("AsyncQueue lock after".to_string(), t.is_some()));
-			// log::warn!("AsyncQueue lock after===========");
 			let task = {
 				let mut t1 = queue.0.lock();
 				let index = t1.index;
 				let t = t1.list.remove(index);
+				// log::warn!("AsyncQueue run==========={:?}", index);
 				match t {
 					Some(r) => {
 						t1.index += 1;
@@ -347,6 +352,7 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock before".to_string());
             let mut lock = self.queue.0.lock();
 			lock.list.insert(index, task);
+			// log::warn!("AsyncQueue push task==========={:?}", index);
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock after".to_string());
             let is_start_run = lock.index == index && self
 				.is_runing

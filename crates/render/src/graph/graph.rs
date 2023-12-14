@@ -241,6 +241,7 @@ impl RenderGraph {
                 wait1.set(());
             }));
             wait.await;
+			task_queue.reset();
         }
 
         #[cfg(feature = "webgl")]
