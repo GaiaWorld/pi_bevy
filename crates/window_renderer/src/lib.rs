@@ -7,6 +7,7 @@ use bevy_app:: {Plugin, First};
 use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, component::GraphId, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
+use pi_null::Null;
 
 #[derive(Resource)]
 pub struct WindowRenderer {
@@ -243,12 +244,27 @@ impl Node for WindowRendererNode {
 
     type Output = ();
 
-    type Param = (Res<'static, PiScreenTexture>, Res<'static, WindowRenderer>);
+    type BuildParam = ();
+	type RunParam = (Res<'static, PiScreenTexture>, Res<'static, WindowRenderer>);
+
+	fn build<'a>(
+		&'a mut self,
+		_world: &'a mut bevy_ecs::world::World,
+		_param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
+		_context: pi_bevy_render_plugin::RenderContext,
+		_input: &'a Self::Input,
+		_usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: NodeId,
+		_from: &'a [NodeId],
+		_to: &'a [NodeId],
+	) -> Result<Self::Output, String> {
+		Ok(())
+	}
 
     fn run<'a>(
         &'a mut self,
         world: &'a bevy_ecs::prelude::World,
-        param: &'a mut bevy_ecs::system::SystemState<Self::Param>,
+        param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
         _context: pi_bevy_render_plugin::RenderContext,
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _: &'a Self::Input,
@@ -288,6 +304,8 @@ impl Node for WindowRendererNode {
             Ok(())
         })
     }
+
+    
 }
 
 pub struct WindowRendererClearNode;
@@ -296,12 +314,27 @@ impl Node for WindowRendererClearNode {
 
     type Output = ();
 
-    type Param = Res<'static, WindowRenderer>;
+    type BuildParam = ();
+	type RunParam = Res<'static, WindowRenderer>;
+
+	fn build<'a>(
+		&'a mut self,
+		_world: &'a mut bevy_ecs::world::World,
+		_param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
+		_context: pi_bevy_render_plugin::RenderContext,
+		_input: &'a Self::Input,
+		_usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: NodeId,
+		_from: &'a [NodeId],
+		_to: &'a [NodeId],
+	) -> Result<Self::Output, String> {
+		Ok(())
+	}
 
     fn run<'a>(
         &'a mut self,
         _world: &'a bevy_ecs::prelude::World,
-        _param: &'a mut bevy_ecs::system::SystemState<Self::Param>,
+        _param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
         _context: pi_bevy_render_plugin::RenderContext,
         _commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,
@@ -350,6 +383,8 @@ impl Node for WindowRendererClearNode {
             Ok(())
         })
     }
+
+   
 }
 
 fn sys_changesize(
@@ -377,8 +412,8 @@ impl Plugin for PluginWindowRender {
 
 
             let mut rg = app.world.get_resource_mut::<PiRenderGraph>().unwrap();
-            let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode).unwrap();
-            let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode).unwrap();
+            let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode, NodeId::null()).unwrap();
+            let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode, NodeId::null()).unwrap();
             rg.set_finish(WindowRenderer::KEY, true).unwrap();
             rg.add_depend(CLEAR_WIDNOW_NODE, WindowRenderer::CLEAR_KEY).unwrap();
 

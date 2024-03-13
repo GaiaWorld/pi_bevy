@@ -17,12 +17,27 @@ pub const CLEAR_WIDNOW_NODE: &str = "clear_window";
 impl Node for ClearNode {
     type Input = ();
     type Output = ();
-    type Param = (Res<'static, PiScreenTexture>, Res<'static, PiClearOptions>);
+    type BuildParam = ();
+	type RunParam = (Res<'static, PiScreenTexture>, Res<'static, PiClearOptions>);
+
+	fn build<'a>(
+		&'a mut self,
+		_world: &'a mut World,
+		_param: &'a mut SystemState<Self::BuildParam>,
+		_context: RenderContext,
+		_input: &'a Self::Input,
+		_usage: &'a ParamUsage,
+		_id: NodeId,
+		_from: &'a [NodeId],
+		_to: &'a [NodeId],
+	) -> Result<Self::Output, String> {
+		Ok(())
+	}
 
     fn run<'a>(
         &'a mut self,
         world: &'a World,
-        param: &'a mut SystemState<Self::Param>,
+        param: &'a mut SystemState<Self::RunParam>,
         _context: RenderContext,
         commands: ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,
@@ -61,4 +76,6 @@ impl Node for ClearNode {
             Ok(())
         })
     }
+
+   
 }
