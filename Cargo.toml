@@ -27,7 +27,6 @@ pi_sdf = { path = "../pi_sdf" }
 pi_wgpu = {path = "../pi_wgpu"}
 pi_egl = {path = "../pi_egl"}
 winit = { path = "../winit"}
-# pi_render = { path = "../pi_render_new_graphic" }
 pi_render = { path = "../pi_render" }
 pi_postprocess = { path = "../pi_post_process"}
 pi_hal = { path = "../pi_hal" }
@@ -35,8 +34,8 @@ pi_hal = { path = "../pi_hal" }
 # pi_graph = { path = "../pi_graph" }
 # pi_map = { path = "../pi_map" }
 
-pi_bevy_render_plugin = { path="../pi_bevy_new_graphic/crates/render" }
-pi_bevy_winit_window = { path="../pi_bevy_new_graphic/crates/winit_window" }
-pi_bevy_ecs_extend = { path="../pi_bevy_new_graphic/crates/ecs_extend" }
-pi_bevy_asset = { path="../pi_bevy_new_graphic/crates/asset" }
-pi_bevy_log = { path="../pi_bevy_new_graphic/crates/log" }
+pi_bevy_render_plugin = { path="../pi_bevy/crates/render" }
+pi_bevy_winit_window = { path="../pi_bevy/crates/winit_window" }
+pi_bevy_ecs_extend = { path="../pi_bevy/crates/ecs_extend" }
+pi_bevy_asset = { path="../pi_bevy/crates/asset" }
+pi_bevy_log = { path="../pi_bevy/crates/log" }
