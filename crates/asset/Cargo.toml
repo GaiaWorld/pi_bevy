@@ -28,5 +28,5 @@ crossbeam="0.8"
 pi_time = "0.3"
 log = "0.4"
 
-pi_atom = { version="0.2", features = ["serde"] }
+pi_atom = { version="0.5", features = ["serde"] }
 pi_render = { version = "0.1", registry = "yn" }

@@ -22,6 +22,11 @@ pub struct PostprocessResource {
     pub vballocator: VertexBufferAllocator,
     pub resources: SingleImageEffectResource,
 }
+
+// TODO Send问题， 临时解决
+unsafe impl Send for PostprocessResource {}
+unsafe impl Sync for PostprocessResource {}
+
 impl PostprocessResource {
     pub fn new(renderdevice: &RenderDevice, queue: &RenderQueue, asset_samplers: &Share<AssetMgr<SamplerRes>>) -> Self {
         let mut vballocator = VertexBufferAllocator::new(64 * 1024, 60 * 1000);

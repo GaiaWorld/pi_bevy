@@ -1,11 +1,12 @@
-use crate::{
-    init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
+use crate::system::build_graph;
+use crate::{init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
     PiAsyncRuntime, PiClearOptions, PiRenderDevice, PiRenderOptions, PiRenderWindow,
     PiSafeAtlasAllocator, PiScreenTexture,
 };
-use bevy_app::{App, Plugin, PostUpdate};
+use bevy_app::{App, Plugin, PostUpdate, Update};
 
 use bevy_ecs::prelude::IntoSystemConfigs;
+use bevy_ecs::schedule::{SystemSet, IntoSystemSetConfig, IntoSystemSetConfigs};
 use pi_assets::asset::GarbageEmpty;
 use pi_async_rt::prelude::*;
 use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr};
@@ -27,6 +28,18 @@ pub use bevy_window::{should_run, FrameState};
 
 pub use bevy_window::FrameSet as PiRenderSystemSet;
 
+/// 图构建系统集（一些资源更新显存可能需要在图构建之后）
+#[derive(Debug, Clone, Hash, SystemSet, PartialEq, Eq)]
+pub struct GraphBuild;
+
+/// 图运行系统集（一些资源更新显存可能需要在图构建之后）
+#[derive(Debug, Clone, Hash, SystemSet, PartialEq, Eq)]
+pub struct GraphRun;
+
+/// 帧数据准备（实际上就是在FrameDataPrepare系统集中的system，添加了FrameState::Active的运行条件）
+#[derive(Debug, Clone, Hash, SystemSet, PartialEq, Eq)]
+pub struct FrameDataPrepare;
+
 /// ================ 插件 ================
 
 #[derive(Default)]
@@ -36,6 +49,12 @@ pub struct PiRenderPlugin {
 
 impl Plugin for PiRenderPlugin {
     fn build(&self, app: &mut App) {
+		app
+			.configure_set(Update, FrameDataPrepare.run_if(should_run))
+			.configure_set(PostUpdate, PiRenderSystemSet.run_if(should_run))
+			.configure_set(PostUpdate, GraphBuild.in_set(PiRenderSystemSet))
+			.configure_set(PostUpdate, GraphRun.in_set(PiRenderSystemSet))
+			.configure_sets(PostUpdate, (GraphBuild, GraphRun).chain());
 		// std::thread::spawn(move || {
 		// 	loop {
 		// 		{
@@ -65,17 +84,26 @@ impl Plugin for PiRenderPlugin {
 
         #[cfg(target_arch = "wasm32")]
         let rt = {
-            app.add_systems(
-				PostUpdate,
-                run_frame_system::<
-                    pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
-                >
-                    .in_set(PiRenderSystemSet)
-                    .run_if(should_run),
-            );
+            app
+				.add_systems(
+					PostUpdate,
+					run_frame_system::<
+						pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
+					>
+						.in_set(GraphRun)
+				)
+				.add_systems(
+					PostUpdate,
+					build_graph::<
+						pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
+					>
+						.in_set(GraphBuild)
+				);
 			pi_hal::runtime::RENDER_RUNTIME.clone()
             // create_single_runtime()
         };
+
+		
 
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
 		let rt = pi_hal::runtime::RENDER_RUNTIME.clone();
@@ -83,20 +111,30 @@ impl Plugin for PiRenderPlugin {
 		let rt = pi_hal::runtime::RENDER_RUNTIME.clone();
 		// let rt = create_single_runtime();
 		#[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
-		app.add_systems(
-			PostUpdate,
-			run_frame_system::<MultiTaskRuntime>
-				.in_set(PiRenderSystemSet)
-				.run_if(should_run),
-		);
+		app
+			.add_systems(
+				PostUpdate,
+				run_frame_system::<MultiTaskRuntime>
+				.in_set(GraphRun)
+			)
+			.add_systems(
+				PostUpdate,
+				build_graph::<MultiTaskRuntime>
+					.in_set(GraphBuild)
+			);
 
 		#[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
-		app.add_systems(
-			PostUpdate,
-			run_frame_system::<pi_async_rt::prelude::SingleTaskRuntime>
-				.in_set(PiRenderSystemSet)
-				.run_if(should_run),
-		);
+		app
+			.add_systems(
+				PostUpdate,
+				run_frame_system::<pi_async_rt::prelude::SingleTaskRuntime>
+					.in_set(GraphRun)
+			)
+			.add_systems(
+				PostUpdate,
+				build_graph::<pi_async_rt::prelude::SingleTaskRuntime>
+					.in_set(GraphBuild)
+			);
 
         let (
             share_texture_res,

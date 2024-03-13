@@ -5,7 +5,7 @@ use crate::{
 };
 use bevy_ecs::prelude::With;
 use bevy_ecs::world::World;
-use bevy_window::{PrimaryWindow, RawHandleWrapper};
+use bevy_window::{PrimaryWindow, HandleWrapper};
 use log::debug;
 use pi_async_rt::prelude::{AsyncRuntime, AsyncRuntimeExt};
 use pi_render::rhi::texture::PiRenderDefault;
@@ -15,21 +15,23 @@ use pi_render::rhi::{
     RenderInstance, RenderQueue,
 };
 use pi_share::Share;
+use wgpu::InstanceFlags;
+use wgpu1::Gles3MinorVersion;
 
 pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
     rt: &A,
-) -> (RawHandleWrapper, wgpu::PresentMode) {
+) -> (HandleWrapper, wgpu::PresentMode) {
     let options = world.resource::<PiRenderOptions>().0.clone();
     // let windows = world.resource_mut::<bevy::prelude::Windows>();
 
-    let mut primary_window = world.query_filtered::<&RawHandleWrapper, With<PrimaryWindow>>();
+    let mut primary_window = world.query_filtered::<&HandleWrapper, With<PrimaryWindow>>();
     let primary_window_handle = primary_window.single(world).clone();
     let mode = options.present_mode;
 
     init_render_impl(world, rt, &primary_window_handle, options);
 
-    (primary_window_handle, mode)
+    (primary_window_handle.clone(), mode)
 }
 
 // 初始化 渲染环境 的 System
@@ -41,26 +43,18 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
 fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
     rt: &A,
-    window: &RawHandleWrapper,
+    window: &HandleWrapper,
     options: RenderOptions,
 ) {
     let backends = options.backends;
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends,
         dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
+        flags: InstanceFlags::VALIDATION,
+        gles_minor_version: Gles3MinorVersion::Automatic,
     });
 
-    let surface = unsafe {
-        let w = window.get_handle();
-
-        match instance.create_surface(&w) {
-            Ok(s) => s,
-            Err(e) => {
-                log::error!("create surface failed: {:?}", e);
-                panic!("create surface failed: {:?}", e);
-            }
-        }
-    };
+    let surface = window.handle.create_surface(&instance);
 
     let SetupResult {
         surface,
@@ -80,7 +74,7 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     let rg = RenderGraph::new(device.clone(), queue.clone());
 
     // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
-    world.insert_resource(PiFirstSurface(surface));
+    // world.insert_resource(PiFirstSurface(surface));
     world.insert_resource(PiRenderGraph(rg));
     world.insert_resource(PiRenderInstance(instance));
     world.insert_resource(PiRenderDevice(device));
@@ -89,8 +83,8 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
 }
 
 #[derive(Default)]
-struct SetupResult {
-    pub surface: Option<wgpu::Surface>,
+struct SetupResult<'a> {
+    pub surface: Option<wgpu::Surface<'a>>,
     pub instance: Option<RenderInstance>,
     pub device: Option<RenderDevice>,
     pub queue: Option<RenderQueue>,
@@ -98,11 +92,11 @@ struct SetupResult {
 }
 
 /// 初始化 渲染 环境
-async fn setup_render_context(
+async fn setup_render_context<'a>(
     instance: RenderInstance,
-    surface: wgpu::Surface,
+    surface: wgpu::Surface<'a>,
     options: RenderOptions,
-) -> SetupResult {
+) -> SetupResult<'a> {
     let request_adapter_options = wgpu::RequestAdapterOptions {
         power_preference: options.power_preference,
         compatible_surface: Some(&surface),
@@ -119,6 +113,7 @@ async fn setup_render_context(
         present_mode: wgpu::PresentMode::Fifo,
         alpha_mode: wgpu::CompositeAlphaMode::Auto,
         view_formats: vec![],
+        desired_maximum_frame_latency: 2,
     };
 
     surface.configure(&device, &config);
@@ -140,7 +135,7 @@ async fn setup_render_context(
 async fn initialize_renderer(
     instance: &wgpu::Instance,
     options: &RenderOptions,
-    request_adapter_options: &wgpu::RequestAdapterOptions<'_>,
+    request_adapter_options: &wgpu::RequestAdapterOptions<'_, '_>,
 ) -> (RenderDevice, RenderQueue, wgpu::AdapterInfo) {
     let adapter = instance
         .request_adapter(request_adapter_options)
@@ -278,6 +273,9 @@ async fn initialize_renderer(
             max_bindings_per_bind_group: limits
                 .max_bindings_per_bind_group
                 .min(constrained_limits.max_bindings_per_bind_group),
+            max_non_sampler_bindings: limits
+				.max_non_sampler_bindings
+				.min(constrained_limits.max_non_sampler_bindings),
         };
     }
 
@@ -285,8 +283,8 @@ async fn initialize_renderer(
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: options.device_label.as_ref().map(|a| a.as_ref()),
-                features,
-                limits,
+                required_features: features,
+                required_limits: limits,
             },
             trace_path,
         )

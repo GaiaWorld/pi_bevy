@@ -59,6 +59,11 @@ pub struct PiAsyncRuntime<A: AsyncRuntime + AsyncRuntimeExt>(pub A);
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiRenderInstance(pub pi_render::rhi::RenderInstance);
 
+// TODO Send问题， 临时解决
+unsafe impl Send for PiRenderInstance {}
+unsafe impl Sync for PiRenderInstance {}
+
+
 /// 渲染 Options，等价于 wgpu::Options
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct PiRenderOptions(pub pi_render::rhi::options::RenderOptions);
@@ -67,9 +72,17 @@ pub struct PiRenderOptions(pub pi_render::rhi::options::RenderOptions);
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiRenderDevice(pub pi_render::rhi::device::RenderDevice);
 
+// TODO Send问题， 临时解决
+unsafe impl Send for PiRenderDevice {}
+unsafe impl Sync for PiRenderDevice {}
+
 /// 渲染 队列，等价于 wgpu::RenderQueue
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiRenderQueue(pub pi_render::rhi::RenderQueue);
+
+// TODO Send问题， 临时解决
+unsafe impl Send for PiRenderQueue {}
+unsafe impl Sync for PiRenderQueue {}
 
 /// AdapterInfo，wgpu::AdapterInfo
 #[derive(Resource, Deref, DerefMut)]
@@ -79,9 +92,17 @@ pub struct PiAdapterInfo(pub pi_render::rhi::AdapterInfo);
 #[derive(Resource, Deref, DerefMut)]
 pub struct PiRenderGraph(pub super::graph::graph::RenderGraph);
 
+// TODO Send问题， 临时解决
+unsafe impl Send for PiRenderGraph {}
+unsafe impl Sync for PiRenderGraph {}
+
 /// 交换链对应的屏幕纹理
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct PiScreenTexture(pub Option<pi_render::rhi::texture::ScreenTexture>);
+
+// TODO Send问题， 临时解决
+unsafe impl Send for PiScreenTexture {}
+unsafe impl Sync for PiScreenTexture {}
 
 /// 清屏 参数
 #[derive(Default, Resource, Deref, DerefMut, Debug, Clone)]
@@ -89,7 +110,11 @@ pub struct PiClearOptions(pub ClearOptions);
 
 /// 用于处理 初始化 的Surface 和 prepare_windows 的 关系
 #[derive(Resource, Deref, DerefMut)]
-pub(crate) struct PiFirstSurface(pub(crate) Option<wgpu::Surface>);
+pub(crate) struct PiFirstSurface(pub(crate) Option<wgpu::Surface<'static>>);
+
+// TODO Send问题， 临时解决
+unsafe impl Send for PiFirstSurface {}
+unsafe impl Sync for PiFirstSurface {}
 
 #[derive(Clone, Debug)]
 pub struct ClearOptions {

@@ -25,13 +25,13 @@ impl Clone for SystemStatePool {
 impl SystemStatePool {
     pub fn set<T: 'static + Send + Sync>(&mut self, state: T) {
 		// log::warn!("SystemStatePool lock before===========");
-        self.data.lock().set(state);
+        self.data.lock().unwrap().set(state);
 		// log::warn!("SystemStatePool lock after===========");
     }
 
     /// 从缓存中获取，如果没有，则返回 None
     pub fn get<T: 'static + Send + Sync>(&mut self) -> Option<T> {
-        let r = self.data.lock().get();
+        let r = self.data.lock().unwrap().get();
 
         log::debug!(
             "SystemStatePool::get, type: {:?}, is_some: {}",

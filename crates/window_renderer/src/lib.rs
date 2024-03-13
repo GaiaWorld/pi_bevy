@@ -4,7 +4,7 @@ use std::{ops::Deref, sync::Arc};
 use bevy_ecs::prelude::{Res, Resource, ResMut, Commands, Entity};
 use bevy_ecs::system::CommandQueue;
 use bevy_app:: {Plugin, First};
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, component::GraphId, NodeId};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, render_cross::GraphId, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
 use wgpu::Extent3d;
 use pi_null::Null;
@@ -34,6 +34,13 @@ pub struct WindowRenderer {
     pub render_entity: Entity,
     pub render_node: NodeId,
 }
+
+
+// TODO Send问题， 临时解决
+unsafe impl Send for WindowRenderer {}
+unsafe impl Sync for WindowRenderer {}
+
+
 impl WindowRenderer {
     pub const CLEAR_KEY: &'static str = "FinalRenderClear";
     pub const KEY: &'static str = "FinalRender";
@@ -286,11 +293,13 @@ impl Node for WindowRendererNode {
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Load,
-                                store: true,
+                                store: wgpu::StoreOp::Store,
                             },
                         })
                     ],
                     depth_stencil_attachment: None,
+                    timestamp_writes: None,
+                    occlusion_query_set: None,
                 }
             );
             rpass.set_pipeline(final_render.pipeline.as_ref().unwrap());

@@ -7,7 +7,7 @@ use pi_bevy_asset::{AssetConfig, PiAssetPlugin};
 use pi_bevy_render_plugin::{
     ClearOptions, PiClearOptions, PiRenderOptions, PiRenderPlugin, PiRenderWindow, PiScreenTexture,
 };
-use pi_bevy_winit_window::{update_window_handle, WinitPlugin};
+use pi_bevy_winit_window::{WinitPlugin};
 use pi_render::rhi::options::RenderOptions;
 use winit::event::{Event, WindowEvent};
 
@@ -46,12 +46,12 @@ fn main() {
                 is_resume = true;
                 println!("Resumed, thread id = {:?}", std::thread::current().id());
                 if !is_first {
-                    let w = update_window_handle(&mut app.world, &window);
+                    // let w = update_window_handle(&mut app.world, &window);
 
-                    app.world
-                        .resource_mut::<PiRenderWindow>()
-                        .0
-                        .update_handle(w);
+                    // app.world
+                    //     .resource_mut::<PiRenderWindow>()
+                    //     .0
+                    //     .update_handle(w);
                 } else {
                     is_first = false;
 

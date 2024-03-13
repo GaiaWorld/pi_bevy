@@ -14,17 +14,18 @@ keywords = ["pi", "bevy", "plugin"]
 # bevy_derive = "0.9"
 # bevy_window = "0.9"
 pi_null = "0.1"
-pi_map = "0.1"
+pi_map = "0.2"
 bevy_ecs = "0.11"
 bevy_app = {version = "0.11", default-features = false}
 # bevy_window = "0.11"
 bevy_window = {path = "../window", version = "0.1", registry = "yn", package = "pi_bevy_window" }
-raw-window-handle = "0.5"
+raw-window-handle = "0.6"
 derive_deref = "1.1"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
+wgpu = {version = "0.1", registry = "yn", package="pi_wgpu", features = ["use_wgpu"]}
+wgpu1 = {version = "0.19", package = "wgpu", feature = ["fragile-send-sync-non-atomic-wasm"]}
 crossbeam = "0.8"
 futures = "0.3"
 

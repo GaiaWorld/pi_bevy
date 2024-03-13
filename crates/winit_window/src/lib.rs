@@ -1,11 +1,8 @@
 use bevy_app::Plugin;
-use bevy_ecs::prelude::*;
 use bevy_window::{
-    PrimaryWindow, RawHandleWrapper, WindowCreated, WindowPosition, WindowResolution,
+    PrimaryWindow, WindowCreated, WindowPosition, WindowResolution, CreateSurface,
 };
 use glam::IVec2;
-use raw_window_handle::HasRawDisplayHandle;
-use raw_window_handle::HasRawWindowHandle;
 use std::sync::Arc;
 use winit::{dpi::PhysicalSize, window::Window};
 
@@ -92,6 +89,14 @@ pub struct WindowDescribe {
     size: Option<(u32, u32)>,
 }
 
+pub struct WindowWrapper(Arc<Window>);
+
+impl CreateSurface for WindowWrapper {
+    fn create_surface(&self, instance: &wgpu::Instance) -> wgpu::Surface<'static> {
+		instance.create_surface(self.0.clone()).unwrap()
+    }
+}
+
 impl WindowDescribe {
     pub fn new(window: Arc<Window>) -> Self {
         Self { window, size: None }
@@ -113,9 +118,8 @@ impl WindowDescribe {
 
         let inner_size = winit_window.inner_size();
         let scale_factor = winit_window.scale_factor();
-        let raw_handle = RawHandleWrapper {
-            window_handle: winit_window.raw_window_handle(),
-            display_handle: winit_window.raw_display_handle(),
+        let raw_handle = bevy_window::HandleWrapper {
+            handle: Arc::new(WindowWrapper(self.window.clone())),
         };
         let mut window = bevy_window::prelude::Window::default();
         window.resolution = WindowResolution::new(
@@ -144,13 +148,13 @@ impl WindowDescribe {
     }
 }
 
-pub fn update_window_handle(world: &mut World, window: &Window) -> RawHandleWrapper {
-    let mut primary_window = world.query_filtered::<&mut RawHandleWrapper, With<PrimaryWindow>>();
+// pub fn update_window_handle(world: &mut World, window: &Window) -> HandleWrapper {
+//     let mut primary_window = world.query_filtered::<&mut HandleWrapper, With<PrimaryWindow>>();
 
-    let mut r = primary_window.single_mut(world);
+//     let mut r = primary_window.single_mut(world);
 
-    r.window_handle = window.raw_window_handle();
-    r.display_handle = window.raw_display_handle();
+//     r.window_handle = window.window_handle();
+//     r.display_handle = window.display_handle();
 
-    r.clone()
-}
+//     r.clone()
+// }

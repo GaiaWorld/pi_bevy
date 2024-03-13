@@ -49,6 +49,11 @@ pub trait Node: 'static + ThreadSync {
 		to: &'a [NodeId],
     ) -> Result<Self::Output, String>;
 
+	// 节点被使用完毕后(所有出度节点的build方法执行完成)， 会调用此方法
+	fn reset<'a>(
+        &'a mut self,
+    ) {}
+
     /// 执行，每帧会调用一次
     fn run<'a>(
         &'a mut self,
@@ -263,6 +268,12 @@ where
         };
         Box::pin(task)
     }
+
+    fn reset<'a>(
+            &'a mut self,
+        ) {
+        self.node.reset()
+    }
 }
 
 pub trait AsyncQueue: Send + Sync + 'static {
@@ -302,7 +313,7 @@ unsafe impl Sync for ShareTaskQueue {}
 
 impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
 	fn reset(&self) {
-		let mut lock = self.queue.0.lock();
+		let mut lock = self.queue.0.lock().unwrap();
 		lock.index = 0;
 	}
     /// 在指定索引处添加一个任务
@@ -316,7 +327,7 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
             
 			// pi_hal::runtime::LOGS.lock().0.push(format!("AsyncQueue lock after".to_string(), t.is_some()));
 			let task = {
-				let mut t1 = queue.0.lock();
+				let mut t1 = queue.0.lock().unwrap();
 				let index = t1.index;
 				let t = t1.list.remove(index);
 				// log::warn!("AsyncQueue run==========={:?}", index);
@@ -350,7 +361,7 @@ impl<A: AsyncRuntime> AsyncQueue for AsyncTaskQueue<A> {
         let is_start_run = {
 			
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock before".to_string());
-            let mut lock = self.queue.0.lock();
+            let mut lock = self.queue.0.lock().unwrap();
 			lock.list.insert(index, task);
 			// log::warn!("AsyncQueue push task==========={:?}", index);
 			// pi_hal::runtime::LOGS.lock().0.push("AsyncQueue1 lock after".to_string());
