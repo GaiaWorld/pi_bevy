@@ -19,7 +19,7 @@ use pi_share::ShareRefCell;
 
 /// 渲染图 执行过程需要的环境
 #[derive(Clone)]
-pub struct RenderContext {
+pub struct RenderContext{
     /// 渲染 设备，用于 创建资源
     pub device: RenderDevice,
 

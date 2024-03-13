@@ -230,7 +230,6 @@ impl RenderGraph {
                 transmute::<_, &'static mut NodeContext>(&mut context)
             })
             .await;
-		
 		let node_count = self.imp.node_count();
         // 用 异步值 等待 队列的 提交 全部完成
         #[cfg(not(feature = "webgl"))]
@@ -252,6 +251,32 @@ impl RenderGraph {
             self.queue.submit(vec![cmd.finish()]);
         }
 
+        ret
+    }
+
+	/// 执行 构建
+    #[inline]
+    pub fn build<'a, A: AsyncRuntime>(
+        &'a mut self,
+        rt: &'a A,
+        world: &'static mut World,
+    ) -> Result<(), GraphError> {
+        let async_submit_queue = self.async_submit_queue.clone();
+
+        let task_queue = AsyncTaskQueue {
+            queue: async_submit_queue,
+            is_runing: Share::new(AtomicBool::new(false)),
+            rt: rt.clone(),
+        };
+
+
+        // 运行 渲染图
+        let mut context = NodeContext::new(world, Box::new(task_queue.clone()));
+        let ret = self
+            .imp
+            .build(unsafe {
+                transmute::<_, &'static mut NodeContext>(&mut context)
+            });
         ret
     }
 }

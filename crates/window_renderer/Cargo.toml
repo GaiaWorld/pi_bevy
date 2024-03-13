@@ -15,10 +15,10 @@ bevy_app = {version = "0.11", default-features = false}
 pi_null = "0.1"
 log = "0.4"
 thiserror = "1.0"
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
+wgpu = {version = "0.1", registry = "yn", package="pi_wgpu", features = ["use_wgpu"]}
 crossbeam="0.8"
 futures="0.3"
-naga = { version = "0.12"}
+naga = { version = "0.19"}
 bytemuck = { version = "1.4", features = ["derive"] }
 
 pi_hash = "0.1"

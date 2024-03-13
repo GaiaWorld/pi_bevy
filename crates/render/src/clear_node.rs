@@ -7,6 +7,7 @@ use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::ParamUsage;
 use pi_share::ShareRefCell;
 use pi_render::depend_graph::NodeId;
+use wgpu::StoreOp;
 
 /// 窗口清屏
 /// 注：此节点 只清屏窗口
@@ -68,9 +69,11 @@ impl Node for ClearNode {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(clear.color),
-                        store: true,
+                        store: StoreOp::Store,
                     },
                 })],
+                timestamp_writes: None,
+                occlusion_query_set: None,
             });
 
             Ok(())

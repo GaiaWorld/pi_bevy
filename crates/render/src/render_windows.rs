@@ -1,4 +1,4 @@
-use bevy_window::RawHandleWrapper;
+use bevy_window::HandleWrapper;
 use pi_render::rhi::{
     device::RenderDevice,
     texture::{PiRenderDefault, ScreenTexture},
@@ -9,12 +9,12 @@ use wgpu::{Surface, TextureFormat};
 pub struct RenderWindow {
     pub width: u32,
     pub height: u32,
-    pub handle: RawHandleWrapper,
+    pub handle: HandleWrapper,
     pub present_mode: PresentMode,
 }
 
 impl RenderWindow {
-    pub fn new(handle: RawHandleWrapper, present_mode: PresentMode) -> Self {
+    pub fn new(handle: HandleWrapper, present_mode: PresentMode) -> Self {
         Self {
             handle,
             present_mode,
@@ -23,14 +23,14 @@ impl RenderWindow {
         }
     }
 
-    pub fn update_handle(&mut self, handle: RawHandleWrapper) {
+    pub fn update_handle(&mut self, handle: HandleWrapper) {
         self.handle = handle;
     }
 }
 
 pub fn prepare_window(
     window: &mut RenderWindow,
-    first_surface: Option<Surface>, // 用于衔接 初始化的surface 和 这里的代码
+    first_surface: Option<Surface<'static>>, // 用于衔接 初始化的surface 和 这里的代码
     view: &mut Option<ScreenTexture>,
     device: &RenderDevice,
     instance: &RenderInstance,
@@ -44,9 +44,7 @@ pub fn prepare_window(
                 "prepare_window, first_surface is none, create new surface, , thread id = {:?}",
                 std::thread::current().id()
             );
-
-            let handle = unsafe { window.handle.get_handle() };
-            unsafe { instance.create_surface(&handle).unwrap() }
+            window.handle.handle.create_surface(instance)
         } else {
             first_surface.unwrap()
         };
@@ -64,6 +62,7 @@ pub fn prepare_window(
         present_mode: window.present_mode,
         alpha_mode: wgpu::CompositeAlphaMode::Auto,
         view_formats: vec![],
+        desired_maximum_frame_latency: 2,
     };
 
     let is_size_changed = width != window.width || height != window.height;

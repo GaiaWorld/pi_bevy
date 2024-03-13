@@ -3,8 +3,8 @@ use std::sync::atomic::Ordering;
 use crate::{
     graph::graph::RenderGraph,
     render_windows::{prepare_window, RenderWindow},
-    PiAsyncRuntime, PiFirstSurface, PiRenderDevice, PiRenderGraph, PiRenderInstance,
-    PiRenderWindow, PiScreenTexture, IS_RESUMED,
+    PiAsyncRuntime, PiRenderDevice, PiRenderGraph, PiRenderInstance,
+    PiRenderWindow, IS_RESUMED, PiScreenTexture,
 };
 use bevy_ecs::prelude::{World, With};
 use bevy_window::{PrimaryWindow, Window};
@@ -38,10 +38,10 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     // 从 world 取 res
     let ptr_world = world as *mut World as usize;
 
-    let first_surface = {
-        let w = unsafe { &mut *(ptr_world as *mut World) };
-        w.resource_mut::<PiFirstSurface>().0.take()
-    };
+    // let first_surface = {
+    //     let w = unsafe { &mut *(ptr_world as *mut World) };
+    //     w.resource_mut::<PiFirstSurface>().0.take()
+    // };
 
     let world_ref: &'static World = unsafe { std::mem::transmute(world) };
 	let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
@@ -87,8 +87,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     #[cfg(not(feature = "trace"))]
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
-        prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
-
+        prepare_window(window, None, view, device, instance, width, height).unwrap();
         // ============ 2. 执行渲染图 ============
         // rg.build().unwrap();
 		// log::warn!("run before====================");
@@ -141,6 +140,24 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     rt.block_on(task).unwrap();
 }
 
+
+pub(crate) fn build_graph<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World) {
+    if !IS_RESUMED.load(Ordering::Relaxed){
+        return;
+    }
+	// 从 world 取 res
+	let ptr_world = world as *mut World as usize;
+	let world_ref: &'static World = unsafe { std::mem::transmute(world) };
+	let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
+	let rt: &A = &world_ref.resource::<PiAsyncRuntime<A>>().0;
+	let rg: &'static mut RenderGraph = unsafe {
+        let w = &mut *(ptr_world as *mut World);
+        let rg = &mut w.resource_mut::<PiRenderGraph>().0;
+        std::mem::transmute(rg)
+    };
+
+	rg.build(rt, world_mut).unwrap();
+}
 // fn present_window(screen_texture: &mut ScreenTexture) {
 //     if let Some(view) = screen_texture.take_surface_texture() {
 //         view.present();

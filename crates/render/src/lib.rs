@@ -9,7 +9,7 @@ extern crate lazy_static;
 
 mod async_queue;
 mod clear_node;
-pub mod component;
+pub mod render_cross;
 pub mod constant;
 mod graph;
 mod init_render;
@@ -41,6 +41,9 @@ pub struct SimpleInOut {
     pub target: Option<ShareTargetView>,
 	pub valid_rect: Option<(u32, u32, u32, u32)>, // x, y, w, h
 }
+// TODO, Send问题， 临时解决
+unsafe impl Send for SimpleInOut {}
+unsafe impl Sync for SimpleInOut {}
 
 impl GetTargetView for SimpleInOut {
     fn get_target_view(&self) -> Option<&TargetView> {
