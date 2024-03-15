@@ -170,6 +170,24 @@ impl RenderGraph {
         self.imp.add_depend(before_label, after_label)
     }
 
+	/// 取到入度节点
+	#[inline]
+	pub fn before_nodes(
+        &self,
+        label: impl Into<NodeLabel>
+	) -> Result<&[NodeId], GraphError> {
+        self.imp.before_nodes(label)
+    }
+
+	/// 取到出现度节点
+	#[inline]
+	pub fn after_nodes(
+        &self,
+        label: impl Into<NodeLabel>
+	) -> Result<&[NodeId], GraphError> {
+        self.imp.after_nodes(label)
+    }
+
     /// 移除依赖
     #[inline]
     pub fn remove_depend(
