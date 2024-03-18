@@ -14,7 +14,7 @@ use pi_render::renderer::sampler::SamplerRes;
 use pi_render::{
     components::view::target_alloc::{SafeAtlasAllocator, UnuseTexture},
     rhi::{
-        asset::{RenderRes, TextureRes},
+        asset::{RenderRes, TextureRes, AssetWithId},
         bind_group::BindGroup,
         buffer::Buffer,
         pipeline::RenderPipeline,
@@ -143,6 +143,7 @@ impl Plugin for PiRenderPlugin {
             sampler_res,
             bind_group_res,
             texture_res,
+			texture_asset_res,
             pipeline_res,
         ) = {
             let w = app.world.cell();
@@ -215,6 +216,17 @@ impl Plugin for PiRenderPlugin {
                     &asset_config,
                     &mut allocator,
                 ),
+				ShareAssetMgr::<AssetWithId<TextureRes>>::new_with_config(
+                    GarbageEmpty(),
+                    &AssetDesc {
+                        ref_garbage: false,
+                        min: 10 * 1024 * 1024,
+                        max: 600 * 1024 * 1024,
+                        timeout: 10 * 60 * 1000,
+                    },
+                    &asset_config,
+                    &mut allocator,
+                ),
                 ShareAssetMgr::<RenderRes<RenderPipeline>>::new_with_config(
                     GarbageEmpty(),
                     &AssetDesc {
@@ -242,6 +254,7 @@ impl Plugin for PiRenderPlugin {
         app.insert_resource(bind_group_res);
 
         app.insert_resource(texture_res);
+		app.insert_resource(texture_asset_res);
         app.insert_resource(pipeline_res);
         // app.insert_resource(AssetMgr::<RenderRes<Program>>::new(
         // 	GarbageEmpty(),
