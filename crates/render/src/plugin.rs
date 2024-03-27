@@ -254,6 +254,7 @@ impl Plugin for PiRenderPlugin {
         app.insert_resource(bind_group_res);
 
         app.insert_resource(texture_res);
+
 		app.insert_resource(texture_asset_res);
         app.insert_resource(pipeline_res);
         // app.insert_resource(AssetMgr::<RenderRes<Program>>::new(

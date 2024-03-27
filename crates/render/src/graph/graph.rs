@@ -14,7 +14,7 @@ use crate::{
 use bevy_ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_render::{
-    depend_graph::graph::DependGraph,
+    depend_graph::{graph::DependGraph, graph_data::NGraph},
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareMutex, ShareRefCell};
@@ -34,9 +34,9 @@ pub struct RenderGraph {
 
     async_submit_queue: ShareTaskQueue,
 }
-#[cfg(not(feature = "webgl"))]
+#[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
 use crate::node::AsyncQueue;
-#[cfg(not(feature = "webgl"))]
+#[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
 use pi_async_rt::prelude::AsyncValueNonBlocking;
 
 /// 渲染图的 拓扑信息 相关 方法
@@ -106,7 +106,45 @@ impl RenderGraph {
         };
 
         let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone());
-        let r = self.imp.add_node(name, node, parent_graph_id);
+        let r = self.imp.add_node(name, node, parent_graph_id, true);
+
+        if r.is_ok() {
+            self.node_count += 1;
+
+            if self.node_count > 1 {
+                let id = *r.as_ref().unwrap();
+                // 清屏节点 在 所有节点 之前
+                self.add_depend(CLEAR_WIDNOW_NODE, id).unwrap();
+                // // 两个以上的节点，清屏节点设置为 非终止节点
+                // self.set_finish(CLEAR_WIDNOW_NODE, false).unwrap();
+            }
+        }
+        r
+    }
+
+	/// 添加一个不运行的节点
+    #[inline]
+    pub fn add_node_not_run<I, O, R, BP, RP>(
+        &mut self,
+        name: impl Into<Cow<'static, str>>,
+        node: R,
+		parent_graph_id: NodeId,
+    ) -> Result<NodeId, GraphError>
+    where
+        I: InParam + Default,
+        O: OutParam + Default + Clone,
+        R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+        BP: SystemParam + 'static,
+		RP: SystemParam + 'static,
+    {
+        let context = RenderContext {
+            device: self.device.clone(),
+            queue: self.queue.clone(),
+            commands: self.commands.clone(),
+        };
+
+        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone());
+        let r = self.imp.add_node(name, node, parent_graph_id, false);
 
         if r.is_ok() {
             self.node_count += 1;
@@ -231,7 +269,7 @@ impl RenderGraph {
             rt: rt.clone(),
         };
 
-		#[cfg(feature = "webgl")]
+		#[cfg(any(feature = "webgl",feature = "single_thread"))]
 		{
 			let commands = {
 				let c = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
@@ -248,9 +286,11 @@ impl RenderGraph {
                 transmute::<_, &'static mut NodeContext>(&mut context)
             })
             .await;
-		let node_count = self.imp.node_count();
+		// 图执行完毕， 通知外部可进行下一步渲染
+		
+		let node_count = self.imp.can_run_count();
         // 用 异步值 等待 队列的 提交 全部完成
-        #[cfg(not(feature = "webgl"))]
+        #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
         {
             let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
             let wait1 = wait.clone();
@@ -261,7 +301,7 @@ impl RenderGraph {
 			task_queue.reset();
         }
 
-        #[cfg(feature = "webgl")]
+        #[cfg(any(feature = "webgl",feature = "single_thread"))]
         {
             let mut cmd_ref = self.commands.0.borrow_mut();
 			let r = std::mem::replace(&mut *cmd_ref, None);
@@ -297,4 +337,18 @@ impl RenderGraph {
             });
         ret
     }
+
+	/// 更新图
+    #[inline]
+    pub fn update<'a, A: AsyncRuntime>(&'a mut self) -> Result<(), GraphError> {
+		self
+            .imp
+            .update()
+    }
+
+	pub fn schedule_graph(&self) -> &NGraph<NodeId, ()> {
+		self
+            .imp
+            .schedule_graph()
+	}
 }

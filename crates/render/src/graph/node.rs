@@ -207,7 +207,7 @@ where
     ) -> BoxFuture<'a, Result<(), String>> {
         let context = self.context.clone();
         let task = async move {
-            #[cfg(not(feature = "webgl"))]
+            #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
             let commands = {
                 // 每节点 一个 CommandEncoder
                 let commands = self
@@ -220,7 +220,7 @@ where
                 commands
             };
 
-            #[cfg(feature = "webgl")]
+            #[cfg(any(feature = "webgl",feature = "single_thread"))]
             let commands = self.context.commands.0.borrow().as_ref().unwrap().clone();
 
 			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
@@ -242,7 +242,7 @@ where
             let output = output.await.unwrap();
 			// pi_hal::runtime::LOGS.lock().0.push("node run end".to_string());
 
-            #[cfg(not(feature = "webgl"))]
+            #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
             {
                 // CommandEncoder --> CommandBuffer
                 let commands = Share::try_unwrap(commands.0).unwrap();

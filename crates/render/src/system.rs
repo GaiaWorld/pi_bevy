@@ -69,20 +69,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         std::mem::transmute(rg)
     };
 
-    let rt_clone = rt.clone();
-
-    #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
-    let prepare_window_span = tracing::info_span!("prepare_window");
-    #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
-    let rg_build_span = tracing::info_span!("rg build");
-    #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
-    let rg_run_span = tracing::info_span!("rg_run");
-    #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
-    let take_texture_span = tracing::info_span!("take_texture");
-    #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
-    let system_present_span = tracing::info_span!("present");
-    #[cfg(feature = "trace")] // NB: outside the task to get the TLS current span
-    let frame_render_span = tracing::info_span!("frame_render");
+    let rt_clone = rt.clone(); 
 
     #[cfg(not(feature = "trace"))]
     let task = async move {
@@ -103,9 +90,10 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     };
     #[cfg(feature = "trace")]
     let task = async move {
+   		let prepare_window_span = tracing::warn_span!("prepare_window");
         // ============ 1. 获取 窗口 可用纹理 ============
         async {
-            prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
+            prepare_window(window, None, view, device, instance, width, height).unwrap();
         }
         .instrument(prepare_window_span)
         .await;
@@ -116,28 +104,37 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         // }
         // .instrument(rg_build_span)
         // .await;
-
-        rg.run(&rt_clone, world_mut)
-            .instrument(rg_run_span)
-            .await
-            .unwrap();
-        
-        // ============ 3. 呈现 ============
-        let view = async move { view.as_mut().unwrap().take_surface_texture() }
-            .instrument(take_texture_span)
-            .await;
-        if let Some(view) = view {
-            let r = async move {
-                view.present();
-            }
-            .instrument(system_present_span)
-            .await;
-			r
-        }
-    }
-    .instrument(frame_render_span);
+        rg.run(&rt_clone, world_mut).await.unwrap();
+    };
 
     rt.block_on(task).unwrap();
+	#[cfg(feature = "trace")]
+	{
+		let view: &'static mut Option<ScreenTexture> = unsafe {
+			// 同一个 world 不能 即 resource 又 resource_mut
+			let w = &mut *(ptr_world as *mut World);
+			let views = &mut w.resource_mut::<PiScreenTexture>().0;
+			std::mem::transmute(views)
+		};
+		let present = async move {
+			// ============ 3. 呈现 ============
+			let take_texture_span = tracing::info_span!("take_texture");
+			let view = async move { view.as_mut().unwrap().take_surface_texture() }
+			.instrument(take_texture_span)
+			.await;
+			if let Some(view) = view {
+				let system_present_span = tracing::warn_span!("present");
+				let r = async move {
+					view.present();
+				}.instrument(system_present_span)
+				.await;
+				r
+			}
+		};
+		rt.block_on(present).unwrap();
+	}
+	
+
 }
 
 
