@@ -24,7 +24,7 @@ derive_deref = "1.1"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu", features = ["use_wgpu"]}
+wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
 wgpu1 = {version = "0.19", package = "wgpu", feature = ["fragile-send-sync-non-atomic-wasm"]}
 crossbeam = "0.8"
 futures = "0.3"
@@ -46,6 +46,7 @@ web-sys = { version = "0.3", features = ["HtmlCanvasElement"] }
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 wasm-bindgen-futures = { version = "0.4" }
 lazy_static = "1.4"
+pi_key_alloter = "0.4"
 
 [features]
 trace = []

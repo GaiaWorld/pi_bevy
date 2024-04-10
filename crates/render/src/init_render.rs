@@ -15,8 +15,7 @@ use pi_render::rhi::{
     RenderInstance, RenderQueue,
 };
 use pi_share::Share;
-use wgpu::InstanceFlags;
-use wgpu1::Gles3MinorVersion;
+use wgpu::{InstanceFlags, Gles3MinorVersion};
 
 pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,

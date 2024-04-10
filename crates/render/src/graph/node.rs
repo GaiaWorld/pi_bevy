@@ -182,7 +182,7 @@ where
 
 		let c = self.context.clone();
 
-        self.node.build(
+        let r = self.node.build(
 			world,
 			self.build_state.as_mut().unwrap(),
 			c,
@@ -191,7 +191,9 @@ where
 			id,
 			from,
 			to,
-        )
+        );
+        self.state_pool.set(self.build_state.take().unwrap());
+        r
     }
 
     #[inline]

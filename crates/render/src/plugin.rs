@@ -1,4 +1,5 @@
 use crate::system::build_graph;
+use crate::TextureKeyAlloter;
 use crate::{init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
     PiAsyncRuntime, PiClearOptions, PiRenderDevice, PiRenderOptions, PiRenderWindow,
     PiSafeAtlasAllocator, PiScreenTexture,
@@ -255,7 +256,7 @@ impl Plugin for PiRenderPlugin {
 
         app.insert_resource(texture_res);
 
-		app.insert_resource(texture_asset_res);
+		app.insert_resource(texture_asset_res.clone());
         app.insert_resource(pipeline_res);
         // app.insert_resource(AssetMgr::<RenderRes<Program>>::new(
         // 	GarbageEmpty(),
@@ -267,12 +268,15 @@ impl Plugin for PiRenderPlugin {
         let (wrapper, present_mode) = init_render(&mut app.world, &rt);
 
         app.insert_resource(PiRenderWindow(RenderWindow::new(wrapper, present_mode)));
+        let texture_key_alloter = TextureKeyAlloter::default();
+        app.insert_resource(texture_key_alloter.clone());
 
         let device = app.world.get_resource::<PiRenderDevice>().unwrap();
         app.insert_resource(PiSafeAtlasAllocator(SafeAtlasAllocator::new(
             device.0.clone(),
-            share_texture_res.0,
+            texture_asset_res.0,
             share_unuse.0,
+            texture_key_alloter.0.clone(),
         )));
     }
 }

@@ -14,7 +14,7 @@ bevy_math = "0.11"
 bevy_app = {version = "0.11", default-features = false}
 raw-window-handle = "0.6"
 log = "0.4"
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu", features = ["use_wgpu"]}
+wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
 
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]

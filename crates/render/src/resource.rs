@@ -3,6 +3,7 @@ use bevy_ecs::prelude::FromWorld;
 use bevy_ecs::system::Resource;
 use pi_async_rt::prelude::*;
 use pi_render::rhi::buffer_alloc::BufferAlloter;
+use pi_share::Share;
 use wgpu::BufferUsages;
 use derive_deref::{Deref, DerefMut};
 /// ================ 单例 ================
@@ -132,3 +133,8 @@ impl Default for ClearOptions {
         }
     }
 }
+
+
+// 纹理key分配器
+#[derive(Debug, Default, Resource, Clone, Deref)]
+pub struct TextureKeyAlloter(pub Share<pi_key_alloter::KeyAlloter>);

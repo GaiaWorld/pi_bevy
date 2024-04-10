@@ -340,7 +340,7 @@ impl RenderGraph {
 
 	/// 更新图
     #[inline]
-    pub fn update<'a, A: AsyncRuntime>(&'a mut self) -> Result<(), GraphError> {
+    pub fn update(&mut self) -> Result<(), GraphError> {
 		self
             .imp
             .update()
