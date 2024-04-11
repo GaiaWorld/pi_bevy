@@ -73,7 +73,7 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     let rg = RenderGraph::new(device.clone(), queue.clone());
 
     // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
-    // world.insert_resource(PiFirstSurface(surface));
+    world.insert_resource(PiFirstSurface(surface));
     world.insert_resource(PiRenderGraph(rg));
     world.insert_resource(PiRenderInstance(instance));
     world.insert_resource(PiRenderDevice(device));

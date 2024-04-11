@@ -38,10 +38,10 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     // 从 world 取 res
     let ptr_world = world as *mut World as usize;
 
-    // let first_surface = {
-    //     let w = unsafe { &mut *(ptr_world as *mut World) };
-    //     w.resource_mut::<PiFirstSurface>().0.take()
-    // };
+    let first_surface = {
+        let w = unsafe { &mut *(ptr_world as *mut World) };
+        w.resource_mut::<crate::PiFirstSurface>().0.take()
+    };
 
     let world_ref: &'static World = unsafe { std::mem::transmute(world) };
 	let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
@@ -74,7 +74,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     #[cfg(not(feature = "trace"))]
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
-        prepare_window(window, None, view, device, instance, width, height).unwrap();
+        prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
         // ============ 2. 执行渲染图 ============
         // rg.build().unwrap();
 		// log::warn!("run before====================");
@@ -93,7 +93,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
    		let prepare_window_span = tracing::warn_span!("prepare_window");
         // ============ 1. 获取 窗口 可用纹理 ============
         async {
-            prepare_window(window, None, view, device, instance, width, height).unwrap();
+            prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
         }
         .instrument(prepare_window_span)
         .await;
