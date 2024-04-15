@@ -98,7 +98,7 @@ impl AddFrameEvent for App {
     fn add_frame_event<T: Event>(&mut self) -> &mut Self {
         if !self.world.contains_resource::<Events<T>>() {
             self.init_resource::<Events<T>>()
-                .add_systems(Update, Events::<T>::update_system.run_if(should_run).after(FrameSet)); // 在每帧结束时清理事件
+                .add_systems(PostUpdate, Events::<T>::update_system.run_if(should_run).after(FrameSet)); // 在每帧结束时清理事件
         }
         self
     }
