@@ -11,7 +11,7 @@ use pi_render::renderer::vertex_buffer::EVertexBufferRange;
 use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_render::rhi::pipeline::RenderPipeline;
 use pi_share::Share;
-use pi_world::{prelude::App, single_res::SingleResMut, system_parms::Local};
+use pi_world::{prelude::App, single_res::SingleResMut, prelude::Local};
 use pi_world_extend_plugin::plugin::Plugin;
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;

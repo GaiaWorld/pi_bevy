@@ -128,8 +128,11 @@ impl Plugin for PiRenderPlugin {
             pipeline_res,
         ) = {
             // let w = &mut app.world;
-            let mut allocator = app.world.get_single_res_mut::<Allocator>().unwrap();
-            let asset_config = app.world.get_single_res::<AssetConfig>().unwrap();
+            let mut unsafe_world = app.world.unsafe_world();
+            let mut allocator = unsafe_world.get_single_res_mut::<Allocator>().unwrap();
+            let unsafe_world = app.world.unsafe_world();
+            let asset_config = unsafe_world.get_single_res::<AssetConfig>().unwrap();
+
             (
                 ShareAssetMgr::<RenderRes<TextureView>>::new_with_config(
                     GarbageEmpty(),

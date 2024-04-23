@@ -10,7 +10,7 @@ use pi_slotmap_tree::{
 use pi_world_extend_commands::Commands;
 use serde::{Deserialize, Serialize};
 
-use pi_world::{query::Query, system_parms::SystemParam, world::Entity};
+use pi_world::{query::Query, prelude::SystemParam, world::Entity};
 
 // use super::layer_dirty::ComponentEvent;
 
