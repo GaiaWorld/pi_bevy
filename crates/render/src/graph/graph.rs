@@ -18,7 +18,7 @@ use pi_render::{
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareMutex, ShareRefCell};
-use pi_world::{system_parms::SystemParam, world::World};
+use pi_world::{prelude::SystemParam, world::World};
 use std::{borrow::Cow, mem::transmute, sync::atomic::AtomicBool};
 use pi_null::Null;
 /// 渲染图

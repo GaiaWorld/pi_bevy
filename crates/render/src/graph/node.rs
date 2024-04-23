@@ -16,7 +16,7 @@ use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
-use pi_world::{system_parms::SystemParam, world::World};
+use pi_world::{prelude::SystemParam, world::World};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 use wgpu::CommandEncoder;

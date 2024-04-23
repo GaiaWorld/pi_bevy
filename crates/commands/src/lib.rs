@@ -13,7 +13,7 @@ pub use command_queue::CommandQueue;
 use pi_world_extend_utils::{system::{SystemBuffer, Deferred}, entity::Entities};
 // pub use parallel_scope::*;
 use std::marker::PhantomData;
-use pi_world::{prelude::World, system_parms::SystemParam, system::SystemMeta, world::Entity, insert::InsertComponents};
+use pi_world::{prelude::World,  system::SystemMeta, world::Entity, insert::InsertComponents};
 // use super::{Deferred, Resource, SystemBuffer, SystemMeta};
 
 /// A [`World`] mutation.
