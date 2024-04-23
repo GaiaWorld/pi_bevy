@@ -7,16 +7,16 @@ use super::{
     param::{InParam, OutParam},
     RenderContext,
 };
-use bevy_ecs::{
-    system::{SystemParam, SystemState},
-    world::World,
-};
+// use bevy_ecs::{
+//     system::{ SystemState}
+// };
 use derive_deref::{Deref, DerefMut};
 use pi_map::vecmap::VecMap;
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
+use pi_world::{system_parms::SystemParam, world::World};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 use wgpu::CommandEncoder;
@@ -39,8 +39,8 @@ pub trait Node: 'static + ThreadSync {
 
 	fn build<'a>(
         &'a mut self,
-        world: &'a mut World,
-        param: &'a mut SystemState<Self::BuildParam>,
+        world: &'a World,
+        // param: &'a mut Self::BuildParam,
         context: RenderContext,
 		input: &'a Self::Input,
         usage: &'a ParamUsage,
@@ -58,7 +58,7 @@ pub trait Node: 'static + ThreadSync {
     fn run<'a>(
         &'a mut self,
         world: &'a World,
-        param: &'a mut SystemState<Self::RunParam>,
+        // param: &'a mut Self::RunParam,
         context: RenderContext,
         commands: ShareRefCell<CommandEncoder>,
         input: &'a Self::Input,
@@ -76,13 +76,13 @@ where
     I: InParam + Default,
     O: OutParam + Default + Clone,
     R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
-    BP: SystemParam + 'static,
-	RP: SystemParam + 'static,
+    // BP: SystemParam + 'static,
+	// RP: SystemParam + 'static,
 {
     node: R,
     state_pool: SystemStatePool,
-    build_state: Option<SystemState<BP>>,
-	run_state: Option<SystemState<RP>>,
+    build_state: Option<&'static World>,
+	run_state: Option<&'static World>,
     context: RenderContext,
 }
 
@@ -91,8 +91,8 @@ where
     I: InParam + Default,
     O: OutParam + Default + Clone,
     R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
-    BP: SystemParam + 'static,
-	RP: SystemParam + 'static,
+    // BP: SystemParam + 'static,
+	// RP: SystemParam + 'static,
 {
     #[inline]
     pub(crate) fn new(node: R, context: RenderContext, state_pool: SystemStatePool) -> Self {
@@ -107,22 +107,22 @@ where
 }
 
 pub struct NodeContext {
-    world: &'static mut World,
+    world: &'static World,
     pub async_tasks: Box<dyn AsyncQueue>,
 }
 
 impl NodeContext {
-    pub fn new(world: &'static mut World, async_tasks: Box<dyn AsyncQueue>) -> Self {
+    pub fn new(world: &'static World, async_tasks: Box<dyn AsyncQueue>) -> Self {
         NodeContext { world, async_tasks }
     }
 
-    pub fn world(&self) -> &World {
+    pub fn world(&self) -> & World {
         &*self.world
     }
 
-	pub fn world_mut(&mut self) -> &mut World {
-        &mut *self.world
-    }
+	// pub fn world_mut(&mut self) -> &mut World {
+    //     &mut *self.world
+    // }
 }
 
 impl<I, O, R, BP, RP> Drop for NodeImpl<I, O, R, BP, RP>
@@ -130,8 +130,8 @@ where
     I: InParam + Default,
     O: OutParam + Default + Clone,
     R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
-    BP: SystemParam + 'static,
-	RP: SystemParam + 'static,
+    // BP: SystemParam + 'static,
+	// RP: SystemParam + 'static,
 {
     fn drop(&mut self) {
         // 将 state 拿出来，扔到 state_pool 中
@@ -165,18 +165,18 @@ where
 		from: &'a [NodeId],
 		to: &'a [NodeId],
     ) -> Result<O, String> {
-		let world = context.world_mut();
+		let world = context.world();
         if self.build_state.is_none() {
             self.build_state = self.state_pool.get();
             if self.build_state.is_none() {
-                self.build_state = Some(SystemState::new(world));
+                // self.build_state = Some(world );
             }
         }
 
 		if self.run_state.is_none() {
             self.run_state = self.state_pool.get();
             if self.run_state.is_none() {
-                self.run_state = Some(SystemState::new(world));
+                // self.run_state = Some(world);
             }
         }
 
@@ -184,7 +184,7 @@ where
 
         let r = self.node.build(
 			world,
-			self.build_state.as_mut().unwrap(),
+			// self.build_state.as_mut().unwrap(),
 			c,
 			input,
 			usage,
@@ -192,7 +192,7 @@ where
 			from,
 			to,
         );
-        self.state_pool.set(self.build_state.take().unwrap());
+        // self.state_pool.set(self.build_state.take().unwrap());
         r
     }
 
@@ -228,7 +228,7 @@ where
 			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
             let output = self.node.run(
                 c.world(),
-                self.run_state.as_mut().unwrap(),
+                // self.run_state.as_mut().unwrap(),
                 context,
                 commands.clone(),
                 input,

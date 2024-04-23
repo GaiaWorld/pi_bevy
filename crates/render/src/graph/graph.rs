@@ -11,13 +11,14 @@ use crate::{
     state_pool::SystemStatePool,
     CLEAR_WIDNOW_NODE,
 };
-use bevy_ecs::{system::SystemParam, world::World};
+// use bevy_ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_render::{
     depend_graph::{graph::DependGraph, graph_data::NGraph},
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareMutex, ShareRefCell};
+use pi_world::{system_parms::SystemParam, world::World};
 use std::{borrow::Cow, mem::transmute, sync::atomic::AtomicBool};
 use pi_null::Null;
 /// 渲染图
@@ -259,7 +260,7 @@ impl RenderGraph {
     pub async fn run<'a, A: AsyncRuntime>(
         &'a mut self,
         rt: &'a A,
-        world: &'static mut World,
+        world: &'static World,
     ) -> Result<(), GraphError> {
         let async_submit_queue = self.async_submit_queue.clone();
 
@@ -317,7 +318,7 @@ impl RenderGraph {
     pub fn build<'a, A: AsyncRuntime>(
         &'a mut self,
         rt: &'a A,
-        world: &'static mut World,
+        world: &'static World,
     ) -> Result<(), GraphError> {
         let async_submit_queue = self.async_submit_queue.clone();
 

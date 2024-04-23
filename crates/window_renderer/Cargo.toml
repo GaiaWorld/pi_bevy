@@ -9,8 +9,9 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "window_renderer"]
 
 [dependencies]
-bevy_ecs = "0.11"
-bevy_app = {version = "0.11", default-features = false}
+pi_world_extend_plugin = { path = "../plugin", version = "0.1"}
+pi_world_extend_commands = { path = "../commands", version = "0.1"}
+pi_world = { path = "../../../pi_world"}
 
 pi_null = "0.1"
 log = "0.4"
@@ -36,5 +37,5 @@ tracing = { version = "0.1", default-features = false, features = ["std"] }
 trace = []
 
 [dev-dependencies]
-bevy_ecs = "0.11"
-bevy_winit = {version="0.11"}
+# bevy_ecs = "0.11"
+# bevy_winit = {version="0.11"}

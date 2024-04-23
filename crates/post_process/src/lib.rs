@@ -1,5 +1,5 @@
-use bevy_app::{Plugin, App};
-use bevy_ecs::system::Resource;
+// use bevy_app::{Plugin, App};
+// use bevy_ecs::system::Resource;
 use pi_assets::mgr::AssetMgr;
 use pi_bevy_asset::ShareAssetMgr;
 use pi_bevy_render_plugin::{PiRenderDevice, PiRenderQueue};
@@ -9,6 +9,8 @@ use pi_render::renderer::vertex_buffer::VertexBufferAllocator;
 use pi_render::rhi::RenderQueue;
 use pi_render::rhi::device::RenderDevice;
 use pi_share::Share;
+use pi_world::prelude::App;
+use pi_world_extend_plugin::plugin::Plugin;
 // use pi_postprocess::{postprocess_pipeline::PostProcessMaterialMgr, postprocess_geometry::PostProcessGeometryManager};
 
 // #[derive(Deref, DerefMut, Resource)]
@@ -17,7 +19,7 @@ use pi_share::Share;
 // #[derive(Deref, DerefMut, Resource)]
 // pub struct PiPostProcessGeometryManager(pub PostProcessGeometryManager);
 
-#[derive(Resource)]
+
 pub struct PostprocessResource {
     pub vballocator: VertexBufferAllocator,
     pub resources: SingleImageEffectResource,
@@ -56,9 +58,9 @@ pub struct PiPostProcessPlugin;
 
 impl Plugin for PiPostProcessPlugin {
     fn build(&self, app: &mut App) {
-        let device = app.world.get_resource::<PiRenderDevice>().unwrap();
-        let queue = app.world.get_resource::<PiRenderQueue>().unwrap();
-        let asset_samplers = app.world.get_resource::<ShareAssetMgr<SamplerRes>>().unwrap();
-        app.insert_resource(PostprocessResource::new(device, queue, asset_samplers));
+        let device = app.world.get_single_res::<PiRenderDevice>().unwrap();
+        let queue = app.world.get_single_res::<PiRenderQueue>().unwrap();
+        let asset_samplers = app.world.get_single_res::<ShareAssetMgr<SamplerRes>>().unwrap();
+        app.world.register_single_res(PostprocessResource::new(device, queue, asset_samplers));
     }
 }

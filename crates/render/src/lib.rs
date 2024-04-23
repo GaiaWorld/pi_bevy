@@ -52,7 +52,7 @@ impl GetTargetView for SimpleInOut {
 }
 
 pub mod asset_config {
-    use bevy_ecs::prelude::Resource;
+    // use bevy_ecs::prelude::Resource;
     use pi_bevy_asset::AssetCapacity;
 
     /// Asset 资源管理
@@ -72,7 +72,7 @@ pub mod asset_config {
         File,
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgRenderResTextureView(pub AssetCapacity);
     impl Default for AssetCfgRenderResTextureView {
         fn default() -> Self {
@@ -90,7 +90,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgRenderResUnuseTexture(pub AssetCapacity);
     impl Default for AssetCfgRenderResUnuseTexture {
         fn default() -> Self {
@@ -108,7 +108,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgSamplerRes(pub AssetCapacity);
     impl Default for AssetCfgSamplerRes {
         fn default() -> Self {
@@ -126,7 +126,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgTextureRes(pub AssetCapacity);
     impl Default for AssetCfgTextureRes {
         fn default() -> Self {
@@ -144,7 +144,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgImageTexture(pub AssetCapacity);
     impl Default for AssetCfgImageTexture {
         fn default() -> Self {
@@ -162,7 +162,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgImageTextureView(pub AssetCapacity);
     impl Default for AssetCfgImageTextureView {
         fn default() -> Self {
@@ -180,7 +180,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgBindGroup(pub AssetCapacity);
     impl Default for AssetCfgBindGroup {
         fn default() -> Self {
@@ -198,7 +198,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgVertexBuffer3D(pub AssetCapacity);
     impl Default for AssetCfgVertexBuffer3D {
         fn default() -> Self {
@@ -216,7 +216,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgShaderMeta3D(pub AssetCapacity);
     impl Default for AssetCfgShaderMeta3D {
         fn default() -> Self {
@@ -234,7 +234,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgShader3D(pub AssetCapacity);
     impl Default for AssetCfgShader3D {
         fn default() -> Self {
@@ -252,7 +252,7 @@ pub mod asset_config {
         }
     }
 
-    #[derive(Resource)]
+    // #[derive(Resource)]
     pub struct AssetCfgRenderPipeline(pub AssetCapacity);
     impl Default for AssetCfgRenderPipeline {
         fn default() -> Self {

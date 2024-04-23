@@ -11,13 +11,14 @@
 // #[macro_use]
 // extern crate pi_ecs_macros;
 
-use bevy_ecs::prelude::{World, Resource};
-use bevy_app::prelude::App;
+// use bevy_ecs::prelude::{World, Resource};
+// use bevy_app::prelude::App;
 use derive_deref::Deref;
+use pi_world::{world::World, prelude::App};
 
 pub mod system_param;
-pub mod query;
-pub mod async_system;
+// pub mod query;
+// pub mod async_system;
 // pub mod dispatch;
 pub mod action;
 
@@ -26,9 +27,9 @@ pub mod prelude {
     pub use crate::{
         system_param::{
 			tree::{Layer, Down, Up, EntityTreeMut, EntityTree, Root},
-			layer_dirty::LayerDirty
+			// layer_dirty::LayerDirty
 		},
-		query::or_default::{OrDefault, DefaultComponent},
+		// query::or_default::{OrDefault, DefaultComponent},
 		
     };
 }
@@ -40,5 +41,5 @@ pub trait TShell {
 	fn app_mut(&mut self) -> &mut App;
 }
 
-#[derive(Resource, Debug, Deref, Default)]
+#[derive(Debug, Deref, Default)]
 pub struct IsNotRun(pub bool);

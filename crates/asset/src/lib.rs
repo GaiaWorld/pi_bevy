@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
-use bevy_ecs::system::{Resource, ResMut, Local};
-use bevy_app::prelude::{App, Plugin, Last};
+// use bevy_ecs::system::{Resource, ResMut, Local};
+// use bevy_app::prelude::{App, Plugin, Last};
 use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer, Size}, homogeneous::HomogeneousMgr};
 use pi_hash::XHashMap;
 use pi_render::renderer::bind_group::{BindGroup, BindGroupLayout};
@@ -11,6 +11,8 @@ use pi_render::renderer::vertex_buffer::EVertexBufferRange;
 use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_render::rhi::pipeline::RenderPipeline;
 use pi_share::Share;
+use pi_world::{prelude::App, single_res::SingleResMut, system_parms::Local};
+use pi_world_extend_plugin::plugin::Plugin;
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
 use pi_null::Null;
@@ -34,11 +36,11 @@ impl Plugin for PiAssetPlugin {
 		} else {
 			self.total_capacity
 		};
-		app.insert_resource(Allocator(pi_assets::allocator::Allocator::new(total_capacity)));
-		app.insert_resource(self.asset_config.clone());
+		app.world.register_single_res(Allocator(pi_assets::allocator::Allocator::new(total_capacity)));
+		app.world.register_single_res(self.asset_config.clone());
 
 		// 帧推结束前，整理资产（这里采用在帧推结束前整理资产， 而不是利用容量分配器自带的定时整理， 可以防止整理立即打断正在进行的其他system）
-		app.add_systems(Last, collect);
+		app.schedule.add_system(collect);
 
 		#[cfg(feature="account_info")]
 		app.add_systems(Last, account);
@@ -54,7 +56,7 @@ impl Default for LastCollectTime {
 }
 
 /// 整理容量
-pub fn collect(mut allocator: ResMut<Allocator>, last_collect_time: Local<LastCollectTime>) {
+pub fn collect(mut allocator: SingleResMut<Allocator>, last_collect_time: Local<LastCollectTime>) {
 	// 暂时设置为每秒整理， 这里间隔配置？TODO
 	if now_millisecond() - last_collect_time.0 > 1000 {
 		allocator.collect(now_millisecond())
@@ -62,11 +64,11 @@ pub fn collect(mut allocator: ResMut<Allocator>, last_collect_time: Local<LastCo
 }
 
 /// 容量分配器
-#[derive(Resource, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct Allocator(pub pi_assets::allocator::Allocator);
 
 /// 资产配置
-#[derive(Debug, Clone, Resource, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct AssetConfig (XHashMap<TypeId, AssetDesc>);
 
 impl AssetConfig {
@@ -93,7 +95,7 @@ pub struct AssetDesc {
 }
 
 /// 资源、资产管理器
-#[derive(Resource, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct ShareAssetMgr<A: Asset, G: Garbageer<A> = GarbageEmpty>(pub Share<AssetMgr<A, G>>);
 
 impl<A: Asset, G: Garbageer<A>> ShareAssetMgr<A, G> {
@@ -121,7 +123,7 @@ impl<A: Asset, G: Garbageer<A>> Clone for ShareAssetMgr<A, G> {
 }
 
 /// 资源， 同质资产管理器
-#[derive(Resource, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct ShareHomogeneousMgr<A: Size, G: pi_assets::homogeneous::Garbageer<A> = pi_assets::homogeneous::GarbageEmpty>(pub Share<HomogeneousMgr<A, G>>);
 
 impl<A: Asset + Size, G: pi_assets::homogeneous::Garbageer<A>> ShareHomogeneousMgr<A, G> {
@@ -163,7 +165,7 @@ impl Default for AssetCapacity {
         Self { flag: false, min: 1024, max: 10 * 1024, timeout: 10 * 1000 }
     }
 }
-#[derive(Debug, Default, Clone, Resource, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone,  Serialize, Deserialize)]
 pub struct AssetMgrConfigs (pub XHashMap<String, AssetCapacity>);
 impl AssetMgrConfigs {
 	#[inline]

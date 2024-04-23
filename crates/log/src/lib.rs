@@ -33,13 +33,15 @@ static GLOBAL: tracy_client::ProfiledAllocator<std::alloc::System> =
 //     };
 // }
 
-use bevy_ecs::system::Resource;
+// use bevy_ecs::system::Resource;
 // pub use bevy::utils::tracing::{
 //     debug, debug_span, error, error_span, info, info_span, trace, trace_span, warn, warn_span,
 //     Level,
 // };
 
-use bevy_app::{App, Plugin};
+use pi_world::prelude::App;
+use pi_world_extend_plugin::plugin::Plugin;
+// use bevy_app::{App, Plugin};
 use tracing_log::LogTracer;
 #[cfg(feature = "tracing-chrome")]
 use tracing_subscriber::fmt::{format::DefaultFields, FormattedFields};
@@ -108,7 +110,7 @@ pub struct LogPlugin<T: Write + Send + Sync + 'static> {
 
 
 /// 日志过滤处理器，如果添加LogPlugin，该类型的一个实例会被放置在Resource中， 外部可通过该单例，重设过滤条件
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct LogFilterHandle(pub tracing_subscriber::reload::Handle<EnvFilter, Registry>);
 
 impl<T: Write + Send + Sync + 'static> Default for LogPlugin<T> {
@@ -140,7 +142,7 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
             .unwrap();
 		let (filter_layer, reload_handle) = tracing_subscriber::reload::Layer::new(filter_layer);
         let subscriber = Registry::default().with(filter_layer);
-		app.insert_resource(LogFilterHandle(reload_handle));
+		app.world.register_single_res(LogFilterHandle(reload_handle));
 
         #[cfg(feature = "trace")]
         let subscriber = subscriber.with(tracing_error::ErrorLayer::default());

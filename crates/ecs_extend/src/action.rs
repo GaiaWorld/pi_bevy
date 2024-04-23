@@ -1,8 +1,8 @@
 use std::mem::replace;
 
-use bevy_ecs::prelude::Resource;
+// use bevy_ecs::prelude::Resource;
 
-#[derive(Resource)]
+
 pub struct ActionList<T: Send + Sync + 'static>(Vec<T>);
 impl<T: Send + Sync> Default for ActionList<T> {
     fn default() -> Self {

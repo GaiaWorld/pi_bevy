@@ -4,12 +4,13 @@ use crate::{
     graph::graph::RenderGraph,
     render_windows::{prepare_window, RenderWindow},
     PiAsyncRuntime, PiRenderDevice, PiRenderGraph, PiRenderInstance,
-    PiRenderWindow, IS_RESUMED, PiScreenTexture,
+    PiRenderWindow, IS_RESUMED, PiScreenTexture, PiFirstSurface,
 };
-use bevy_ecs::prelude::{World, With};
+// use bevy_ecs::prelude::{World, With};
 use bevy_window::{PrimaryWindow, Window};
 use pi_async_rt::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
+use pi_world::{world::World, filter::With, single_res::{SingleRes, SingleResMut}};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 
@@ -21,14 +22,23 @@ use tracing::Instrument;
 //   + wasm 环境 是 SingleTaskRuntime
 //   + 否则 是 MultiTaskRuntime
 //
-pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World) {
+pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
+    world: &World, 
+    mut first_surface: SingleResMut<PiFirstSurface>,
+     rt: SingleRes<PiAsyncRuntime<A>>,
+     instance: SingleRes<PiRenderInstance>,
+     device: SingleRes<PiRenderDevice>,
+    mut views: SingleResMut<PiScreenTexture>,
+    mut window: SingleResMut<PiRenderWindow>,
+    mut rg: SingleResMut<PiRenderGraph>,
+) {
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
-    let mut primary_window = world.query_filtered::<&Window, With<PrimaryWindow>>();
+    let mut primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
 
-    let (width, height) = match primary_window.get_single(world) {
-        Ok(primary_window) => (
+    let (width, height) = match primary_window.iter().nth(0) {
+        Some(primary_window) => (
             primary_window.physical_width(),
             primary_window.physical_height(),
         ),
@@ -36,36 +46,36 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
     };
 
     // 从 world 取 res
-    let ptr_world = world as *mut World as usize;
+    // let ptr_world = world as *mut World as usize;
 
     let first_surface = {
-        let w = unsafe { &mut *(ptr_world as *mut World) };
-        w.resource_mut::<crate::PiFirstSurface>().0.take()
+        // let w = unsafe { &mut *(ptr_world as *mut World) };
+        first_surface.0.take()
     };
 
     let world_ref: &'static World = unsafe { std::mem::transmute(world) };
-	let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
-    let rt = &world_ref.resource::<PiAsyncRuntime<A>>().0;
-    let instance = &world_ref.resource::<PiRenderInstance>().0;
-    let device = &world_ref.resource::<PiRenderDevice>().0;
+	// let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
+    let rt = &rt.0;
+    let instance = unsafe { std::mem::transmute(&instance.0) } ;
+    let device =  unsafe { std::mem::transmute(&device.0) } ;
 
     // 跨 异步运行时 的 引用 必须 声明 是 'static 的
     let view: &'static mut Option<ScreenTexture> = unsafe {
         // 同一个 world 不能 即 resource 又 resource_mut
-        let w = &mut *(ptr_world as *mut World);
-        let views = &mut w.resource_mut::<PiScreenTexture>().0;
+        // let w = &mut *(ptr_world as *mut World);
+        let views = &mut views.0;
         std::mem::transmute(views)
     };
 
     let window: &'static mut RenderWindow = unsafe {
-        let w = &mut *(ptr_world as *mut World);
-        let window = &mut w.resource_mut::<PiRenderWindow>().0;
+        // let w = &mut *(ptr_world as *mut World);
+        let window = &mut window.0;
         std::mem::transmute(window)
     };
 
     let rg: &'static mut RenderGraph = unsafe {
-        let w = &mut *(ptr_world as *mut World);
-        let rg = &mut w.resource_mut::<PiRenderGraph>().0;
+        // let w = &mut *(ptr_world as *mut World);
+        let rg = &mut rg.0;
         std::mem::transmute(rg)
     };
 
@@ -79,7 +89,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
         // rg.build().unwrap();
 		// log::warn!("run before====================");
 		// pi_hal::runtime::LOGS.lock().0.push("system run before".to_string());
-        rg.run(&rt_clone, world_mut).await.unwrap();
+        rg.run(&rt_clone, world_ref).await.unwrap();
 		// pi_hal::runtime::LOGS.lock().0.push("system run after".to_string());
         
         // ============ 3. 呈现 ============
@@ -138,22 +148,22 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut Wo
 }
 
 
-pub(crate) fn build_graph<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World) {
+pub(crate) fn build_graph<A: AsyncRuntime + AsyncRuntimeExt>(world: & World, mut rg: SingleResMut<PiRenderGraph>) {
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
 	// 从 world 取 res
-	let ptr_world = world as *mut World as usize;
+	// let ptr_world = world as *mut World as usize;
 	let world_ref: &'static World = unsafe { std::mem::transmute(world) };
-	let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
-	let rt: &A = &world_ref.resource::<PiAsyncRuntime<A>>().0;
+	// let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
+	let rt: &A = &world_ref.get_single_res::<PiAsyncRuntime<A>>().unwrap().0;
 	let rg: &'static mut RenderGraph = unsafe {
-        let w = &mut *(ptr_world as *mut World);
-        let rg = &mut w.resource_mut::<PiRenderGraph>().0;
+        // let w = &mut *(ptr_world as *mut World);
+        let rg = &mut rg.0;
         std::mem::transmute(rg)
     };
 
-	rg.build(rt, world_mut).unwrap();
+	rg.build(rt, world_ref).unwrap();
 }
 // fn present_window(screen_texture: &mut ScreenTexture) {
 //     if let Some(view) = screen_texture.take_surface_texture() {

@@ -1,6 +1,7 @@
 use crate::render_windows::RenderWindow;
-use bevy_ecs::prelude::FromWorld;
-use bevy_ecs::system::Resource;
+// use bevy_ecs::world::FromWorld;
+// use bevy_ecs::prelude::FromWorld;
+// use bevy_ecs::system::Resource;
 use pi_async_rt::prelude::*;
 use pi_render::rhi::buffer_alloc::BufferAlloter;
 use pi_share::Share;
@@ -8,7 +9,7 @@ use wgpu::BufferUsages;
 use derive_deref::{Deref, DerefMut};
 /// ================ 单例 ================
 
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 pub struct PiSafeAtlasAllocator(pub pi_render::components::view::target_alloc::SafeAtlasAllocator);
 
 // lazy_static::lazy_static! {
@@ -29,23 +30,23 @@ pub type PiVertexBufferAlloter = PiBufferAlloter<{VERTEX_USAGES}>;
 pub type PiIndexBufferAlloter = PiBufferAlloter<{INDEX_USAGES}>;
 
 /// buffer分配器
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 pub struct PiBufferAlloter<const B: u32>(BufferAlloter);
 
-impl<const B: u32> FromWorld for PiBufferAlloter<B> {
-    fn from_world(world: &mut bevy_ecs::prelude::World) -> Self {
-        let device = world.get_resource::<PiRenderDevice>().unwrap();
-        let queue = world.get_resource::<PiRenderQueue>().unwrap();
-		Self(BufferAlloter::new((**device).clone(), (**queue).clone(), 4096, BufferUsages::from_bits_truncate(B)))
-    }
-}
+// impl<const B: u32> FromWorld for PiBufferAlloter<B> {
+//     fn from_world(world: &mut bevy_ecs::prelude::World) -> Self {
+//         let device = world.get_resource::<PiRenderDevice>().unwrap();
+//         let queue = world.get_resource::<PiRenderQueue>().unwrap();
+// 		Self(BufferAlloter::new((**device).clone(), (**queue).clone(), 4096, BufferUsages::from_bits_truncate(B)))
+//     }
+// }
 
 /// 异步 运行时
 /// A 的 类型 见 plugin 模块
 ///   + wasm 环境 是 SingleTaskRuntime
 ///   + 否则 是 MultiTaskRuntime
 ///
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 pub struct PiRenderWindow(pub RenderWindow);
 
 /// 异步 运行时
@@ -53,11 +54,11 @@ pub struct PiRenderWindow(pub RenderWindow);
 ///   + wasm 环境 是 SingleTaskRuntime
 ///   + 否则 是 MultiTaskRuntime
 ///
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 pub struct PiAsyncRuntime<A: AsyncRuntime + AsyncRuntimeExt>(pub A);
 
 /// 渲染 Instance，等价于 wgpu::Instance
-#[derive(Resource, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct PiRenderInstance(pub pi_render::rhi::RenderInstance);
 
 // TODO Send问题， 临时解决
@@ -66,11 +67,11 @@ unsafe impl Sync for PiRenderInstance {}
 
 
 /// 渲染 Options，等价于 wgpu::Options
-#[derive(Resource, Deref, DerefMut, Default)]
+#[derive(Deref, DerefMut, Default)]
 pub struct PiRenderOptions(pub pi_render::rhi::options::RenderOptions);
 
 /// 渲染 设备，等价于 wgpu::RenderDevice
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 pub struct PiRenderDevice(pub pi_render::rhi::device::RenderDevice);
 
 // TODO Send问题， 临时解决
@@ -78,7 +79,7 @@ unsafe impl Send for PiRenderDevice {}
 unsafe impl Sync for PiRenderDevice {}
 
 /// 渲染 队列，等价于 wgpu::RenderQueue
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 pub struct PiRenderQueue(pub pi_render::rhi::RenderQueue);
 
 // TODO Send问题， 临时解决
@@ -86,11 +87,11 @@ unsafe impl Send for PiRenderQueue {}
 unsafe impl Sync for PiRenderQueue {}
 
 /// AdapterInfo，wgpu::AdapterInfo
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Deref, DerefMut)]
 pub struct PiAdapterInfo(pub pi_render::rhi::AdapterInfo);
 
 /// 渲染图，等价于 RenderGraph
-#[derive(Resource, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub struct PiRenderGraph(pub super::graph::graph::RenderGraph);
 
 // TODO Send问题， 临时解决
@@ -98,7 +99,7 @@ unsafe impl Send for PiRenderGraph {}
 unsafe impl Sync for PiRenderGraph {}
 
 /// 交换链对应的屏幕纹理
-#[derive(Default, Resource, Deref, DerefMut)]
+#[derive(Default,  Deref, DerefMut)]
 pub struct PiScreenTexture(pub Option<pi_render::rhi::texture::ScreenTexture>);
 
 // TODO Send问题， 临时解决
@@ -106,11 +107,11 @@ unsafe impl Send for PiScreenTexture {}
 unsafe impl Sync for PiScreenTexture {}
 
 /// 清屏 参数
-#[derive(Default, Resource, Deref, DerefMut, Debug, Clone)]
+#[derive(Default,  Deref, DerefMut, Debug, Clone)]
 pub struct PiClearOptions(pub ClearOptions);
 
 /// 用于处理 初始化 的Surface 和 prepare_windows 的 关系
-#[derive(Resource, Deref, DerefMut)]
+#[derive( Deref, DerefMut)]
 pub(crate) struct PiFirstSurface(pub(crate) Option<wgpu::Surface<'static>>);
 
 // TODO Send问题， 临时解决
@@ -136,5 +137,5 @@ impl Default for ClearOptions {
 
 
 // 纹理key分配器
-#[derive(Debug, Default, Resource, Clone, Deref)]
+#[derive(Debug, Default,  Clone, Deref)]
 pub struct TextureKeyAlloter(pub Share<pi_key_alloter::KeyAlloter>);

@@ -1,15 +1,15 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use bevy_ecs::prelude::{Res, Resource, ResMut, Commands, Entity};
-use bevy_ecs::system::CommandQueue;
-use bevy_app:: {Plugin, First};
 use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, render_cross::GraphId, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
+use pi_world::{world::{Entity, World}, single_res::{SingleRes, SingleResMut}, prelude::App};
+use pi_world_extend_commands::{CommandQueue, Commands};
+use pi_world_extend_plugin::plugin::Plugin;
 use wgpu::Extent3d;
 use pi_null::Null;
 
-#[derive(Resource)]
+// #[derive(Resource)]
 pub struct WindowRenderer {
     format: wgpu::TextureFormat,
     surface_format: wgpu::TextureFormat,
@@ -252,12 +252,12 @@ impl Node for WindowRendererNode {
     type Output = ();
 
     type BuildParam = ();
-	type RunParam = (Res<'static, PiScreenTexture>, Res<'static, WindowRenderer>);
+	type RunParam = (SingleRes<'static, PiScreenTexture>, SingleRes<'static, WindowRenderer>);
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a mut bevy_ecs::world::World,
-		_param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
+		_world: &'a  World,
+		// _param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
 		_context: pi_bevy_render_plugin::RenderContext,
 		_input: &'a Self::Input,
 		_usage: &'a pi_bevy_render_plugin::node::ParamUsage,
@@ -270,8 +270,8 @@ impl Node for WindowRendererNode {
 
     fn run<'a>(
         &'a mut self,
-        world: &'a bevy_ecs::prelude::World,
-        param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
+        world: &'a World,
+        // param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
         _context: pi_bevy_render_plugin::RenderContext,
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _: &'a Self::Input,
@@ -281,7 +281,9 @@ impl Node for WindowRendererNode {
 		_to: &'a [NodeId],
     ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
 
-        let (screen, final_render) = param.get(world);
+        // let (screen, final_render) = param.get(world);
+        let final_render = world.get_single_res::<WindowRenderer>().unwrap().clone();
+        let screen = world.get_single_res::<PiScreenTexture>().unwrap().clone();
 
         if final_render.pipeline.is_some() {
             let mut rpass = commands.begin_render_pass(
@@ -324,12 +326,12 @@ impl Node for WindowRendererClearNode {
     type Output = ();
 
     type BuildParam = ();
-	type RunParam = Res<'static, WindowRenderer>;
+	type RunParam = SingleRes<'static, WindowRenderer>;
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a mut bevy_ecs::world::World,
-		_param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
+		_world: &'a World,
+		// _param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
 		_context: pi_bevy_render_plugin::RenderContext,
 		_input: &'a Self::Input,
 		_usage: &'a pi_bevy_render_plugin::node::ParamUsage,
@@ -342,8 +344,8 @@ impl Node for WindowRendererClearNode {
 
     fn run<'a>(
         &'a mut self,
-        _world: &'a bevy_ecs::prelude::World,
-        _param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
+        _world: &'a World,
+        // _param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
         _context: pi_bevy_render_plugin::RenderContext,
         _commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,
@@ -397,12 +399,12 @@ impl Node for WindowRendererClearNode {
 }
 
 fn sys_changesize(
-    window: Res<PiRenderWindow>,
-    device: Res<PiRenderDevice>,
-    mut final_render: ResMut<WindowRenderer>,
+    window: SingleRes<PiRenderWindow>,
+    device: SingleRes<PiRenderDevice>,
+    mut final_render: SingleResMut<WindowRenderer>,
 ) {
-    if window.width > 0 && window.height > 0 {
-        let surface_size = wgpu::Extent3d { width: window.width, height: window.height, depth_or_array_layers: 1 };
+    if window.0.width > 0 && window.0.height > 0 {
+        let surface_size = wgpu::Extent3d { width: window.0.width, height: window.0.height, depth_or_array_layers: 1 };
         final_render.change(wgpu::TextureFormat::Rgba8Unorm, surface_size, &device);
     }
 }
@@ -410,32 +412,36 @@ fn sys_changesize(
 #[derive(Debug, Default)]
 pub struct PluginWindowRender;
 impl Plugin for PluginWindowRender {
-    fn build(&self, app: &mut bevy_app::App) {
+    fn build(&self, app: &mut App) {
         
         // #[cfg(not(target_arch="wasm32"))]
         // {
-            let id_clear = app.world.spawn_empty().id();
-            let id_render = app.world.spawn_empty().id();
+            // let id_clear = app.spawn_empty().id();
 
-            let device = app.world.get_resource::<PiRenderDevice>().unwrap().0.clone();
+            let device = app.world.get_single_res::<PiRenderDevice>().unwrap().0.clone();
 
-
-            let mut rg = app.world.get_resource_mut::<PiRenderGraph>().unwrap();
-            let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode, NodeId::null()).unwrap();
-            let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode, NodeId::null()).unwrap();
-            rg.set_finish(WindowRenderer::KEY, true).unwrap();
-            rg.add_depend(CLEAR_WIDNOW_NODE, WindowRenderer::CLEAR_KEY).unwrap();
+            let (node_clear, node_render) = {
+                let rg = app.world.get_single_res_mut::<PiRenderGraph>().unwrap();
+                let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode, NodeId::null()).unwrap();
+                let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode, NodeId::null()).unwrap();
+                rg.set_finish(WindowRenderer::KEY, true).unwrap();
+                rg.add_depend(CLEAR_WIDNOW_NODE, WindowRenderer::CLEAR_KEY).unwrap();
+                (node_clear, node_render)
+            };
+            
 
             let mut cmdqueue = CommandQueue::default();
-            let mut cmds = Commands::new(&mut cmdqueue, &app.world);
-            cmds.entity(id_clear).insert(GraphId(node_clear));
-            cmds.entity(id_render).insert(GraphId(node_render));
+            // let mut cmds = Commands::new(&mut cmdqueue, &app.world);
+
+            // cmds.entity(id_clear).insert(GraphId(node_clear));
+            // cmds.entity(id_render).insert(GraphId(node_render));
+           
 
             cmdqueue.apply(&mut app.world);
 
-            let node = WindowRenderer::new(&device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default(), id_clear, node_clear, id_render, node_render);
-            app.insert_resource(node);
-            app.add_systems(First, sys_changesize);
+            let node = WindowRenderer::new(&device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default(),  Entity::default(), node_clear,  Entity::default(), node_render);
+            app.world.register_single_res(node);
+            app.schedule.add_system( sys_changesize);
         // }
     }
 }

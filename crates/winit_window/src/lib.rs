@@ -1,8 +1,11 @@
-use bevy_app::Plugin;
+// use bevy_app::Plugin;
 use bevy_window::{
-    PrimaryWindow, WindowCreated, WindowPosition, WindowResolution, CreateSurface,
+    PrimaryWindow, WindowCreated, WindowPosition, WindowResolution, CreateSurface, HandleWrapper,
 };
-use glam::IVec2;
+// use glam::IVec2;
+use nalgebra::Vector2;
+use pi_world::prelude::App;
+use pi_world_extend_plugin::plugin::Plugin;
 use std::sync::Arc;
 use winit::{dpi::PhysicalSize, window::Window};
 
@@ -36,7 +39,7 @@ impl WinitPlugin {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Plugin for WinitPlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+    fn build(&self, app: &mut App) {
         self.descript.build(app);
     }
 }
@@ -107,7 +110,7 @@ impl WindowDescribe {
         self
     }
 
-    fn build(&self, app: &mut bevy_app::App) {
+    fn build(&self, app: &mut App) {
         let winit_window = &*self.window;
         if let Some(size) = self.size {
             winit_window.set_inner_size(PhysicalSize {
@@ -127,11 +130,12 @@ impl WindowDescribe {
             inner_size.height as f32 / scale_factor as f32,
         );
         window.resolution.set_scale_factor(scale_factor);
-        window.position = match winit_window.outer_position().map(|r| IVec2::new(r.x, r.y)) {
+        window.position = match winit_window.outer_position().map(|r| Vector2::new(r.x, r.y)) {
             Ok(r) => WindowPosition::At(r),
             _ => WindowPosition::Automatic,
         };
-        let primary = app.world.spawn((window, raw_handle, PrimaryWindow)).id();
+        let i = app.world.make_inserter::<(bevy_window::prelude::Window, HandleWrapper, PrimaryWindow)>();
+        let primary = i.insert((window, raw_handle, PrimaryWindow));
 		log::warn!("zzzzzzzzzzzzzz==================");
 
         // TODO?
@@ -143,7 +147,8 @@ impl WindowDescribe {
         });
 
         // windows.add(window);
-        app.world.send_event(WindowCreated { window: primary });
+        // todo
+        // app.world.send_event(WindowCreated { window: primary });
         // world.send_event(bevy_window::WindowCreated { id: self.window_id });
     }
 }

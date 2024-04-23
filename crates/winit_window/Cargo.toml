@@ -9,11 +9,13 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy", "window", "winit"]
 
 [dependencies]
-bevy_ecs = "0.11"
-bevy_app = {version = "0.11", default-features = false}
+# bevy_ecs = "0.11"
+# bevy_app = {version = "0.11", default-features = false}
+pi_world_extend_plugin = { path = "../plugin", version = "0.1"}
+pi_world = { path = "../../../pi_world"}
 bevy_window = {path = "../window", version = "0.1", registry = "yn", package = "pi_bevy_window" }
 winit = { registry = "yn", version = "0.27"}
-glam="0.24"
+# glam="0.24"
 raw-window-handle = "0.6"
 log = "0.4"
 wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
@@ -22,3 +24,8 @@ wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
 web-sys = {version="0.3", features = [
 	"HtmlCanvasElement"
 ]}
+
+[dependencies.nalgebra]
+version = "0.32"
+features = ["libm"]
+default-features = false

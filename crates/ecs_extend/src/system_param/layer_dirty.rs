@@ -1,21 +1,29 @@
 //! 层脏
 
-use super::tree::{EntityTree, RecursiveIterator};
-use bevy_ecs::{
-	prelude::{World, Event},
-    event::ManualEventReader,
-    prelude::{Component, Entity, Events},
-    query::{Added, Changed, Or, WorldQuery},
-    system::{Local, Res, SystemParam, SystemMeta},
-	component::{ComponentId, Tick}, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell,
-};
-use bevy_utils::synccell::SyncCell;
-use pi_bevy_ecs_macro::all_tuples;
+// use crate::filter::{Added, Changed};
+// use crate::{world::Entity, prelude::SystemParam, system::SystemMeta};
+
+use crate::tree::{EntityTree, RecursiveIterator};
+// use bevy_ecs::{
+// 	prelude::{World, Event},
+//     event::ManualEventReader,
+//     prelude::{Component, Entity, Events},
+//     query::{Added, Changed, Or, WorldQuery},
+//     system::{Local, Res, SystemParam, SystemMeta},
+// 	component::{ComponentId, Tick}, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell,
+// };
+// use bevy_utils::synccell::SyncCell;
+// use pi_bevy_ecs_macro::all_tuples;
 use pi_dirty::{
     DirtyIterator, LayerDirty as LayerDirty1, NextDirty, PreDirty, ReverseDirtyIterator,
 };
+use pi_world::prelude::Or;
 use pi_map::vecmap::VecMap;
 use pi_null::Null;
+use pi_world::system_parms::SystemParam;
+use pi_world::world::Entity;
+use pi_world::listener::EventList;
+// use pi_world_extend_macro::all_tuples;
 use std::ops::{Index, IndexMut};
 use std::slice::Iter;
 use std::{marker::PhantomData, mem::transmute};
@@ -57,60 +65,64 @@ pub struct LayerDirty<'w, 's, F: Dirty>
 // where
 //     for<'a, 'b> <<F as Dirty>::EventReader as SystemParam>::Item<'a, 'b>: EventList,
 {
-    entity_tree: EntityTree<'w, 's>,
-    event_reader: <<F as Dirty>::EventReader as SystemParam>::Item<'w, 's>,
+    // entity_tree: EntityTree<'w, 's>,
+    // event_reader: <<F as Dirty>::EventReader as SystemParam>::Item<'w, 's>,
 
-    dirty_mark: Local<'s, DirtyMark>,
-    layer_list: Local<'s, LayerDirty1<Entity>>,
+    // dirty_mark: Local<'s, DirtyMark>,
+    // layer_list: Local<'s, LayerDirty1<Entity>>,
 
-    is_init: bool,
+    // is_init: bool,
+}
+unsafe impl<F: Dirty> SystemParam for LayerDirty<'_, '_, F> {
+
 }
 
-unsafe impl<F: Dirty> SystemParam for LayerDirty<'_, '_, F> {
-    type State = (
-		<EntityTree<'static, 'static> as SystemParam>::State, 
-		<<F as Dirty>::EventReader as SystemParam>::State, 
-		<Local<'static, DirtyMark> as SystemParam>::State, 
-		<Local<'static, LayerDirty1<Entity>> as SystemParam>::State, 
-	);
-	type Item<'world, 'state> = LayerDirty<'world, 'state, F>;
 
-	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
-		(
-			<EntityTree<'static, 'static> as SystemParam>::init_state(world, system_meta), 
-			<<F as Dirty>::EventReader as SystemParam>::init_state(world, system_meta), 
-			<Local<'static, DirtyMark> as SystemParam>::init_state(world, system_meta), 
-			<Local<'static, LayerDirty1<Entity>> as SystemParam>::init_state(world, system_meta), 
-		)
-    }
+// unsafe impl<F: Dirty> SystemParam for LayerDirty<'_, '_, F> {
+//     type State = (
+// 		<EntityTree<'static, 'static> as SystemParam>::State, 
+// 		<<F as Dirty>::EventReader as SystemParam>::State, 
+// 		<Local<'static, DirtyMark> as SystemParam>::State, 
+// 		<Local<'static, LayerDirty1<Entity>> as SystemParam>::State, 
+// 	);
+// 	type Item<'world, 'state> = LayerDirty<'world, 'state, F>;
 
-	fn new_archetype(
-        state: &mut Self::State,
-        archetype: &Archetype,
-        system_meta: &mut SystemMeta,
-    ) {
-		<EntityTree<'static, 'static> as SystemParam>::new_archetype(&mut state.0, archetype, system_meta);
-    }
+// 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+// 		(
+// 			<EntityTree<'static, 'static> as SystemParam>::init_state(world, system_meta), 
+// 			<<F as Dirty>::EventReader as SystemParam>::init_state(world, system_meta), 
+// 			<Local<'static, DirtyMark> as SystemParam>::init_state(world, system_meta), 
+// 			<Local<'static, LayerDirty1<Entity>> as SystemParam>::init_state(world, system_meta), 
+// 		)
+//     }
 
-	#[inline]
-    unsafe fn get_param<'w, 's>(
-        state: &'s mut Self::State,
-        system_meta: &SystemMeta,
-        world: UnsafeWorldCell<'w>,
-        change_tick: Tick,
-    ) -> Self::Item<'w, 's> {
-		LayerDirty {
-			entity_tree: <EntityTree<'static, 'static> as SystemParam>::get_param(&mut state.0, system_meta, world, change_tick), 
-			event_reader: <<F as Dirty>::EventReader as SystemParam>::get_param(&mut state.1, system_meta, world, change_tick), 
-			dirty_mark: <Local<'static, DirtyMark> as SystemParam>::get_param(&mut state.2, system_meta, world, change_tick), 
-			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(&mut state.3, system_meta, world, change_tick),
-			is_init: false,
-		}
-		// OrInitRes(Res::<T>::get_param(component_id, system_meta, world, change_tick))
-    }
+// 	fn new_archetype(
+//         state: &mut Self::State,
+//         archetype: &Archetype,
+//         system_meta: &mut SystemMeta,
+//     ) {
+// 		<EntityTree<'static, 'static> as SystemParam>::new_archetype(&mut state.0, archetype, system_meta);
+//     }
+
+// 	#[inline]
+//     unsafe fn get_param<'w, 's>(
+//         state: &'s mut Self::State,
+//         system_meta: &SystemMeta,
+//         world: UnsafeWorldCell<'w>,
+//         change_tick: Tick,
+//     ) -> Self::Item<'w, 's> {
+// 		LayerDirty {
+// 			entity_tree: <EntityTree<'static, 'static> as SystemParam>::get_param( world, system_meta, &mut state.0,), 
+// 			event_reader: <<F as Dirty>::EventReader as SystemParam>::get_param(world, system_meta,   &mut state.1), 
+// 			dirty_mark: <Local<'static, DirtyMark> as SystemParam>::get_param(world, system_meta, &mut state.2,  ), 
+// 			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(world, system_meta,&mut state.3,  ),
+// 			is_init: false,
+// 		}
+// 		// OrInitRes(Res::<T>::get_param(component_id, system_meta, world, change_tick))
+//     }
 
 	
-}
+// }
 
 impl<'w, 's, F: Dirty> LayerDirty<'w, 's, F>
 // where
@@ -238,16 +250,16 @@ impl<'a> RemainDirty<'a> {
 }
 
 /// 手动迭代器（需要自己控制脏标记）
-pub struct ManualLayerDirtyIter<'w, 's, 'a> {
+pub struct ManualLayerDirtyIter<'w, 'a> {
     matchs: bool,
     iter_inner: DirtyIterator<'a, Entity>,
 
     mark_inner: &'a mut DirtyMark,
 
-    tree: &'a EntityTree<'w, 's>,
+    tree: &'a EntityTree<'w,>,
 }
 
-impl<'w, 's, 'a> Iterator for ManualLayerDirtyIter<'w, 's, 'a> {
+impl<'w, 'a> Iterator for ManualLayerDirtyIter<'w, 'a> {
     type Item = (Entity, &'a mut DirtyMark, usize);
 
     #[inline]
@@ -289,16 +301,16 @@ impl<'w, 's, 'a> Iterator for ManualLayerDirtyIter<'w, 's, 'a> {
 }
 
 /// 逆序迭代，从叶子节点向父迭代
-pub struct LayerReverseDirtyIter<'w, 's, 'a> {
+pub struct LayerReverseDirtyIter<'w, 'a> {
     matchs: bool,
     iter_inner: ReverseDirtyIterator<'a, Entity>,
 
     mark_inner: &'a mut DirtyMark,
 
-    tree: &'a EntityTree<'w, 's>,
+    tree: &'a EntityTree<'w>,
 }
 
-impl<'w, 's, 'a> Iterator for LayerReverseDirtyIter<'w, 's, 'a> {
+impl<'w, 'a> Iterator for LayerReverseDirtyIter<'w,  'a> {
     type Item = Entity;
 
     #[inline]
@@ -328,14 +340,14 @@ impl<'w, 's, 'a> Iterator for LayerReverseDirtyIter<'w, 's, 'a> {
     }
 }
 
-impl<T: Component> Dirty for Changed<T> {
-    type EventReader = ComponentEventReader<'static, 'static, Self>;
-	type Item<'w, 's> = ComponentEventReader<'w, 's, Self>;
-}
-impl<T: Component> Dirty for Added<T> {
-    type EventReader = ComponentEventReader<'static, 'static, Self>;
-	type Item<'w, 's> = ComponentEventReader<'w, 's, Self>;
-}
+// impl<T: Component> Dirty for Changed<T> {
+//     type EventReader = ComponentEventReader<'static, 'static, Self>;
+// 	type Item<'w, 's> = ComponentEventReader<'w, 's, Self>;
+// }
+// impl<T: Component> Dirty for Added<T> {
+//     type EventReader = ComponentEventReader<'static, 'static, Self>;
+// 	type Item<'w, 's> = ComponentEventReader<'w, 's, Self>;
+// }
 
 macro_rules! impl_dirty_tuple {
 	() => {
@@ -378,9 +390,9 @@ pub struct ComponentEvent<T: Dirty> {
     mark: PhantomData<T>,
 }
 
-impl<T: Dirty> Event for ComponentEvent<T> {
+// impl<T: Dirty> Event for ComponentEvent<T> {
 
-}
+// }
 
 impl<T: Dirty> ComponentEvent<T> {
     pub fn new(id: Entity) -> Self {
@@ -395,7 +407,7 @@ impl<T: Dirty> ComponentEvent<T> {
 unsafe impl<T: Dirty> Send for ComponentEvent<T> {}
 unsafe impl<T: Dirty> Sync for ComponentEvent<T> {}
 
-pub trait Dirty: WorldQuery + 'static {
+pub trait Dirty: 'static {
     type EventReader: for<'world, 'state> SystemParam<Item<'world, 'state> = <Self as Dirty>::Item<'world, 'state>>;
 	type Item<'w, 's>: EventList;
 }
@@ -407,9 +419,9 @@ pub struct AutoLayerDirtyIter<'w, 's, 'a> {
 
     mark_inner: &'a mut DirtyMark,
 
-    tree: &'a EntityTree<'w, 's>,
+    tree: &'a EntityTree<'w>,
     // archetype_id: Local,
-    pre_iter: Option<RecursiveIterator<'a, EntityTree<'w, 's>>>,
+    pre_iter: Option<RecursiveIterator<'a, EntityTree<'w>>>,
     // layers: &'a mut  ReadFetch<C>,
 }
 
@@ -477,52 +489,52 @@ impl<'w, 's, 'a> Iterator for AutoLayerDirtyIter<'w, 's, 'a> {
 
 // }
 
-pub struct ComponentEventReader<'w, 's, F: Dirty> {
-    reader: Local<'s, ManualEventReader<ComponentEvent<F>>>,
-    events: Res<'w, Events<ComponentEvent<F>>>,
-}
+// pub struct ComponentEventReader<'w, 's, F: Dirty> {
+//     reader: Local<'s, ManualEventReader<ComponentEvent<F>>>,
+//     events: Res<'w, Events<ComponentEvent<F>>>,
+// }
 
-unsafe impl<F: Dirty> SystemParam for ComponentEventReader<'_, '_, F> {
-    type State = (
-        SyncCell<ManualEventReader<ComponentEvent<F>>>,
-		ComponentId,
-    );
-	type Item<'w, 's> = ComponentEventReader<'w, 's, F>;
+// unsafe impl<F: Dirty> SystemParam for ComponentEventReader<'_, '_, F> {
+//     type State = (
+//         SyncCell<ManualEventReader<ComponentEvent<F>>>,
+// 		ComponentId,
+//     );
+// 	type Item<'w, 's> = ComponentEventReader<'w, 's, F>;
 
-	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
-		(
-			<Local::<'_, ManualEventReader<ComponentEvent<F>>> as SystemParam>::init_state(world, system_meta),
-			<Res::<'_, Events<ComponentEvent<F>>> as SystemParam>::init_state(world, system_meta)
-		)
-	}
+// 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+// 		(
+// 			<Local::<'_, ManualEventReader<ComponentEvent<F>>> as SystemParam>::init_state(world, system_meta),
+// 			<Res::<'_, Events<ComponentEvent<F>>> as SystemParam>::init_state(world, system_meta)
+// 		)
+// 	}
 
-	unsafe fn get_param<'w, 's>(
-        state: &'s mut Self::State,
-        system_meta: &SystemMeta,
-        world: UnsafeWorldCell<'w>,
-        change_tick: Tick,
-    ) -> Self::Item<'w, 's> {
-        ComponentEventReader { 
-			reader : <Local<'s , ManualEventReader<ComponentEvent<F>>> as bevy_ecs :: system :: SystemParam>::get_param(& mut state.0 , system_meta, world, change_tick) , 
-			events : <Res <'w, Events< ComponentEvent<F> >> as bevy_ecs :: system :: SystemParam >::get_param(& mut state.1, system_meta, world, change_tick) ,
-		}
-    }
-}
+// 	unsafe fn get_param<'w, 's>(
+//         state: &'s mut Self::State,
+//         system_meta: &SystemMeta,
+//         world: UnsafeWorldCell<'w>,
+//         change_tick: Tick,
+//     ) -> Self::Item<'w, 's> {
+//         ComponentEventReader { 
+// 			reader : <Local<'s , ManualEventReader<ComponentEvent<F>>> as bevy_ecs :: system :: SystemParam>::get_param(& mut state.0 , system_meta, world, change_tick) , 
+// 			events : <Res <'w, Events< ComponentEvent<F> >> as bevy_ecs :: system :: SystemParam >::get_param(& mut state.1, system_meta, world, change_tick) ,
+// 		}
+//     }
+// }
 
-unsafe impl<F: Dirty> bevy_ecs::system::ReadOnlySystemParam for ComponentEventReader<'_, '_, F> {}
+// unsafe impl<F: Dirty> ReadOnlySystemParam for ComponentEventReader<'_, '_, F> {}
 
-pub trait EventList: SystemParam {
-    fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity>;
-}
+// pub trait EventList: SystemParam {
+//     fn iter<'a>(&'a mut self) -> impl Iterator<Item = &'a Entity>;
+// }
 
-impl<'w, 's, F: Dirty> EventList for ComponentEventReader<'w, 's, F> {
-    fn iter(&mut self) -> impl Iterator<Item = &Entity> {
-        self.reader.iter_with_id(&self.events).map(|r @ (_, _id)| {
-            // trace!("EventReader::iter() -> {}", id);
-            &r.0.id
-        })
-    }
-}
+// impl<'w, 's, F: Dirty> EventList for ComponentEventReader<'w, 's, F> {
+//     fn iter(&mut self) -> impl Iterator<Item = &Entity> {
+//         self.reader.iter_with_id(&self.events).map(|r @ (_, _id)| {
+//             // trace!("EventReader::iter() -> {}", id);
+//             &r.0.id
+//         })
+//     }
+// }
 
 #[derive(Debug, Default)]
 pub struct DirtyMark {

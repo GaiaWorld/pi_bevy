@@ -1,9 +1,10 @@
-use bevy_ecs::{
-    entity::{Entity, EntityMapper, MapEntities},
-    prelude::Component,
-};
-use bevy_math::{DVec2, IVec2, Vec2};
-
+// use bevy_ecs::{
+//     entity::{Entity, EntityMapper, MapEntities},
+//     prelude::Component,
+// };
+// use bevy_math::{DVec2, IVec2, Vec2};
+use nalgebra::Vector2;
+use pi_world::world::Entity;
 
 use crate::CursorIcon;
 
@@ -14,7 +15,7 @@ use crate::CursorIcon;
 /// [`WindowPlugin`](crate::WindowPlugin) will spawn a [`Window`] entity
 /// with this component if [`primary_window`](crate::WindowPlugin::primary_window)
 /// is `Some`.
-#[derive(Default, Debug, Component, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
 pub struct PrimaryWindow;
 
 /// Reference to a [`Window`], whether it be a direct link to a specific entity or
@@ -47,16 +48,16 @@ impl WindowRef {
     }
 }
 
-impl MapEntities for WindowRef {
-    fn map_entities(&mut self, entity_mapper: &mut EntityMapper) {
-        match self {
-            Self::Entity(entity) => {
-                *entity = entity_mapper.get_or_reserve(*entity);
-            }
-            Self::Primary => {}
-        };
-    }
-}
+// impl MapEntities for WindowRef {
+//     fn map_entities(&mut self, entity_mapper: &mut EntityMapper) {
+//         match self {
+//             Self::Entity(entity) => {
+//                 *entity = entity_mapper.get_or_reserve(*entity);
+//             }
+//             Self::Primary => {}
+//         };
+//     }
+// }
 
 /// A flattened representation of a window reference for equality/hashing purposes.
 ///
@@ -81,7 +82,7 @@ impl NormalizedWindowRef {
 ///
 /// This component is synchronized with `winit` through `bevy_winit`:
 /// it will reflect the current state of the window and can be modified to change this state.
-#[derive(Component, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Window {
     /// The cursor of this window.
     // pub cursor: Cursor,
@@ -174,7 +175,7 @@ pub struct Window {
     ///  ## Platform-specific
     ///
     /// - iOS / Android / Web: Unsupported.
-    pub ime_position: Vec2,
+    pub ime_position: Vector2<f32>,
     // /// Sets a specific theme for the window.
     // ///
     // /// If `None` is provided, the window will use the system theme.
@@ -273,10 +274,11 @@ impl Window {
     ///
     /// See [`WindowResolution`] for an explanation about logical/physical sizes.
     #[inline]
-    pub fn cursor_position(&self) -> Option<Vec2> {
-        self.internal
-            .physical_cursor_position
-            .map(|position| (position / self.scale_factor()).as_vec2())
+    pub fn cursor_position(&self) -> Option<Vector2<f32>> {
+        self.internal.physical_cursor_position.map(|position| {
+            let p = position / self.scale_factor();
+            Vector2::new(p.x as f32, p.y as f32)
+        })
     }
 
     /// The cursor position in this window in physical pixels.
@@ -285,24 +287,24 @@ impl Window {
     ///
     /// See [`WindowResolution`] for an explanation about logical/physical sizes.
     #[inline]
-    pub fn physical_cursor_position(&self) -> Option<Vec2> {
+    pub fn physical_cursor_position(&self) -> Option<Vector2<f32>> {
         self.internal
             .physical_cursor_position
-            .map(|position| position.as_vec2())
+            .map(|position| Vector2::new(position.x as f32, position.y as f32))
     }
 
     /// Set the cursor position in this window in logical pixels.
     ///
     /// See [`WindowResolution`] for an explanation about logical/physical sizes.
-    pub fn set_cursor_position(&mut self, position: Option<Vec2>) {
+    pub fn set_cursor_position(&mut self, position: Option<Vector2<f32>>) {
         self.internal.physical_cursor_position =
-            position.map(|p| p.as_dvec2() * self.scale_factor());
+            position.map(|p| Vector2::new(p.x as f64, p.y as f64) * self.scale_factor());
     }
 
     /// Set the cursor position in this window in physical pixels.
     ///
     /// See [`WindowResolution`] for an explanation about logical/physical sizes.
-    pub fn set_physical_cursor_position(&mut self, position: Option<DVec2>) {
+    pub fn set_physical_cursor_position(&mut self, position: Option<Vector2<f64>>) {
         self.internal.physical_cursor_position = position;
     }
 }
@@ -355,14 +357,16 @@ impl WindowResizeConstraints {
         if max_width < min_width {
             log::warn!(
                 "The given maximum width {} is smaller than the minimum width {}",
-                max_width, min_width
+                max_width,
+                min_width
             );
             max_width = min_width;
         }
         if max_height < min_height {
             log::warn!(
                 "The given maximum height {} is smaller than the minimum height {}",
-                max_height, min_height
+                max_height,
+                min_height
             );
             max_height = min_height;
         }
@@ -440,17 +444,17 @@ pub enum WindowPosition {
     /// The window's top-left corner should be placed at the specified position (in physical pixels).
     ///
     /// (0,0) represents top-left corner of screen space.
-    At(IVec2),
+    At(Vector2<i32>),
 }
 
 impl WindowPosition {
     /// Creates a new [`WindowPosition`] at a position.
-    pub fn new(position: IVec2) -> Self {
+    pub fn new(position: Vector2<i32>) -> Self {
         Self::At(position)
     }
 
     /// Set the position to a specific point.
-    pub fn set(&mut self, position: IVec2) {
+    pub fn set(&mut self, position: Vector2<i32>) {
         *self = WindowPosition::At(position);
     }
 
@@ -655,14 +659,14 @@ where
     }
 }
 
-impl From<bevy_math::Vec2> for WindowResolution {
-    fn from(res: bevy_math::Vec2) -> WindowResolution {
+impl From<nalgebra::Vector2<f32>> for WindowResolution {
+    fn from(res: Vector2<f32>) -> WindowResolution {
         WindowResolution::new(res.x, res.y)
     }
 }
 
-impl From<bevy_math::DVec2> for WindowResolution {
-    fn from(res: bevy_math::DVec2) -> WindowResolution {
+impl From<nalgebra::Vector2<f64>> for WindowResolution {
+    fn from(res: Vector2<f64>) -> WindowResolution {
         WindowResolution::new(res.x as f32, res.y as f32)
     }
 }
@@ -697,7 +701,7 @@ pub struct InternalWindowState {
     /// If this is true then next frame we will ask to maximize/un-maximize the window depending on `maximized`.
     maximize_request: Option<bool>,
     /// Unscaled cursor position.
-    physical_cursor_position: Option<DVec2>,
+    physical_cursor_position: Option<Vector2<f64>>,
 }
 
 impl InternalWindowState {
