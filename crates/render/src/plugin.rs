@@ -107,15 +107,18 @@ impl Plugin for PiRenderPlugin {
         let rt = pi_hal::runtime::RENDER_RUNTIME.clone();
         // let rt = create_single_runtime();
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
-        app.schedule
-            .add_system(run_frame_system::<MultiTaskRuntime>);
-        app.schedule.add_system(build_graph::<MultiTaskRuntime>);
+        {
+            app.schedule
+                .add_system(run_frame_system::<MultiTaskRuntime>);
+            app.schedule.add_system(build_graph::<MultiTaskRuntime>);
+        }
 
         #[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
-        app.schedule
-            .add_system(run_frame_system::<pi_async_rt::prelude::SingleTaskRuntime>);
-        app.schedule
-            .add_system(build_graph::<pi_async_rt::prelude::SingleTaskRuntime>);
+        {
+            app.schedule
+                .add_system(run_frame_system::<SingleTaskRuntime>);
+            app.schedule.add_system(build_graph::<SingleTaskRuntime>);
+        }
 
         let (
             share_texture_res,
