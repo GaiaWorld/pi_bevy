@@ -68,66 +68,62 @@ pub fn marked<'w, 's, 'a, T: Eq + Clone>(
     }
 }
 
-fn a(q: Query<Entity, ()>){
-
-}
 pub struct LayerDirty<'w, F: FilterComponents + 'static>
 // where
 //     for<'a, 'b> <<F as Dirty>::EventReader as SystemParam>::Item<'a>: EventList,
 {
     entity_tree: EntityTree<'w>,
-    // event_reader: <<F as FilterComponents>:: as SystemParam>::Item<'w>,
     event_reader: Query<'w, Entity, F>,
     dirty_mark: Local<'w, DirtyMark>,
     layer_list: Local<'w, LayerDirty1<Entity>>,
 
     is_init: bool,
 }
+impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_, F> {
+    type State = (
+        <EntityTree<'static> as SystemParam>::State,
+        <Query<'static, Entity, F> as SystemParam>::State,
+        <Local<'static, DirtyMark> as SystemParam>::State,
+        <Local<'static, LayerDirty1<Entity>> as SystemParam>::State,
+    );
 
-// unsafe impl<F: Dirty> SystemParam for LayerDirty<'_, '_, F> {
-//     type State = (
-// 		<EntityTree<'static, 'static> as SystemParam>::State,
-// 		<<F as Dirty>::EventReader as SystemParam>::State,
-// 		<Local<'static, DirtyMark> as SystemParam>::State,
-// 		<Local<'static, LayerDirty1<Entity>> as SystemParam>::State,
-// 	);
-// 	type Item<'world, 'state> = LayerDirty<'world, 'state, F>;
+    type Item<'world> = LayerDirty<'world, F>;
 
-// 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
-// 		(
-// 			<EntityTree<'static, 'static> as SystemParam>::init_state(world, system_meta),
-// 			<<F as Dirty>::EventReader as SystemParam>::init_state(world, system_meta),
-// 			<Local<'static, DirtyMark> as SystemParam>::init_state(world, system_meta),
-// 			<Local<'static, LayerDirty1<Entity>> as SystemParam>::init_state(world, system_meta),
-// 		)
-//     }
+    fn init_state(
+        world: &mut pi_world::world::World,
+        system_meta: &mut pi_world::system::SystemMeta,
+    ) -> Self::State {
+        (
+			<EntityTree<'static> as SystemParam>::init_state(world, system_meta), 
+			<Query<'static, Entity, F> as SystemParam>::init_state(world, system_meta), 
+			<Local<'static, DirtyMark> as SystemParam>::init_state(world, system_meta), 
+			<Local<'static, LayerDirty1<Entity>> as SystemParam>::init_state(world, system_meta), 
+		)
+    }
 
-// 	fn new_archetype(
-//         state: &mut Self::State,
-//         archetype: &Archetype,
-//         system_meta: &mut SystemMeta,
-//     ) {
-// 		<EntityTree<'static, 'static> as SystemParam>::new_archetype(&mut state.0, archetype, system_meta);
-//     }
+    fn get_param<'world>(
+        world: &'world pi_world::world::World,
+        system_meta: &'world pi_world::system::SystemMeta,
+        state: &'world mut Self::State,
+    ) -> Self::Item<'world> {
+        LayerDirty {
+			entity_tree: <EntityTree<'static> as SystemParam>::get_param(world, system_meta, &mut state.0), 
+			event_reader: <Query<'static, Entity, F> as SystemParam>::get_param(world, system_meta, &mut state.1), 
+			dirty_mark: <Local<'static, DirtyMark> as SystemParam>::get_param(world, system_meta, &mut state.2), 
+			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(world, system_meta, &mut state.3),
+			is_init: false,
+		}
+    }
 
-// 	#[inline]
-//     unsafe fn get_param<'w, 's>(
-//         state: &'s mut Self::State,
-//         system_meta: &SystemMeta,
-//         world: UnsafeWorldCell<'w>,
-//         change_tick: Tick,
-//     ) -> Self::Item<'w, 's> {
-// 		LayerDirty {
-// 			entity_tree: <EntityTree<'static, 'static> as SystemParam>::get_param( world, system_meta, &mut state.0,),
-// 			event_reader: <<F as Dirty>::EventReader as SystemParam>::get_param(world, system_meta,   &mut state.1),
-// 			dirty_mark: <Local<'static, DirtyMark> as SystemParam>::get_param(world, system_meta, &mut state.2,  ),
-// 			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(world, system_meta,&mut state.3,  ),
-// 			is_init: false,
-// 		}
-// 		// OrInitRes(Res::<T>::get_param(component_id, system_meta, world, change_tick))
-//     }
+    fn get_self<'world>(
+        world: &'world pi_world::world::World,
+        system_meta: &'world pi_world::system::SystemMeta,
+        state: &'world mut Self::State,
+    ) -> Self {
+        unsafe { transmute(Self::get_param(world, system_meta, state)) }
+    }
+}
 
-// }
 
 impl<'w, F: FilterComponents> LayerDirty<'w, F>
 // where
@@ -193,10 +189,10 @@ impl<'w, F: FilterComponents> LayerDirty<'w, F>
         }
         self.dirty_mark.map.clear();
         self.layer_list.clear();
-        for id in self.event_reader {
+        for id in self.event_reader.iter() {
             marked_dirty(
-                *id,
-                *id,
+                id,
+                id,
                 &mut self.dirty_mark,
                 &mut self.layer_list,
                 &self.entity_tree,
