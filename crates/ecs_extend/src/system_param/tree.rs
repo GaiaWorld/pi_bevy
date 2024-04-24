@@ -9,7 +9,7 @@ use pi_slotmap_tree::{
 };
 use serde::{Deserialize, Serialize};
 
-use pi_world::{query::Query, prelude::SystemParam, world::Entity};
+use pi_world::{query::Query, prelude::SystemParam, world::{Entity, World, self}, system::SystemMeta};
 
 // use pi_print_any::{println_any, out_any};
 
@@ -100,6 +100,46 @@ pub struct EntityTree<'w, 's> {
 	layer_query: Query<'w, 's, &'static Layer>,
 	up_query: Query<'w, 's, &'static Up>,
 	down_query: Query<'w, 's, &'static Down>,
+}
+// use pi_world::prelude::
+// impl_system_param_tuple!()
+
+impl SystemParam for EntityTree<'_> {
+    type State = (
+        <Query<'static, &'static  Layer> as SystemParam>::State,
+		<Query<'static, &'static  Up> as SystemParam>::State,
+		<Query<'static, &'static  Down> as SystemParam>::State,
+    );
+
+    type Item<'world> = EntityTree<'world>;
+
+    fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+        (
+			<Query< 'static, &'static  Layer> as SystemParam>::init_state(world, system_meta),
+			<Query<'static, &'static  Up> as SystemParam>::init_state(world, system_meta),
+			<Query<'static, &'static  Down> as SystemParam>::init_state(world, system_meta),
+		)
+    }
+
+    fn get_param<'world>(
+        world: &'world World,
+        system_meta: &'world SystemMeta,
+        state: &'world mut Self::State,
+    ) -> Self::Item<'world> {
+        EntityTree{
+            layer_query: <Query< 'static, &'static  Layer> as SystemParam>::get_param(world, system_meta, &mut state.0),
+            up_query:  <Query< 'static, &'static  Up> as SystemParam>::get_param(world, system_meta, &mut state.1),
+            down_query:  <Query< 'static, &'static  Down> as SystemParam>::get_param(world, system_meta, &mut state.2),
+        }
+    }
+
+    fn get_self<'world>(
+        world: &'world pi_world::world::World,
+        system_meta: &'world pi_world::system::SystemMeta,
+        state: &'world mut Self::State,
+    ) -> Self {
+        unsafe { transmute(Self::get_param(world, system_meta, state)) }
+    }
 }
 
 impl<'w, 's> Storage<TreeKey> for EntityTree<'w, 's> {
