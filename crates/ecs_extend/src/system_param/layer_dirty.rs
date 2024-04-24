@@ -188,21 +188,21 @@ impl<'w, F: FilterComponents> LayerDirty<'w, F>
     }
 
     pub fn init(&mut self) {
-        if self.is_init {
-            return;
-        }
-        self.dirty_mark.map.clear();
-        self.layer_list.clear();
-        for id in self.event_reader {
-            marked_dirty(
-                *id,
-                *id,
-                &mut self.dirty_mark,
-                &mut self.layer_list,
-                &self.entity_tree,
-            )
-        }
-        self.is_init = true;
+        // if self.is_init {
+        //     return;
+        // }
+        // self.dirty_mark.map.clear();
+        // self.layer_list.clear();
+        // for id in self.event_reader {
+        //     marked_dirty(
+        //         *id,
+        //         *id,
+        //         &mut self.dirty_mark,
+        //         &mut self.layer_list,
+        //         &self.entity_tree,
+        //     )
+        // }
+        // self.is_init = true;
     }
 
     pub fn mark(&mut self, entity: Entity) {

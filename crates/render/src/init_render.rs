@@ -5,8 +5,7 @@ use crate::{
     graph::graph::RenderGraph, PiAdapterInfo, PiRenderDevice, PiRenderGraph, PiRenderInstance,
     PiRenderOptions, PiRenderQueue,
 };
-use bevy_ecs::prelude::With;
-use bevy_ecs::world::World;
+use pi_world::prelude::{With, World};
 use bevy_window::{PrimaryWindow, HandleWrapper};
 use log::debug;
 use pi_async_rt::prelude::{AsyncRuntime, AsyncRuntimeExt};
@@ -23,11 +22,11 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
     rt: &A,
 ) -> (HandleWrapper, wgpu::PresentMode) {
-    let options = world.resource::<PiRenderOptions>().0.clone();
+    let options = world.get_single_res::<PiRenderOptions>().unwrap().0.clone();
     // let windows = world.resource_mut::<bevy::prelude::Windows>();
 
-    let mut primary_window = world.query_filtered::<&HandleWrapper, With<PrimaryWindow>>();
-    let primary_window_handle = primary_window.single(world).clone();
+    let primary_window = world.make_queryer::<&HandleWrapper, With<PrimaryWindow>>();
+    let primary_window_handle = primary_window.iter().nth(0).unwrap().clone();
     let mode = options.present_mode;
 
     init_render_impl(world, rt, &primary_window_handle, options);
@@ -57,9 +56,8 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
 
     let surface = window.handle.create_surface(&instance);
 
-    let mut allocator = world.get_resource_mut::<pi_bevy_asset::Allocator>().unwrap();
-    let allocator1 = &mut allocator.0;
-    let allocator1: &'static mut Allocator = unsafe {transmute(allocator1)};
+    let allocator = world.get_single_res_mut::<pi_bevy_asset::Allocator>().unwrap();
+    let allocator1: &'static mut Allocator = unsafe {transmute(allocator)};
     let SetupResult {
         surface,
         instance,
@@ -78,12 +76,12 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     let rg = RenderGraph::new(device.clone(), queue.clone());
 
     // 注：之所以写到这里，是因为 Bevy 的 内置类型 不能 传到 pi_async 的 future中。
-    world.insert_resource(PiFirstSurface(surface));
-    world.insert_resource(PiRenderGraph(rg));
-    world.insert_resource(PiRenderInstance(instance));
-    world.insert_resource(PiRenderDevice(device));
-    world.insert_resource(PiRenderQueue(queue));
-    world.insert_resource(PiAdapterInfo(adapter_info));
+    world.register_single_res(PiFirstSurface(surface));
+    world.register_single_res(PiRenderGraph(rg));
+    world.register_single_res(PiRenderInstance(instance));
+    world.register_single_res(PiRenderDevice(device));
+    world.register_single_res(PiRenderQueue(queue));
+    world.register_single_res(PiAdapterInfo(adapter_info));
 }
 
 #[derive(Default)]

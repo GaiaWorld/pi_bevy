@@ -1,10 +1,9 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, render_cross::GraphId, NodeId};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
 use pi_world::{world::{Entity, World}, single_res::{SingleRes, SingleResMut}, prelude::App};
-use pi_world_extend_commands::{CommandQueue, Commands};
 use pi_world_extend_plugin::plugin::Plugin;
 use wgpu::Extent3d;
 use pi_null::Null;
@@ -430,14 +429,14 @@ impl Plugin for PluginWindowRender {
             };
             
 
-            let mut cmdqueue = CommandQueue::default();
+            // let mut cmdqueue = CommandQueue::default();
             // let mut cmds = Commands::new(&mut cmdqueue, &app.world);
 
             // cmds.entity(id_clear).insert(GraphId(node_clear));
             // cmds.entity(id_render).insert(GraphId(node_render));
            
 
-            cmdqueue.apply(&mut app.world);
+            // cmdqueue.apply(&mut app.world);
 
             let node = WindowRenderer::new(&device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default(),  Entity::default(), node_clear,  Entity::default(), node_render);
             app.world.register_single_res(node);

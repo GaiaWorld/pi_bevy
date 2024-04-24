@@ -17,7 +17,7 @@ raw-window-handle = "0.6"
 log = "0.4"
 wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
 pi_world_extend_plugin = { path = "../plugin", version = "0.1"}
-pi_world = { path = "../../../pi_world"}
+pi_world = "0.1"
 
 [dependencies.nalgebra]
 version = "0.32"
