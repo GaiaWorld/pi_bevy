@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 pi_bevy_ecs_macro = { path = "../ecs_extend/macro", version = "0.1"}
-pi_world = { path = "../../../pi_world"}
+pi_world = "0.1"
 downcast-rs = "1.2"
 log = "0.4"
 pi-async-rt = "0.2"

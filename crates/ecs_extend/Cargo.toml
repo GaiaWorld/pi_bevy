@@ -37,9 +37,7 @@ flume = "0.10"
 pi_bevy_ecs_macro = {path = "./macro", version="0.1", registry = "yn"}
 pi_assets = "0.13"
 serde = { version = "1.0", features = ["derive"], option=true }
-pi_world_extend_plugin = { path = "../plugin", version = "0.1"}
-pi_world_extend_commands = { path = "../commands", version = "0.1"}
-pi_world = { path = "../../../pi_world"}
+pi_world = "0.1"
 
 [dev-dependencies]
 pi_async_graph = "0.6"
