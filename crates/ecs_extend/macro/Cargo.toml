@@ -9,11 +9,8 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "bevy", "ecs", "ecs_macro"]
 
 [dependencies]
-toml = "0.5.8"
 syn = "2.0"
 quote = "1.0"
-toml_edit = "0.19"
-rustc-hash = "1.1"
 
 [lib]
 proc-macro = true

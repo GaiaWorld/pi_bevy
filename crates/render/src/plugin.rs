@@ -23,7 +23,7 @@ use pi_render::{
         pipeline::RenderPipeline,
     },
 };
-use pi_world::prelude::App;
+use pi_world::prelude::{App, PostUpdate};
 use pi_world_extend_plugin::plugin::Plugin;
 use std::mem::size_of;
 use wgpu::TextureView;
@@ -87,12 +87,14 @@ impl Plugin for PiRenderPlugin {
 
         #[cfg(target_arch = "wasm32")]
         let rt = {
-            app.schedule.add_system(
+            app.add_system(
+                PostUpdate,
                 run_frame_system::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
                 >,
             );
-            app.schedule.add_system(
+            app.add_system(
+                PostUpdate,
                 build_graph::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
                 >,
@@ -108,16 +110,14 @@ impl Plugin for PiRenderPlugin {
         // let rt = create_single_runtime();
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
         {
-            app.schedule
-                .add_system(run_frame_system::<MultiTaskRuntime>);
-            app.schedule.add_system(build_graph::<MultiTaskRuntime>);
+            app.add_system(PostUpdate, run_frame_system::<MultiTaskRuntime>);
+            app.add_system(PostUpdate, build_graph::<MultiTaskRuntime>);
         }
 
         #[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
         {
-            app.schedule
-                .add_system(run_frame_system::<SingleTaskRuntime>);
-            app.schedule.add_system(build_graph::<SingleTaskRuntime>);
+            app.add_system(PostUpdate, run_frame_system::<SingleTaskRuntime>);
+            app.add_system(PostUpdate, build_graph::<SingleTaskRuntime>);
         }
 
         let (

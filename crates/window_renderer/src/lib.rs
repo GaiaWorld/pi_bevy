@@ -3,7 +3,7 @@ use std::{ops::Deref, sync::Arc};
 
 use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
-use pi_world::{world::{Entity, World}, single_res::{SingleRes, SingleResMut}, prelude::App};
+use pi_world::{prelude::App, schedule::Update, single_res::{SingleRes, SingleResMut}, world::{Entity, World}};
 use pi_world_extend_plugin::plugin::Plugin;
 use wgpu::Extent3d;
 use pi_null::Null;
@@ -440,7 +440,7 @@ impl Plugin for PluginWindowRender {
 
             let node = WindowRenderer::new(&device, wgpu::TextureFormat::Rgba8Unorm, wgpu::TextureFormat::pi_render_default(),  Entity::default(), node_clear,  Entity::default(), node_render);
             app.world.register_single_res(node);
-            app.schedule.add_system( sys_changesize);
+            app.add_system(Update,  sys_changesize);
         // }
     }
 }

@@ -1,17 +1,16 @@
 //! 实体树
 
-// use bevy_ecs::{{prelude::{Entity, Component, EventWriter}, system::{Query, Commands, SystemParam, SystemMeta}, query::Changed, archetype::Archetype, world::unsafe_world_cell::UnsafeWorldCell, component::Tick}, prelude::World};
-use pi_bevy_ecs_macro::SystemParam;
+use std::{any::TypeId, borrow::Cow, mem::transmute};
+
 use derive_deref::{Deref, DerefMut};
 
 use pi_null::Null;
 use pi_slotmap_tree::{
-    ChildrenIterator as ChildrenIterator1, Down as Down1, Layer as Layer1,
-    RecursiveIterator as RecursiveIterator1, Storage, StorageMut, Tree, Up as Up1,
+    ChildrenIterator as ChildrenIterator1, Down as Down1, InsertType, Layer as Layer1, RecursiveIterator as RecursiveIterator1, Storage, StorageMut, Tree, Up as Up1
 };
 use serde::{Deserialize, Serialize};
 
-use pi_world::{query::Query, world::{Entity, World, self}, system::SystemMeta};
+use pi_world::{archetype::Flags, prelude::{Entity, Query, SystemParam, World, Alter}, system::SystemMeta};
 
 // use pi_print_any::{println_any, out_any};
 
@@ -83,63 +82,14 @@ impl Down  {
 	}
 }
 
-// 放入EntityTree， 并为其实现一个Default方法
-pub struct Down2(Down1<TreeKey>);
-impl Default for Down2 {
-    fn default() -> Self {
-        Self(
-			Down1 {
-				head: TreeKey::null(),
-				tail: TreeKey::null(),
-				len: 0,
-				count: 1,
-			})
-    }
+#[derive(SystemParam)]
+pub struct EntityTree<'w> {
+	layer_query: Query<'w, &'static Layer>,
+	up_query: Query<'w, &'static Up>,
+	down_query: Query<'w, &'static Down>,
 }
 
-}
-// use pi_world::prelude::
-// impl_system_param_tuple!()
-
-// impl SystemParam for EntityTree<'_> {
-//     type State = (
-//         <Query<'static, &'static  Layer> as SystemParam>::State,
-// 		<Query<'static, &'static  Up> as SystemParam>::State,
-// 		<Query<'static, &'static  Down> as SystemParam>::State,
-//     );
-
-//     type Item<'world> = EntityTree<'world>;
-
-//     fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
-//         (
-// 			<Query< 'static, &'static  Layer> as SystemParam>::init_state(world, system_meta),
-// 			<Query<'static, &'static  Up> as SystemParam>::init_state(world, system_meta),
-// 			<Query<'static, &'static  Down> as SystemParam>::init_state(world, system_meta),
-// 		)
-//     }
-
-//     fn get_param<'world>(
-//         world: &'world World,
-//         system_meta: &'world SystemMeta,
-//         state: &'world mut Self::State,
-//     ) -> Self::Item<'world> {
-//         EntityTree{
-//             layer_query: <Query< 'static, &'static  Layer> as SystemParam>::get_param(world, system_meta, &mut state.0),
-//             up_query:  <Query< 'static, &'static  Up> as SystemParam>::get_param(world, system_meta, &mut state.1),
-//             down_query:  <Query< 'static, &'static  Down> as SystemParam>::get_param(world, system_meta, &mut state.2),
-//         }
-//     }
-
-//     fn get_self<'world>(
-//         world: &'world pi_world::world::World,
-//         system_meta: &'world pi_world::system::SystemMeta,
-//         state: &'world mut Self::State,
-//     ) -> Self {
-//         unsafe { transmute(Self::get_param(world, system_meta, state)) }
-//     }
-// }
-
-impl<'w, 's> Storage<TreeKey> for EntityTree<'w, 's> {
+impl<'w> Storage<TreeKey> for EntityTree<'w> {
 	fn get_up(&self, k: TreeKey) -> Option<&Up1<TreeKey>> {
 		self.get_up(k.0).map(|r|{&**r})
 	}
@@ -163,7 +113,7 @@ impl<'w, 's> Storage<TreeKey> for EntityTree<'w, 's> {
 	}
 }
 
-impl<'w, 's> EntityTree<'w, 's> {
+impl<'w> EntityTree<'w> {
 	pub fn get_up(&self, k: Entity) -> Option<&Up> {
 		match self.up_query.get(k) {
 			Ok(r) => Some(r),
@@ -195,14 +145,14 @@ impl<'w, 's> EntityTree<'w, 's> {
 		self.down_query.get(k).unwrap()
 	}
 
-	pub fn iter(&self, node_children_head: Entity) -> ChildrenIterator<EntityTree<'w, 's>> {
+	pub fn iter(&self, node_children_head: Entity) -> ChildrenIterator<EntityTree<'w>> {
 		ChildrenIterator {
 			inner: ChildrenIterator1::new(self, TreeKey(node_children_head))
 		}
 	}
 
 	/// 迭代指定节点的所有递归子元素
-	pub fn recursive_iter(&self, node_children_head: Entity) -> RecursiveIterator<EntityTree<'w, 's>> {
+	pub fn recursive_iter(&self, node_children_head: Entity) -> RecursiveIterator<EntityTree<'w>> {
 		let head = TreeKey(node_children_head);
 		let len = if head.is_null() {
 			0
@@ -237,11 +187,11 @@ impl<'a, S: Storage<TreeKey>> Iterator for RecursiveIterator<'a, S> {
     }
 }
 
-pub struct EntityTreeMut<'w, 's> {
-	tree: Tree<TreeKey, TreeStorageMut<'w, 's>>,
+pub struct EntityTreeMut<'w> {
+	tree: Tree<TreeKey, TreeStorageMut<'w>>,
 }
 
-impl<'w, 's> EntityTreeMut<'w, 's> {
+impl<'w> EntityTreeMut<'w> {
 	/// 为节点插入子节点
 	/// 注意，调用此方法的前提条件是，parent的Down组件存在，node的Up组件存在
 	pub fn insert_child(&mut self, node: Entity, parent: Entity, index: usize) {
@@ -260,75 +210,78 @@ impl<'w, 's> EntityTreeMut<'w, 's> {
 	}
 }
 
-#[derive(SystemParam)]
-pub struct TreeStorageMut<'w, 's> {
-	layer_query: Query<'w, 's, &'static mut Layer>,
-	up_query: Query<'w, 's, &'static mut Up>,
-	down_query: Query<'w, 's, &'static mut Down>,
-	command: Commands<'w, 's>, // 用于插入Root组件
-	layer_notify: EventWriter<'w, ComponentEvent<Changed<Layer>>>, // 用于通知Layer修改
+// #[derive(SystemParam)]
+pub struct TreeStorageMut<'w> {
+	layer_query: Query<'w, &'static mut Layer>,
+	up_query: Query<'w, &'static mut Up>,
+	down_query: Query<'w, &'static mut Down>,
+	root_alter: Alter<'w, (), (), (Root,), (Root,)>, // 用于插入Root组件
 }
 
-unsafe impl bevy_ecs::system::SystemParam for EntityTreeMut<'_, '_> {
+impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 	type State = (
-		<Query<'static, 'static, &'static mut Layer> as bevy_ecs::system::SystemParam>::State,
-		<Query<'static, 'static, &'static mut Up> as bevy_ecs::system::SystemParam>::State,
-		<Query<'static, 'static, &'static mut Down> as bevy_ecs::system::SystemParam>::State,
-		<Commands<'static, 'static> as bevy_ecs::system::SystemParam>::State,
-		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::State,
-	);
-	type Item<'world, 'state> = EntityTreeMut<'world, 'state>;
-	// type Fetch = FetchState<(
-	//     <Query<'w, 's, &'static mut Layer> as bevy_ecs::system::SystemParam>::Fetch,
-	//     <Query<'w, 's, &'static mut Up> as bevy_ecs::system::SystemParam>::Fetch,
-	//     <Query<'w, 's, &'static mut Down> as bevy_ecs::system::SystemParam>::Fetch,
-	//     <Commands<'w, 's> as bevy_ecs::system::SystemParam>::Fetch,
-	// 	<EventWriter <'w, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::Fetch,
-	// )>;
+        <Query<'static, &'static mut  Layer> as SystemParam>::State,
+		<Query<'static, &'static mut  Up> as SystemParam>::State,
+		<Query<'static, &'static mut Down> as SystemParam>::State,
+        <Alter<'static, (), (), (Root,), (Root,)> as SystemParam>::State,
+    );
 
-	fn init_state(world: &mut bevy_ecs::prelude::World, system_meta: &mut bevy_ecs::system::SystemMeta) -> Self::State {
-		(
-			<Query<'static, 'static, &'static mut Layer> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
-			<Query<'static, 'static, &'static mut Up> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
-			<Query<'static, 'static, &'static mut Down> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
-			<Commands<'static, 'static> as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
-			<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::init_state(world, system_meta),
+    type Item<'world> = EntityTreeMut<'world>;
+
+    fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+        (
+			<Query< 'static, &'static mut  Layer> as SystemParam>::init_state(world, system_meta),
+			<Query<'static, &'static mut  Up> as SystemParam>::init_state(world, system_meta),
+			<Query<'static, &'static mut  Down> as SystemParam>::init_state(world, system_meta),
+            <Alter<'static, (), (), (Root,), (Root,)> as SystemParam>::init_state(world, system_meta),
 		)
-	}
-	fn new_archetype(state: &mut Self::State, archetype: &Archetype, _system_meta: &mut SystemMeta) {
-		state.0.new_archetype(archetype);
-		state.1.new_archetype(archetype);
-		state.2.new_archetype(archetype);
-	}
+    }
 
-	fn apply(state: &mut Self::State, system_meta: &SystemMeta, world: &mut World) {
-		<Query<'static, 'static, &'static mut Layer> as bevy_ecs::system::SystemParam>::apply(&mut state.0, system_meta, world);
-		<Query<'static, 'static, &'static mut Up> as bevy_ecs::system::SystemParam>::apply(&mut state.1, system_meta, world);
-		<Query<'static, 'static, &'static mut Down> as bevy_ecs::system::SystemParam>::apply(&mut state.2, system_meta, world);
-		<Commands<'static, 'static> as bevy_ecs::system::SystemParam>::apply(&mut state.3, system_meta, world);
-		<EventWriter <'static, ComponentEvent<Changed<Layer>> > as bevy_ecs::system::SystemParam>::apply(&mut state.4, system_meta, world);
-	}
+    fn get_param<'world>(
+        world: &'world World,
+        system_meta: &'world SystemMeta,
+        state: &'world mut Self::State,
+    ) -> Self::Item<'world> {
+        EntityTreeMut{
+            tree: Tree::new(
+                TreeStorageMut {
+                    layer_query: <Query< 'static, &'static mut Layer> as SystemParam>::get_param(world, system_meta, &mut state.0),
+                    up_query:  <Query< 'static, &'static mut Up> as SystemParam>::get_param(world, system_meta, &mut state.1),
+                    down_query:  <Query< 'static, &'static mut Down> as SystemParam>::get_param(world, system_meta, &mut state.2),
+                    root_alter: <Alter<'static, (), (), (Root,), (Root,)> as SystemParam>::get_param(world, system_meta, &mut state.3), // 用于插入Root组件
+                }
+            )
+        }
+    }
 
-	unsafe fn get_param<'w, 's>(
-        state: &'s mut Self::State,
+    #[inline]
+    #[allow(unused_variables)]
+    fn res_depend(
+        world: &World,
         system_meta: &SystemMeta,
-        world: UnsafeWorldCell<'w>,
-        change_tick: Tick,
-    ) -> Self::Item<'w, 's> {
-		EntityTreeMut{
-			tree: Tree::new(
-				TreeStorageMut { 
-					layer_query : <Query < 'w, 's , &'static mut Layer > as SystemParam>::get_param (&mut state.0, system_meta, world, change_tick), 
-					up_query : <Query<'w, 's, &'static mut Up > as SystemParam> :: get_param (&mut state.1, system_meta, world, change_tick),
-					down_query : <Query<'w, 's ,& 'static mut Down> as SystemParam >:: get_param (& mut state.2 , system_meta, world, change_tick), 
-					command : <Commands<'w, 's> as SystemParam>::get_param (& mut state. 3 , system_meta, world, change_tick) , 
-					layer_notify: <EventWriter <'w, ComponentEvent<Changed<Layer>>> as SystemParam>::get_param(&mut state.4, system_meta, world, change_tick)}
-				)
-		}
-	}
+        state: &Self::State,
+        res_tid: &TypeId,
+        res_name: &Cow<'static, str>,
+        single: bool,
+        result: &mut Flags,
+    ) {
+        <Query< 'static, &'static mut  Layer> as SystemParam>::res_depend(world, system_meta, &state.0, res_tid, res_name, single, result);
+        <Query<'static, &'static mut  Up> as SystemParam>::res_depend(world, system_meta, &state.1, res_tid, res_name, single, result);
+        <Query<'static, &'static mut  Down> as SystemParam>::res_depend(world, system_meta, &state.2, res_tid, res_name, single, result);
+        <Alter<'static, (), (), (Root,)> as SystemParam>::res_depend(world, system_meta, &state.3, res_tid, res_name, single, result);
+    }
+
+
+    fn get_self<'world>(
+        world: &'world pi_world::world::World,
+        system_meta: &'world pi_world::system::SystemMeta,
+        state: &'world mut Self::State,
+    ) -> Self {
+        unsafe { transmute(Self::get_param(world, system_meta, state)) }
+    }
 }
 
-impl<'w, 's> EntityTreeMut<'w, 's> {
+impl<'w> EntityTreeMut<'w> {
 	pub fn get_up(&self, k: Entity) -> Option<&Up> {
 		unsafe{transmute(self.tree.get_up(TreeKey(k)))}
 	}
@@ -351,19 +304,19 @@ impl<'w, 's> EntityTreeMut<'w, 's> {
 		unsafe{transmute(self.tree.down(TreeKey(k)))}
 	}
 
-	pub fn iter(&self, node_children_head: Entity) -> ChildrenIterator<TreeStorageMut<'w, 's>> {
+	pub fn iter(&self, node_children_head: Entity) -> ChildrenIterator<TreeStorageMut<'w>> {
 		ChildrenIterator {
 			inner: self.tree.iter(TreeKey(node_children_head))
 		}
 	}
 
 	/// 迭代指定节点的所有递归子元素
-	pub fn recursive_iter(&self, node_children_head: Entity) -> RecursiveIterator<TreeStorageMut<'w, 's>> {
+	pub fn recursive_iter(&self, node_children_head: Entity) -> RecursiveIterator<TreeStorageMut<'w>> {
 		RecursiveIterator{inner:self.tree.recursive_iter(TreeKey(node_children_head))}
 	}
 }
 
-impl<'w, 's> Storage<TreeKey> for TreeStorageMut<'w, 's> {
+impl<'w> Storage<TreeKey> for TreeStorageMut<'w> {
 	fn get_up(&self, k: TreeKey) -> Option<&Up1<TreeKey>> {
 		unsafe{transmute(match self.up_query.get(k.0) {
 			Ok(r) => Some(r),
@@ -395,7 +348,7 @@ impl<'w, 's> Storage<TreeKey> for TreeStorageMut<'w, 's> {
 	}
 }
 
-impl<'w, 's> StorageMut<TreeKey> for TreeStorageMut<'w, 's> {
+impl<'w> StorageMut<TreeKey> for TreeStorageMut<'w> {
 	fn get_up_mut(&mut self, k: TreeKey) -> Option<&mut Up1<TreeKey>> {
 		match self.up_query.get_mut(k.0) {
 			Ok(r) => Some(r.into_inner()),
@@ -421,7 +374,6 @@ impl<'w, 's> StorageMut<TreeKey> for TreeStorageMut<'w, 's> {
 	fn set_layer(&mut self, k: TreeKey, layer: Layer1<TreeKey>) {
 		if let Ok(mut write) = self.layer_query.get_mut(k.0) {
 			*write = Layer(layer);
-			self.layer_notify.send(ComponentEvent::new(k.0));
 		}
 	}
 	
@@ -456,20 +408,14 @@ impl<'w, 's> StorageMut<TreeKey> for TreeStorageMut<'w, 's> {
 
 	// 通知， TODO
 	fn set_root(&mut self, k: TreeKey) {
-		self.command.entity(k.0).insert(Root);
+        let _ = self.root_alter.alter(k.0, (Root, ));
 	}
 
 	fn remove_root(&mut self, k: TreeKey) {
-		self.command.entity(k.0).remove::<Root>();
+        let _ = self.root_alter.delete(k.0);
 	}
 }
 
-// // #[derive(Deref)]
-// // pub struct EntityTree<'s, A: ArchetypeIdent>(Tree<Id, &'s IdtreeState>);
 
-// // // impl<A: ArchetypeIdent> Clone for EntityTree {
-// // // 	fn clone(&self) -> Self {
-// // // 		Self(Tree::new(IdtreeState(self.0.get_storage().0.clone())))
-// // // 	}
-// // // }
+
 

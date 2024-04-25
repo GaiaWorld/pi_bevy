@@ -33,7 +33,6 @@ fn main() {
     let window = Arc::new(window);
 
     let mut is_first = true;
-    app.initialize();
     event_loop.run(move |event, _, control_flow| {
         *control_flow = winit::event_loop::ControlFlow::Poll;
 

@@ -30,8 +30,6 @@ fn main() {
     });
     app.add_plugins(PiRenderPlugin::default());
 
-    app.initialize();
-
     event_loop.run(move |event, _, control_flow| {
         *control_flow = winit::event_loop::ControlFlow::Poll;
 
