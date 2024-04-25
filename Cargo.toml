@@ -28,7 +28,7 @@ pi_sdf = { path = "../pi_sdf" }
 # pi_wgpu = {path = "../pi_wgpu"}
 # pi_egl = {path = "../pi_egl"}
 # winit = { path = "../winit"}
-pi_render = { path = "../pi_render" }
+# pi_render = { path = "../pi_render" }
 pi_postprocess = { path = "../pi_post_process"}
 pi_hal = { path = "../pi_hal" }
 # pi_async_graph = { path = "../pi_async_graph" }
