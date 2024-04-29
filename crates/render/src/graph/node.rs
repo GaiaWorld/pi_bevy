@@ -16,7 +16,7 @@ use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
-use pi_world::{prelude::SystemParam, world::World};
+use pi_world::{prelude::SystemParam, system::SystemMeta, world::World};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 use wgpu::CommandEncoder;
@@ -32,15 +32,15 @@ pub trait Node: 'static + ThreadSync {
     type Output: OutParam + Default + Clone;
 
     /// Bevy Build 系统参数
-    type BuildParam: SystemParam + 'static;
+    type BuildParam: SystemParam;
 
 	/// Bevy Run 系统参数
-    type RunParam: SystemParam + 'static;
+    type RunParam: SystemParam;
 
 	fn build<'a>(
         &'a mut self,
-        world: &'a World,
-        // param: &'a mut Self::BuildParam,
+        // world: &'a mut World,
+        param: &'a mut Self::BuildParam,
         context: RenderContext,
 		input: &'a Self::Input,
         usage: &'a ParamUsage,
@@ -57,8 +57,8 @@ pub trait Node: 'static + ThreadSync {
     /// 执行，每帧会调用一次
     fn run<'a>(
         &'a mut self,
-        world: &'a World,
-        // param: &'a mut Self::RunParam,
+        // world: &'a World,
+        param: &'a Self::RunParam,
         context: RenderContext,
         commands: ShareRefCell<CommandEncoder>,
         input: &'a Self::Input,
@@ -76,13 +76,13 @@ where
     I: InParam + Default,
     O: OutParam + Default + Clone,
     R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
-    // BP: SystemParam + 'static,
-	// RP: SystemParam + 'static,
+    BP: SystemParam,
+	RP: SystemParam,
 {
     node: R,
     state_pool: SystemStatePool,
-    build_state: Option<&'static World>,
-	run_state: Option<&'static World>,
+    build_state: Option<(<BP as SystemParam>::State, SystemMeta)>,
+	run_state: Option<(<RP as SystemParam>::State, SystemMeta)>,
     context: RenderContext,
 }
 
@@ -91,8 +91,8 @@ where
     I: InParam + Default,
     O: OutParam + Default + Clone,
     R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
-    // BP: SystemParam + 'static,
-	// RP: SystemParam + 'static,
+    BP: SystemParam,
+	RP: SystemParam,
 {
     #[inline]
     pub(crate) fn new(node: R, context: RenderContext, state_pool: SystemStatePool) -> Self {
@@ -107,12 +107,12 @@ where
 }
 
 pub struct NodeContext {
-    world: &'static World,
+    world: &'static mut World,
     pub async_tasks: Box<dyn AsyncQueue>,
 }
 
 impl NodeContext {
-    pub fn new(world: &'static World, async_tasks: Box<dyn AsyncQueue>) -> Self {
+    pub fn new(world: &'static mut World, async_tasks: Box<dyn AsyncQueue>) -> Self {
         NodeContext { world, async_tasks }
     }
 
@@ -120,9 +120,9 @@ impl NodeContext {
         &*self.world
     }
 
-	// pub fn world_mut(&mut self) -> &mut World {
-    //     &mut *self.world
-    // }
+	pub fn world_mut(&mut self) -> &mut World {
+        &mut *self.world
+    }
 }
 
 impl<I, O, R, BP, RP> Drop for NodeImpl<I, O, R, BP, RP>
@@ -130,8 +130,8 @@ where
     I: InParam + Default,
     O: OutParam + Default + Clone,
     R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
-    // BP: SystemParam + 'static,
-	// RP: SystemParam + 'static,
+    BP: SystemParam,
+	RP: SystemParam,
 {
     fn drop(&mut self) {
         // 将 state 拿出来，扔到 state_pool 中
@@ -165,26 +165,48 @@ where
 		from: &'a [NodeId],
 		to: &'a [NodeId],
     ) -> Result<O, String> {
-		let world = context.world();
-        if self.build_state.is_none() {
-            self.build_state = self.state_pool.get();
-            if self.build_state.is_none() {
-                // self.build_state = Some(world );
+		let world: &mut World = context.world_mut();
+
+        if self.run_state.is_none() {
+            self.run_state = self.state_pool.get();
+            if self.run_state.is_none() {
+                let mut meta = SystemMeta::new::<()>();
+                self.run_state = Some((RP::init_state(world, &mut meta), meta));
             }
         }
 
-		if self.run_state.is_none() {
-            self.run_state = self.state_pool.get();
-            if self.run_state.is_none() {
-                // self.run_state = Some(world);
-            }
-        }
+        let mut build_param = match &mut self.build_state {
+            Some((state, meta)) => {
+                let tick = world.tick();
+                BP::get_self(world, meta, state, tick)
+            },
+            None => {
+                self.build_state = self.state_pool.get();
+                match &mut self.build_state {
+                   
+                    Some((state, meta)) => {
+                        let tick = world.tick();
+                        BP::get_self(world, meta, state, tick)
+                    },
+                    None => {
+                        let mut meta = SystemMeta::new::<()>();
+                        self.build_state = Some((BP::init_state(world, &mut meta), meta));
+                        let r = self.build_state.as_mut().unwrap();
+                        let tick = world.tick();
+                        BP::get_self(world,  &r.1, &mut r.0, tick)
+                    },
+                }
+            },
+        };
+        // let mut build_param = BP::get_self(world, system_meta, state);
+
+		
 
 		let c = self.context.clone();
 
         let r = self.node.build(
-			world,
-			// self.build_state.as_mut().unwrap(),
+			// world,
+			&mut build_param,
 			c,
 			input,
 			usage,
@@ -192,7 +214,7 @@ where
 			from,
 			to,
         );
-        // self.state_pool.set(self.build_state.take().unwrap());
+        self.state_pool.set(self.build_state.take().unwrap());
         r
     }
 
@@ -207,6 +229,7 @@ where
 		from: &'a [NodeId],
 		to: &'a [NodeId],
     ) -> BoxFuture<'a, Result<(), String>> {
+
         let context = self.context.clone();
         let task = async move {
             #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
@@ -225,10 +248,15 @@ where
             #[cfg(any(feature = "webgl",feature = "single_thread"))]
             let commands = self.context.commands.0.borrow().as_ref().unwrap().clone();
 
+            let r = self.run_state.as_mut().unwrap();
+            let tick = c.world().tick();
+            let param = RP::get_self(c.world(),  &r.1, &mut r.0, tick);
+
 			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
             let output = self.node.run(
-                c.world(),
+                // c.world(),
                 // self.run_state.as_mut().unwrap(),
+                &param,
                 context,
                 commands.clone(),
                 input,

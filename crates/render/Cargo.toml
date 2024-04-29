@@ -17,7 +17,7 @@ pi_null = "0.1"
 pi_map = "0.2"
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default-features = false}
-pi_world_extend_plugin = { path = "../plugin", version = "0.1"}
+# pi_world_extend_plugin = { path = "../plugin", version = "0.1"}
 pi_world = "0.1"
 # bevy_window = "0.11"
 bevy_window = {path = "../window", version = "0.1", registry = "yn", package = "pi_bevy_window" }
@@ -56,13 +56,13 @@ webgl = ["pi_render/webgl"]
 single_thread = [] # 本地平台，设置该feature有效，运行时为单线程运行时
 
 [dev-dependencies]
-bevy_ecs = { version = "0.11", default-features = false}
+# bevy_ecs = { version = "0.11", default-features = false}
 winit = { registry = "yn", version = "0.27"}
 pi_bevy_winit_window = { path = "../winit_window", varsion = "0.1", registry = "yn" }
 lazy_static = '1.4'
-bevy_log = "0.11"
-bevy_a11y = "0.11"
-bevy_input = "0.11"
+# bevy_log = "0.11"
+# bevy_a11y = "0.11"
+# bevy_input = "0.11"
 
 [target.'cfg(target_os = "android")'.dev-dependencies]
 ndk-glue = "0.7"

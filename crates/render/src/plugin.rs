@@ -23,8 +23,7 @@ use pi_render::{
         pipeline::RenderPipeline,
     },
 };
-use pi_world::prelude::{App, PostUpdate};
-use pi_world_extend_plugin::plugin::Plugin;
+use pi_world::prelude::{App, PostUpdate, SystemSet, Plugin};
 use std::mem::size_of;
 use wgpu::TextureView;
 
@@ -40,7 +39,7 @@ pub struct GraphBuild;
 pub struct GraphRun;
 
 /// 帧数据准备（实际上就是在FrameDataPrepare系统集中的system，添加了FrameState::Active的运行条件）
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, SystemSet)]
 pub struct FrameDataPrepare;
 
 /// ================ 插件 ================

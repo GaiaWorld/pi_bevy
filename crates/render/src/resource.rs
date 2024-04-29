@@ -1,3 +1,4 @@
+use pi_world::prelude::{FromWorld, World};
 use crate::render_windows::RenderWindow;
 // use bevy_ecs::world::FromWorld;
 // use bevy_ecs::prelude::FromWorld;
@@ -33,13 +34,13 @@ pub type PiIndexBufferAlloter = PiBufferAlloter<{INDEX_USAGES}>;
 #[derive(Deref, DerefMut)]
 pub struct PiBufferAlloter<const B: u32>(BufferAlloter);
 
-// impl<const B: u32> FromWorld for PiBufferAlloter<B> {
-//     fn from_world(world: &mut bevy_ecs::prelude::World) -> Self {
-//         let device = world.get_resource::<PiRenderDevice>().unwrap();
-//         let queue = world.get_resource::<PiRenderQueue>().unwrap();
-// 		Self(BufferAlloter::new((**device).clone(), (**queue).clone(), 4096, BufferUsages::from_bits_truncate(B)))
-//     }
-// }
+impl<const B: u32> FromWorld for PiBufferAlloter<B> {
+    fn from_world(world: &mut World) -> Self {
+        let device = world.get_single_res::<PiRenderDevice>().unwrap();
+        let queue = world.get_single_res::<PiRenderQueue>().unwrap();
+		Self(BufferAlloter::new((**device).clone(), (**queue).clone(), 4096, BufferUsages::from_bits_truncate(B)))
+    }
+}
 
 /// 异步 运行时
 /// A 的 类型 见 plugin 模块

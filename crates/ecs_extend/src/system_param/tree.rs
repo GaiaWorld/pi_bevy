@@ -10,7 +10,7 @@ use pi_slotmap_tree::{
 };
 use serde::{Deserialize, Serialize};
 
-use pi_world::{archetype::Flags, prelude::{Entity, Query, SystemParam, World, Alter}, system::SystemMeta};
+use pi_world::{archetype::Flags, param_set::{ParamSet, ParamSetElement}, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
 
 // use pi_print_any::{println_any, out_any};
 
@@ -215,15 +215,22 @@ pub struct TreeStorageMut<'w> {
 	layer_query: Query<'w, &'static mut Layer>,
 	up_query: Query<'w, &'static mut Up>,
 	down_query: Query<'w, &'static mut Down>,
-	root_alter: Alter<'w, (), (), (Root,), (Root,)>, // 用于插入Root组件
+	root: ParamSet<'w, (
+		Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
+		Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+	)>,
 }
+
 
 impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 	type State = (
         <Query<'static, &'static mut  Layer> as SystemParam>::State,
 		<Query<'static, &'static mut  Up> as SystemParam>::State,
 		<Query<'static, &'static mut Down> as SystemParam>::State,
-        <Alter<'static, (), (), (Root,), (Root,)> as SystemParam>::State,
+        <ParamSet<'static, (
+			Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
+			Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+		)> as SystemParam>::State,
     );
 
     type Item<'world> = EntityTreeMut<'world>;
@@ -233,7 +240,10 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 			<Query< 'static, &'static mut  Layer> as SystemParam>::init_state(world, system_meta),
 			<Query<'static, &'static mut  Up> as SystemParam>::init_state(world, system_meta),
 			<Query<'static, &'static mut  Down> as SystemParam>::init_state(world, system_meta),
-            <Alter<'static, (), (), (Root,), (Root,)> as SystemParam>::init_state(world, system_meta),
+            <ParamSet<'static, (
+				Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
+				Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+			)> as SystemParam>::init_state(world, system_meta),
 		)
     }
 
@@ -241,14 +251,18 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
         world: &'world World,
         system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
+		tick: Tick,
     ) -> Self::Item<'world> {
         EntityTreeMut{
             tree: Tree::new(
                 TreeStorageMut {
-                    layer_query: <Query< 'static, &'static mut Layer> as SystemParam>::get_param(world, system_meta, &mut state.0),
-                    up_query:  <Query< 'static, &'static mut Up> as SystemParam>::get_param(world, system_meta, &mut state.1),
-                    down_query:  <Query< 'static, &'static mut Down> as SystemParam>::get_param(world, system_meta, &mut state.2),
-                    root_alter: <Alter<'static, (), (), (Root,), (Root,)> as SystemParam>::get_param(world, system_meta, &mut state.3), // 用于插入Root组件
+                    layer_query: <Query< 'static, &'static mut Layer> as SystemParam>::get_param(world, system_meta, &mut state.0, tick),
+                    up_query:  <Query< 'static, &'static mut Up> as SystemParam>::get_param(world, system_meta, &mut state.1, tick),
+                    down_query:  <Query< 'static, &'static mut Down> as SystemParam>::get_param(world, system_meta, &mut state.2, tick),
+					root: <ParamSet<'static, (
+						Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
+						Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+					)> as SystemParam>::get_param(world, system_meta, &mut state.3, tick)
                 }
             )
         }
@@ -268,7 +282,10 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
         <Query< 'static, &'static mut  Layer> as SystemParam>::res_depend(world, system_meta, &state.0, res_tid, res_name, single, result);
         <Query<'static, &'static mut  Up> as SystemParam>::res_depend(world, system_meta, &state.1, res_tid, res_name, single, result);
         <Query<'static, &'static mut  Down> as SystemParam>::res_depend(world, system_meta, &state.2, res_tid, res_name, single, result);
-        <Alter<'static, (), (), (Root,)> as SystemParam>::res_depend(world, system_meta, &state.3, res_tid, res_name, single, result);
+        <ParamSet<'static, (
+			Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
+			Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+		)> as SystemParam>::res_depend(world, system_meta, &state.3, res_tid, res_name, single, result);
     }
 
 
@@ -276,8 +293,23 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
         world: &'world pi_world::world::World,
         system_meta: &'world pi_world::system::SystemMeta,
         state: &'world mut Self::State,
+		tick: Tick,
     ) -> Self {
-        unsafe { transmute(Self::get_param(world, system_meta, state)) }
+        unsafe { transmute(Self::get_param(world, system_meta, state, tick)) }
+    }
+}
+
+impl ParamSetElement for EntityTreeMut<'_> {
+    fn init_set_state(world: &World, system_meta: &mut SystemMeta) -> Self::State {
+        (
+			<Query< 'static, &'static mut  Layer> as ParamSetElement>::init_set_state(world, system_meta),
+			<Query<'static, &'static mut  Up> as ParamSetElement>::init_set_state(world, system_meta),
+			<Query<'static, &'static mut  Down> as ParamSetElement>::init_set_state(world, system_meta),
+			<(
+				Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
+				Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+			) as ParamSetElement>::init_set_state(world, system_meta)
+		)
     }
 }
 
@@ -408,11 +440,11 @@ impl<'w> StorageMut<TreeKey> for TreeStorageMut<'w> {
 
 	// 通知， TODO
 	fn set_root(&mut self, k: TreeKey) {
-        let _ = self.root_alter.alter(k.0, (Root, ));
+        let _ = self.root.0.alter(k.0, (Root, ));
 	}
 
 	fn remove_root(&mut self, k: TreeKey) {
-        let _ = self.root_alter.delete(k.0);
+        let _ = self.root.1.alter(k.0, ());
 	}
 }
 

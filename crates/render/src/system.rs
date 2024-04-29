@@ -23,7 +23,7 @@ use tracing::Instrument;
 //   + 否则 是 MultiTaskRuntime
 //
 pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
-    world: &World, 
+    world: &mut World, 
     mut first_surface: SingleResMut<PiFirstSurface>,
      rt: SingleRes<PiAsyncRuntime<A>>,
      instance: SingleRes<PiRenderInstance>,
@@ -35,7 +35,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
-    let mut primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
+    let primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
 
     let (width, height) = match primary_window.iter().nth(0) {
         Some(primary_window) => (
@@ -53,7 +53,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
         first_surface.0.take()
     };
 
-    let world_ref: &'static World = unsafe { std::mem::transmute(world) };
+    let world_ref: &'static mut World = unsafe { std::mem::transmute(world) };
 	// let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
     let rt = &rt.0;
     let instance = unsafe { std::mem::transmute(&instance.0) } ;
@@ -148,22 +148,22 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
 }
 
 
-pub(crate) fn build_graph<A: AsyncRuntime + AsyncRuntimeExt>(world: & World, mut rg: SingleResMut<PiRenderGraph>) {
+pub(crate) fn build_graph<A: AsyncRuntime + AsyncRuntimeExt>(world: &mut World, mut rg: SingleResMut<PiRenderGraph>) {
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
 	// 从 world 取 res
 	// let ptr_world = world as *mut World as usize;
-	let world_ref: &'static World = unsafe { std::mem::transmute(world) };
+	let world_ref: &'static mut World = unsafe { std::mem::transmute(world) };
 	// let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
-	let rt: &A = &world_ref.get_single_res::<PiAsyncRuntime<A>>().unwrap().0;
+	let rt: A = world_ref.get_single_res::<PiAsyncRuntime<A>>().unwrap().0.clone();
 	let rg: &'static mut RenderGraph = unsafe {
         // let w = &mut *(ptr_world as *mut World);
         let rg = &mut rg.0;
         std::mem::transmute(rg)
     };
 
-	rg.build(rt, world_ref).unwrap();
+	rg.build(&rt, world_ref).unwrap();
 }
 // fn present_window(screen_texture: &mut ScreenTexture) {
 //     if let Some(view) = screen_texture.take_surface_texture() {

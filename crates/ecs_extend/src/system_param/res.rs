@@ -1,6 +1,6 @@
 use std::{any::TypeId, borrow::Cow, mem::transmute};
 
-use pi_world::{archetype::Flags, prelude::{SingleRes, SingleResMut}, system::SystemMeta, system_params::SystemParam, world::{FromWorld, SingleResource, World}};
+use pi_world::{archetype::Flags, prelude::{SingleRes, SingleResMut, Tick}, system::SystemMeta, system_params::SystemParam, world::{FromWorld, SingleResource, World}};
 use derive_deref::{DerefMut, Deref};
 
 #[derive(Debug, Deref)]
@@ -37,16 +37,18 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
         world: &'world World,
         system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
+        tick: Tick,
     ) -> Self::Item<'world> {
-        OrInitSingleRes(SingleRes::get_param(world, system_meta, state))
+        OrInitSingleRes(SingleRes::get_param(world, system_meta, state, tick))
     }
     #[inline]
     fn get_self<'world>(
         world: &'world World,
         system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
+        tick: Tick,
     ) -> Self {
-        unsafe { transmute(Self::get_param(world, system_meta, state)) }
+        unsafe { transmute(Self::get_param(world, system_meta, state, tick)) }
     }
 }
 
@@ -85,16 +87,18 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_
         world: &'world World,
         system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
+        tick: Tick,
     ) -> Self::Item<'world> {
-        OrInitSingleResMut(SingleResMut::<T>::get_param(world, system_meta, state))
+        OrInitSingleResMut(SingleResMut::<T>::get_param(world, system_meta, state, tick))
     }
     #[inline]
     fn get_self<'world>(
         world: &'world World,
         system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
+        tick: Tick,
     ) -> Self {
-        unsafe { transmute(Self::get_param(world, system_meta, state)) }
+        unsafe { transmute(Self::get_param(world, system_meta, state, tick)) }
     }
 }
 

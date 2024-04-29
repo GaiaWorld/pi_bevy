@@ -4,7 +4,7 @@
 mod cursor;
 mod event;
 mod raw_handle;
-mod system;
+// mod system;
 mod window;
 
 pub use crate::raw_handle::*;
@@ -13,7 +13,8 @@ pub use crate::raw_handle::*;
 pub use cursor::*;
 pub use event::*;
 use pi_world::{prelude::App, single_res::SingleRes};
-pub use system::*;
+use pi_world_extend_plugin::plugin::Plugin;
+// pub use system::*;
 pub use window::*;
 
 pub mod prelude {
@@ -105,87 +106,85 @@ pub struct FrameSet;
 //     }
 // }
 
-// impl Plugin for WindowPlugin {
-//     fn build(&self, app: &mut App) {
-//         // User convenience events
-//         app.add_frame_event::<WindowResized>()
-//             .add_frame_event::<WindowCreated>()
-//             .add_frame_event::<WindowClosed>()
-//             .add_frame_event::<WindowCloseRequested>()
-//             .add_frame_event::<WindowDestroyed>()
-//             .add_frame_event::<RequestRedraw>()
-//             // .add_frame_event::<CursorMoved>()
-//             // .add_frame_event::<CursorEntered>()
-//             // .add_frame_event::<CursorLeft>()
-//             // .add_frame_event::<ReceivedCharacter>()
-//             .add_frame_event::<Ime>()
-//             // .add_frame_event::<WindowFocused>()
-//             // .add_frame_event::<WindowScaleFactorChanged>()
-//             // .add_frame_event::<WindowBackendScaleFactorChanged>()
-//             // .add_frame_event::<FileDragAndDrop>()
-//             // .add_frame_event::<WindowMoved>()
-//             // .add_frame_event::<WindowThemeChanged>()
-// 			;
+impl Plugin for WindowPlugin {
+    fn build(&self, app: &mut App) {
+        // User convenience events
+        // app.add_frame_event::<WindowResized>()
+        //     .add_frame_event::<WindowCreated>()
+        //     .add_frame_event::<WindowClosed>()
+        //     .add_frame_event::<WindowCloseRequested>()
+        //     .add_frame_event::<WindowDestroyed>()
+        //     .add_frame_event::<RequestRedraw>()
+        //     // .add_frame_event::<CursorMoved>()
+        //     // .add_frame_event::<CursorEntered>()
+        //     // .add_frame_event::<CursorLeft>()
+        //     // .add_frame_event::<ReceivedCharacter>()
+        //     .add_frame_event::<Ime>()
+        //     // .add_frame_event::<WindowFocused>()
+        //     // .add_frame_event::<WindowScaleFactorChanged>()
+        //     // .add_frame_event::<WindowBackendScaleFactorChanged>()
+        //     // .add_frame_event::<FileDragAndDrop>()
+        //     // .add_frame_event::<WindowMoved>()
+        //     // .add_frame_event::<WindowThemeChanged>()
+		// 	;
 
-//         if let Some(primary_window) = &self.primary_window {
-//             app.world
-//                 .spawn(primary_window.clone())
-//                 .insert(PrimaryWindow);
-//         }
+        if let Some(primary_window) = &self.primary_window {
+            app.world.make_inserter::<(PrimaryWindow, Window)>().insert((PrimaryWindow, primary_window.clone()));
+        }
 
-//         match self.exit_condition {
-//             ExitCondition::OnPrimaryClosed => {
-//                 app.add_systems(PostUpdate, exit_on_primary_closed);
-//             }
-//             ExitCondition::OnAllClosed => {
-//                 app.add_systems(PostUpdate, exit_on_all_closed);
-//             }
-//             ExitCondition::DontExit => {}
-//         }
+        // match self.exit_condition {
+        //     ExitCondition::OnPrimaryClosed => {
+        //         app.add_systems(PostUpdate, exit_on_primary_closed);
+        //     }
+        //     ExitCondition::OnAllClosed => {
+        //         app.add_systems(PostUpdate, exit_on_all_closed);
+        //     }
+        //     ExitCondition::DontExit => {}
+        // }
 
-//         if self.close_when_requested {
-//             // Need to run before `exit_on_*` systems
-//             app.add_systems(Update, close_when_requested);
-//         }
+        // if self.close_when_requested {
+        //     // Need to run before `exit_on_*` systems
+        //     app.add_systems(Update, close_when_requested);
+        // }
 
-//         // Register event types
-//         // app.register_type::<WindowResized>()
-//         //     .register_type::<RequestRedraw>()
-//         //     .register_type::<WindowCreated>()
-//         //     .register_type::<WindowCloseRequested>()
-//         //     .register_type::<WindowClosed>()
-//         //     .register_type::<CursorMoved>()
-//         //     .register_type::<CursorEntered>()
-//         //     .register_type::<CursorLeft>()
-//         //     .register_type::<ReceivedCharacter>()
-//         //     .register_type::<WindowFocused>()
-//         //     .register_type::<WindowScaleFactorChanged>()
-//         //     .register_type::<WindowBackendScaleFactorChanged>()
-//         //     .register_type::<FileDragAndDrop>()
-//         //     .register_type::<WindowMoved>()
-//         //     .register_type::<WindowThemeChanged>();
+        // Register event types
+        // app.register_type::<WindowResized>()
+        //     .register_type::<RequestRedraw>()
+        //     .register_type::<WindowCreated>()
+        //     .register_type::<WindowCloseRequested>()
+        //     .register_type::<WindowClosed>()
+        //     .register_type::<CursorMoved>()
+        //     .register_type::<CursorEntered>()
+        //     .register_type::<CursorLeft>()
+        //     .register_type::<ReceivedCharacter>()
+        //     .register_type::<WindowFocused>()
+        //     .register_type::<WindowScaleFactorChanged>()
+        //     .register_type::<WindowBackendScaleFactorChanged>()
+        //     .register_type::<FileDragAndDrop>()
+        //     .register_type::<WindowMoved>()
+        //     .register_type::<WindowThemeChanged>();
 
-//         // // Register window descriptor and related types
-//         // app.register_type::<Window>()
-//         //     .register_type::<PrimaryWindow>()
-//         //     .register_type::<Cursor>()
-//         //     .register_type::<CursorIcon>()
-//         //     .register_type::<CursorGrabMode>()
-//         //     .register_type::<CompositeAlphaMode>()
-//         //     .register_type::<WindowResolution>()
-//         //     .register_type::<WindowPosition>()
-//         //     .register_type::<WindowMode>()
-//         //     .register_type::<WindowLevel>()
-//         //     .register_type::<PresentMode>()
-//         //     .register_type::<InternalWindowState>()
-//         //     .register_type::<MonitorSelection>()
-//         //     .register_type::<WindowResizeConstraints>()
-//         //     .register_type::<WindowTheme>();
+        // // Register window descriptor and related types
+        // app.register_type::<Window>()
+        //     .register_type::<PrimaryWindow>()
+        //     .register_type::<Cursor>()
+        //     .register_type::<CursorIcon>()
+        //     .register_type::<CursorGrabMode>()
+        //     .register_type::<CompositeAlphaMode>()
+        //     .register_type::<WindowResolution>()
+        //     .register_type::<WindowPosition>()
+        //     .register_type::<WindowMode>()
+        //     .register_type::<WindowLevel>()
+        //     .register_type::<PresentMode>()
+        //     .register_type::<InternalWindowState>()
+        //     .register_type::<MonitorSelection>()
+        //     .register_type::<WindowResizeConstraints>()
+        //     .register_type::<WindowTheme>();
 
-//         // // Register `PathBuf` as it's used by `FileDragAndDrop`
-//         // app.register_type::<PathBuf>();
-//     }
-// }
+        // // Register `PathBuf` as it's used by `FileDragAndDrop`
+        // app.register_type::<PathBuf>();
+    }
+}
 
 /// Defines the specific conditions the application should exit on
 #[derive(Clone)]

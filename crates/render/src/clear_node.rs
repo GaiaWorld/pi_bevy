@@ -7,7 +7,7 @@ use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::ParamUsage;
 use pi_share::ShareRefCell;
 use pi_render::depend_graph::NodeId;
-use pi_world::{world::World, single_res::SingleRes};
+use pi_world::single_res::SingleRes;
 use wgpu::StoreOp;
 
 /// 窗口清屏
@@ -24,8 +24,8 @@ impl Node for ClearNode {
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a  World,
-		// _param: &'a mut Self::BuildParam,
+		// _world: &'a  World,
+		_param: &'a mut Self::BuildParam,
 		_context: RenderContext,
 		_input: &'a Self::Input,
 		_usage: &'a ParamUsage,
@@ -38,8 +38,8 @@ impl Node for ClearNode {
 
     fn run<'a>(
         &'a mut self,
-        world: &'a World,
-        // param: &'a mut Self::RunParam,
+        // world: &'a World,
+        param: &'a Self::RunParam,
         _context: RenderContext,
         commands: ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,
@@ -49,15 +49,15 @@ impl Node for ClearNode {
 		_to: &'a [NodeId],
     ) -> BoxFuture<'a, Result<Self::Output, String>> {
         let (view, clear) = {
-            let view = world.get_single_res::<PiScreenTexture>().unwrap().0.as_ref().unwrap().view.as_ref().unwrap().clone();
-            let clear = world.get_single_res::<PiClearOptions>().unwrap().clone();
+            // let view = world.get_single_res::<PiScreenTexture>().unwrap().0.as_ref().unwrap().view.as_ref().unwrap().clone();
+            // let clear = world.get_single_res::<PiClearOptions>().unwrap().clone();
             // let (s, clear) = param;
 
-            // let view = s.0.as_ref().unwrap().view.as_ref().unwrap().clone();
+            let view = param.0.as_ref().unwrap().view.as_ref().unwrap().clone();
 
             // let clear = clear.0.clone();
 
-            (view, clear)
+            (view, &*param.1)
         };
 
         Box::pin(async move {

@@ -255,8 +255,8 @@ impl Node for WindowRendererNode {
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a  World,
-		// _param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
+		// _world: &'a  World,
+		_param: &'a mut Self::BuildParam,
 		_context: pi_bevy_render_plugin::RenderContext,
 		_input: &'a Self::Input,
 		_usage: &'a pi_bevy_render_plugin::node::ParamUsage,
@@ -269,7 +269,8 @@ impl Node for WindowRendererNode {
 
     fn run<'a>(
         &'a mut self,
-        world: &'a World,
+        // world: &'a World,
+        param: &'a Self::RunParam,
         // param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
         _context: pi_bevy_render_plugin::RenderContext,
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
@@ -281,16 +282,16 @@ impl Node for WindowRendererNode {
     ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
 
         // let (screen, final_render) = param.get(world);
-        let final_render = world.get_single_res::<WindowRenderer>().unwrap().clone();
-        let screen = world.get_single_res::<PiScreenTexture>().unwrap().clone();
+        // let final_render = world.get_single_res::<WindowRenderer>().unwrap().clone();
+        // let screen = world.get_single_res::<PiScreenTexture>().unwrap().clone();
 
-        if final_render.pipeline.is_some() {
+        if param.1.pipeline.is_some() {
             let mut rpass = commands.begin_render_pass(
                 &wgpu::RenderPassDescriptor {
                     label: Some(WindowRenderer::KEY),
                     color_attachments: &[
                         Some(wgpu::RenderPassColorAttachment {
-                            view: screen.0.as_ref().unwrap().view.as_ref().unwrap(),
+                            view: param.0.0.as_ref().unwrap().view.as_ref().unwrap(),
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Load,
@@ -303,9 +304,9 @@ impl Node for WindowRendererNode {
                     occlusion_query_set: None,
                 }
             );
-            rpass.set_pipeline(final_render.pipeline.as_ref().unwrap());
-            rpass.set_bind_group(0, final_render.bindgroup.as_ref().unwrap(), &[]);
-            rpass.set_vertex_buffer(0, final_render.vertex.slice(..).deref().clone());
+            rpass.set_pipeline(param.1.pipeline.as_ref().unwrap());
+            rpass.set_bind_group(0, param.1.bindgroup.as_ref().unwrap(), &[]);
+            rpass.set_vertex_buffer(0, param.1.vertex.slice(..).deref().clone());
             rpass.draw(0..6, 0..1);
 
         }
@@ -329,7 +330,8 @@ impl Node for WindowRendererClearNode {
 
 	fn build<'a>(
 		&'a mut self,
-		_world: &'a World,
+		// _world: &'a World,
+        param: &mut Self::BuildParam,
 		// _param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
 		_context: pi_bevy_render_plugin::RenderContext,
 		_input: &'a Self::Input,
@@ -343,8 +345,8 @@ impl Node for WindowRendererClearNode {
 
     fn run<'a>(
         &'a mut self,
-        _world: &'a World,
-        // _param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
+        // _world: &'a World,
+        param: &'a Self::RunParam,
         _context: pi_bevy_render_plugin::RenderContext,
         _commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,

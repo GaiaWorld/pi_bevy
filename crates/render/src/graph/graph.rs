@@ -260,7 +260,7 @@ impl RenderGraph {
     pub async fn run<'a, A: AsyncRuntime>(
         &'a mut self,
         rt: &'a A,
-        world: &'static World,
+        world: &'static mut World,
     ) -> Result<(), GraphError> {
         let async_submit_queue = self.async_submit_queue.clone();
 
@@ -318,7 +318,7 @@ impl RenderGraph {
     pub fn build<'a, A: AsyncRuntime>(
         &'a mut self,
         rt: &'a A,
-        world: &'static World,
+        world: &'static mut World,
     ) -> Result<(), GraphError> {
         let async_submit_queue = self.async_submit_queue.clone();
 

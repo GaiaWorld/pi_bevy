@@ -22,6 +22,7 @@ resolver = "2"
 # bevy_input = { path = "../bevy/crates/bevy_input" }
 pi_assets = {path="../pi_assets"}
 pi_world = { path = "../pi_world" }
+pi_world_macros = { path = "../pi_world/macros" }
 
 [patch.yn]
 pi_sdf = { path = "../pi_sdf" }

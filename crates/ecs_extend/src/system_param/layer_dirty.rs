@@ -21,14 +21,15 @@ use pi_dirty::{
 use pi_map::vecmap::VecMap;
 use pi_null::Null;
 use pi_slotmap::Key;
-use pi_world::fetch::FetchComponents;
-use pi_world::filter::{Changed, FilterComponents};
-use pi_world::prelude::Or;
+use pi_world::filter::FilterComponents;
+use pi_world::param_set::ParamSetElement;
+use pi_world::prelude::Tick;
 use pi_world::query::Query;
 // use pi_world::single_res::SingleRes;
 use pi_world::prelude::{Local, SystemParam};
+use pi_world::system::SystemMeta;
 // use pi_world::system_parms::{SystemParam, Local};
-use pi_world::world::Entity;
+use pi_world::world::{Entity, World};
 // use pi_world::listener::EventList;
 // use pi_world_extend_macro::all_tuples;
 use std::ops::{Index, IndexMut};
@@ -79,6 +80,13 @@ pub struct LayerDirty<'w, F: FilterComponents + 'static>
 
     is_init: bool,
 }
+
+impl<F: FilterComponents + 'static + Send + Sync> ParamSetElement for LayerDirty<'_, F> {
+    fn init_set_state(world: &World, system_meta: &mut SystemMeta) -> Self::State {
+        todo!()
+    }
+}
+
 impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_, F> {
     type State = (
         <EntityTree<'static> as SystemParam>::State,
@@ -105,12 +113,13 @@ impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_,
         world: &'world pi_world::world::World,
         system_meta: &'world pi_world::system::SystemMeta,
         state: &'world mut Self::State,
+        tick: Tick,
     ) -> Self::Item<'world> {
         LayerDirty {
-			entity_tree: <EntityTree<'static> as SystemParam>::get_param(world, system_meta, &mut state.0), 
-			event_reader: <Query<'static, Entity, F> as SystemParam>::get_param(world, system_meta, &mut state.1), 
-			dirty_mark: <Local<'static, DirtyMark> as SystemParam>::get_param(world, system_meta, &mut state.2), 
-			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(world, system_meta, &mut state.3),
+			entity_tree: <EntityTree<'static> as SystemParam>::get_param(world, system_meta, &mut state.0, tick), 
+			event_reader: <Query<'static, Entity, F> as SystemParam>::get_param(world, system_meta, &mut state.1, tick), 
+			dirty_mark: <Local<'static, DirtyMark> as SystemParam>::get_param(world, system_meta, &mut state.2, tick), 
+			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(world, system_meta, &mut state.3, tick),
 			is_init: false,
 		}
     }
@@ -119,8 +128,9 @@ impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_,
         world: &'world pi_world::world::World,
         system_meta: &'world pi_world::system::SystemMeta,
         state: &'world mut Self::State,
+        tick: Tick,
     ) -> Self {
-        unsafe { transmute(Self::get_param(world, system_meta, state)) }
+        unsafe { transmute(Self::get_param(world, system_meta, state, tick)) }
     }
 }
 
