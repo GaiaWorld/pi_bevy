@@ -9,8 +9,7 @@ use pi_bevy_render_plugin::{
 };
 use pi_bevy_winit_window::WinitPlugin;
 use pi_render::rhi::options::RenderOptions;
-use pi_world::prelude::App;
-use pi_world_extend_plugin::plugin_group::WorldPluginExtent;
+use pi_world::prelude::{App, Plugin};
 use winit::event::{Event, WindowEvent};
 
 pub const FILTER: &'static str = "wgpu=warn";
@@ -23,7 +22,7 @@ fn main() {
     let mut app = App::new();
 
     // app.add_plugins(LogPlugin::default());
-    app.world.register_single_res(CheckSurfaceCmd::default());
+    app.world.insert_single_res(CheckSurfaceCmd::default());
 
     let event_loop = winit::event_loop::EventLoop::new();
 
@@ -65,8 +64,8 @@ fn main() {
                     });
 
                     app.add_plugins(WinitPlugin::new(window.clone()));
-                    app.world.register_single_res(option);
-                    app.world.register_single_res(PiClearOptions(ClearOptions {
+                    app.world.insert_single_res(option);
+                    app.world.insert_single_res(PiClearOptions(ClearOptions {
                         color: wgpu::Color::GREEN,
                         ..Default::default()
                     }));

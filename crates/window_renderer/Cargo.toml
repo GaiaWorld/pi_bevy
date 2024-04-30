@@ -9,7 +9,6 @@ license = "MIT OR Apache-2.0"
 keywords = ["pi", "window_renderer"]
 
 [dependencies]
-pi_world_extend_plugin = { path = "../plugin", version = "0.1"}
 pi_world = "0.1"
 
 pi_null = "0.1"

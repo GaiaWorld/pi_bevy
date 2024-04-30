@@ -5,8 +5,7 @@ use std::sync::Arc;
 use pi_bevy_asset::{AssetConfig, PiAssetPlugin};
 use pi_bevy_render_plugin::{ClearOptions, PiClearOptions, PiRenderPlugin};
 use pi_bevy_winit_window::WinitPlugin;
-use pi_world::prelude::App;
-use pi_world_extend_plugin::plugin_group::WorldPluginExtent;
+use pi_world::prelude::{App, WorldPluginExtent};
 
 pub const FILTER: &'static str = "wgpu=warn";
 
@@ -18,7 +17,7 @@ fn main() {
     let window = winit::window::Window::new(&event_loop).unwrap();
 
     app.add_plugins(WinitPlugin::new(Arc::new(window)));
-    app.world.register_single_res(PiClearOptions(ClearOptions {
+    app.world.insert_single_res(PiClearOptions(ClearOptions {
         color: wgpu::Color::GREEN,
         ..Default::default()
     }));

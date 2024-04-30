@@ -9,8 +9,7 @@ use pi_render::renderer::vertex_buffer::VertexBufferAllocator;
 use pi_render::rhi::RenderQueue;
 use pi_render::rhi::device::RenderDevice;
 use pi_share::Share;
-use pi_world::prelude::App;
-use pi_world_extend_plugin::plugin::Plugin;
+use pi_world::prelude::{App, Plugin};
 // use pi_postprocess::{postprocess_pipeline::PostProcessMaterialMgr, postprocess_geometry::PostProcessGeometryManager};
 
 // #[derive(Deref, DerefMut, Resource)]
@@ -61,6 +60,6 @@ impl Plugin for PiPostProcessPlugin {
         let device = app.world.get_single_res::<PiRenderDevice>().unwrap();
         let queue = app.world.get_single_res::<PiRenderQueue>().unwrap();
         let asset_samplers = app.world.get_single_res::<ShareAssetMgr<SamplerRes>>().unwrap();
-        app.world.register_single_res(PostprocessResource::new(device, queue, asset_samplers));
+        app.world.insert_single_res(PostprocessResource::new(device, queue, asset_samplers));
     }
 }

@@ -39,8 +39,7 @@ static GLOBAL: tracy_client::ProfiledAllocator<std::alloc::System> =
 //     Level,
 // };
 
-use pi_world::prelude::App;
-use pi_world_extend_plugin::plugin::Plugin;
+use pi_world::prelude::{App, Plugin};
 // use bevy_app::{App, Plugin};
 use tracing_log::LogTracer;
 #[cfg(feature = "tracing-chrome")]
@@ -142,7 +141,7 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
             .unwrap();
 		let (filter_layer, reload_handle) = tracing_subscriber::reload::Layer::new(filter_layer);
         let subscriber = Registry::default().with(filter_layer);
-		app.world.register_single_res(LogFilterHandle(reload_handle));
+		app.world.insert_single_res(LogFilterHandle(reload_handle));
 
         #[cfg(feature = "trace")]
         let subscriber = subscriber.with(tracing_error::ErrorLayer::default());

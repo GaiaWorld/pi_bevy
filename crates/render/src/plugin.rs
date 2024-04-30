@@ -71,15 +71,15 @@ impl Plugin for PiRenderPlugin {
         // 	}
         // });
 
-        app.world.register_single_res(self.frame_init_state);
+        app.world.insert_single_res(self.frame_init_state);
 
-        app.world.register_single_res(PiScreenTexture::default());
+        app.world.insert_single_res(PiScreenTexture::default());
 
         if app.world.get_single_res::<PiRenderOptions>().is_none() {
-            app.world.register_single_res(PiRenderOptions::default());
+            app.world.insert_single_res(PiRenderOptions::default());
         }
         if app.world.get_single_res::<PiClearOptions>().is_none() {
-            app.world.register_single_res(PiClearOptions::default());
+            app.world.insert_single_res(PiClearOptions::default());
         }
 
         // app.add_stage_after(CoreStage::Last, PiRenderStage, SystemStage::parallel().with_run_criteria(should_run));
@@ -227,22 +227,22 @@ impl Plugin for PiRenderPlugin {
             )
         };
 
-        app.world.register_single_res(share_texture_res.clone());
-        app.world.register_single_res(share_unuse.clone());
+        app.world.insert_single_res(share_texture_res.clone());
+        app.world.insert_single_res(share_unuse.clone());
 
-        app.world.register_single_res(PiAsyncRuntime(rt.clone()));
+        app.world.insert_single_res(PiAsyncRuntime(rt.clone()));
 
         // 添加资源管理器单例
-        app.world.register_single_res(buffer_res);
+        app.world.insert_single_res(buffer_res);
 
-        app.world.register_single_res(sampler_res);
+        app.world.insert_single_res(sampler_res);
 
-        app.world.register_single_res(bind_group_res);
+        app.world.insert_single_res(bind_group_res);
 
-        app.world.register_single_res(texture_res);
+        app.world.insert_single_res(texture_res);
 
-        app.world.register_single_res(texture_asset_res.clone());
-        app.world.register_single_res(pipeline_res);
+        app.world.insert_single_res(texture_asset_res.clone());
+        app.world.insert_single_res(pipeline_res);
         // app.insert_resource(AssetMgr::<RenderRes<Program>>::new(
         // 	GarbageEmpty(),
         // 	false,
@@ -253,13 +253,13 @@ impl Plugin for PiRenderPlugin {
         let (wrapper, present_mode) = init_render(&mut app.world, &rt);
 
         app.world
-            .register_single_res(PiRenderWindow(RenderWindow::new(wrapper, present_mode)));
+            .insert_single_res(PiRenderWindow(RenderWindow::new(wrapper, present_mode)));
         let texture_key_alloter = TextureKeyAlloter::default();
-        app.world.register_single_res(texture_key_alloter.clone());
+        app.world.insert_single_res(texture_key_alloter.clone());
 
         let device = app.world.get_single_res::<PiRenderDevice>().unwrap();
         app.world
-            .register_single_res(PiSafeAtlasAllocator(SafeAtlasAllocator::new(
+            .insert_single_res(PiSafeAtlasAllocator(SafeAtlasAllocator::new(
                 device.0.clone(),
                 texture_asset_res.0,
                 share_unuse.0,

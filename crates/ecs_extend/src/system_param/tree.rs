@@ -440,11 +440,11 @@ impl<'w> StorageMut<TreeKey> for TreeStorageMut<'w> {
 
 	// 通知， TODO
 	fn set_root(&mut self, k: TreeKey) {
-        let _ = self.root.0.alter(k.0, (Root, ));
+        let _ = self.root.p0().alter(k.0, (Root, ));
 	}
 
 	fn remove_root(&mut self, k: TreeKey) {
-        let _ = self.root.1.alter(k.0, ());
+        let _ = self.root.p1().alter(k.0, ());
 	}
 }
 

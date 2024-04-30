@@ -14,7 +14,7 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
         if world.get_single_res::<T>().is_none() {
             let v = T::from_world(world);
-            world.register_single_res(v);
+            world.insert_single_res(v);
         }
         SingleRes::<T>::init_state(world, system_meta)
     }
@@ -64,7 +64,7 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_
 	fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
         if world.get_single_res::<T>().is_none() {
             let v = T::from_world(world);
-            world.register_single_res(v);
+            world.insert_single_res(v);
         }
         SingleResMut::<T>::init_state(world, system_meta)
     }

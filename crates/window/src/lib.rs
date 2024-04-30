@@ -12,8 +12,7 @@ pub use crate::raw_handle::*;
 // use bevy_ecs::{event::{Event, Events}, system::{Resource, Res}, schedule::{IntoSystemConfigs, SystemSet}};
 pub use cursor::*;
 pub use event::*;
-use pi_world::{prelude::App, single_res::SingleRes};
-use pi_world_extend_plugin::plugin::Plugin;
+use pi_world::{prelude::{App, Plugin}, single_res::SingleRes};
 // pub use system::*;
 pub use window::*;
 

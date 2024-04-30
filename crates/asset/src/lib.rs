@@ -11,8 +11,7 @@ use pi_render::renderer::vertex_buffer::EVertexBufferRange;
 use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_render::rhi::pipeline::RenderPipeline;
 use pi_share::Share;
-use pi_world::{prelude::{App, PostUpdate}, single_res::SingleResMut, prelude::Local};
-use pi_world_extend_plugin::plugin::Plugin;
+use pi_world::{prelude::{App, PostUpdate, Plugin}, single_res::SingleResMut, prelude::Local};
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
 use pi_null::Null;
@@ -36,8 +35,8 @@ impl Plugin for PiAssetPlugin {
 		} else {
 			self.total_capacity
 		};
-		app.world.register_single_res(Allocator(pi_assets::allocator::Allocator::new(total_capacity)));
-		app.world.register_single_res(self.asset_config.clone());
+		app.world.insert_single_res(Allocator(pi_assets::allocator::Allocator::new(total_capacity)));
+		app.world.insert_single_res(self.asset_config.clone());
 
 		// 帧推结束前，整理资产（这里采用在帧推结束前整理资产， 而不是利用容量分配器自带的定时整理， 可以防止整理立即打断正在进行的其他system）
 		app.add_system(PostUpdate, collect);

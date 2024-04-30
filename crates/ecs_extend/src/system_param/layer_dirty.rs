@@ -4,7 +4,7 @@
 // use crate::{world::Entity, prelude::SystemParam, system::SystemMeta};
 
 use crate::system_param::tree::{EntityTree, RecursiveIterator};
-use pi_bevy_ecs_macro::all_tuples;
+// use pi_bevy_ecs_macro::all_tuples;
 // use bevy_ecs::{
 // 	prelude::{World, Event},
 //     event::ManualEventReader,
@@ -22,14 +22,12 @@ use pi_map::vecmap::VecMap;
 use pi_null::Null;
 use pi_slotmap::Key;
 use pi_world::filter::FilterComponents;
-use pi_world::param_set::ParamSetElement;
 use pi_world::prelude::Tick;
 use pi_world::query::Query;
 // use pi_world::single_res::SingleRes;
 use pi_world::prelude::{Local, SystemParam};
-use pi_world::system::SystemMeta;
 // use pi_world::system_parms::{SystemParam, Local};
-use pi_world::world::{Entity, World};
+use pi_world::world::Entity;
 // use pi_world::listener::EventList;
 // use pi_world_extend_macro::all_tuples;
 use std::ops::{Index, IndexMut};
@@ -81,11 +79,11 @@ pub struct LayerDirty<'w, F: FilterComponents + 'static>
     is_init: bool,
 }
 
-impl<F: FilterComponents + 'static + Send + Sync> ParamSetElement for LayerDirty<'_, F> {
-    fn init_set_state(world: &World, system_meta: &mut SystemMeta) -> Self::State {
-        todo!()
-    }
-}
+// impl<F: FilterComponents + 'static + Send + Sync> ParamSetElement for LayerDirty<'_, F> {
+//     fn init_set_state(world: &World, system_meta: &mut SystemMeta) -> Self::State {
+//         todo!()
+//     }
+// }
 
 impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_, F> {
     type State = (

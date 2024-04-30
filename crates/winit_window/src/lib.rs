@@ -4,8 +4,7 @@ use bevy_window::{
 };
 // use glam::IVec2;
 use nalgebra::Vector2;
-use pi_world::prelude::App;
-use pi_world_extend_plugin::plugin::Plugin;
+use pi_world::prelude::{App, Plugin};
 use std::sync::Arc;
 use winit::{dpi::PhysicalSize, window::Window};
 
