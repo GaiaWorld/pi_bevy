@@ -7,7 +7,7 @@ use derive_deref::{DerefMut, Deref};
 pub struct OrInitSingleRes<'w, T: FromWorld + 'static + Sync + Send>(SingleRes<'w, T>);
 
 impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T> {
-    type State = SingleResource;
+    type State = (SingleResource, Tick);
 	type Item<'world> = OrInitSingleRes<'world, T>;
 
 	#[inline(never)]
