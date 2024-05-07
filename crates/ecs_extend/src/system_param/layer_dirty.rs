@@ -21,13 +21,15 @@ use pi_dirty::{
 use pi_map::vecmap::VecMap;
 use pi_null::Null;
 use pi_slotmap::Key;
+use pi_world::archetype::{Archetype, ArchetypeDependResult};
 use pi_world::filter::FilterComponents;
 use pi_world::prelude::Tick;
 use pi_world::query::Query;
 // use pi_world::single_res::SingleRes;
 use pi_world::prelude::{Local, SystemParam};
+use pi_world::system::SystemMeta;
 // use pi_world::system_parms::{SystemParam, Local};
-use pi_world::world::Entity;
+use pi_world::world::{Entity, World};
 // use pi_world::listener::EventList;
 // use pi_world_extend_macro::all_tuples;
 use std::ops::{Index, IndexMut};
@@ -107,6 +109,13 @@ impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_,
 		)
     }
 
+    #[inline]
+    #[allow(unused_variables)]
+    fn align(world: &World, system_meta: &SystemMeta, state: &mut Self::State) {
+        <EntityTree<'static> as SystemParam>::align(world, system_meta, &mut state.0);
+        <Query<'static, Entity, F> as SystemParam>::align(world, system_meta, &mut state.1); 
+	}
+
     fn get_param<'world>(
         world: &'world pi_world::world::World,
         system_meta: &'world pi_world::system::SystemMeta,
@@ -120,6 +129,18 @@ impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_,
 			layer_list: <Local<'static, LayerDirty1<Entity>> as SystemParam>::get_param(world, system_meta, &mut state.3, tick),
 			is_init: false,
 		}
+    }
+
+    #[inline]
+    fn archetype_depend(
+        world: &World,
+        system_meta: &SystemMeta,
+        state: &Self::State,
+        archetype: &Archetype,
+        result: &mut ArchetypeDependResult,
+    ) {
+        <EntityTree<'static> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
+        <Query<'static, Entity, F> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
     }
 
     fn get_self<'world>(

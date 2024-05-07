@@ -10,7 +10,7 @@ use pi_slotmap_tree::{
 };
 use serde::{Deserialize, Serialize};
 
-use pi_world::{archetype::Flags, param_set::{ParamSet, ParamSetElement}, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
+use pi_world::{archetype::{Archetype, ArchetypeDependResult, Flags}, param_set::{ParamSet, ParamSetElement}, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
 
 // use pi_print_any::{println_any, out_any};
 
@@ -268,25 +268,34 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
         }
     }
 
-    #[inline]
-    #[allow(unused_variables)]
-    fn res_depend(
+	#[inline]
+    fn archetype_depend(
         world: &World,
         system_meta: &SystemMeta,
         state: &Self::State,
-        res_tid: &TypeId,
-        res_name: &Cow<'static, str>,
-        single: bool,
-        result: &mut Flags,
+        archetype: &Archetype,
+        result: &mut ArchetypeDependResult,
     ) {
-        <Query< 'static, &'static mut  Layer> as SystemParam>::res_depend(world, system_meta, &state.0, res_tid, res_name, single, result);
-        <Query<'static, &'static mut  Up> as SystemParam>::res_depend(world, system_meta, &state.1, res_tid, res_name, single, result);
-        <Query<'static, &'static mut  Down> as SystemParam>::res_depend(world, system_meta, &state.2, res_tid, res_name, single, result);
+        <Query< 'static, &'static mut  Layer> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
+        <Query<'static, &'static mut  Up> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
+        <Query<'static, &'static mut  Down> as SystemParam>::archetype_depend(world, system_meta, &state.2, archetype, result);
         <ParamSet<'static, (
 			Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
 			Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
-		)> as SystemParam>::res_depend(world, system_meta, &state.3, res_tid, res_name, single, result);
+		)> as SystemParam>::archetype_depend(world, system_meta, &state.3, archetype, result);
     }
+
+	#[inline]
+    #[allow(unused_variables)]
+    fn align(world: &World, system_meta: &SystemMeta, state: &mut Self::State) {
+		<Query< 'static, &'static mut  Layer> as SystemParam>::align(world, system_meta, &mut state.0);
+        <Query<'static, &'static mut  Up> as SystemParam>::align(world, system_meta, &mut state.1);
+        <Query<'static, &'static mut  Down> as SystemParam>::align(world, system_meta, &mut state.2);
+        <ParamSet<'static, (
+			Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
+			Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+		)> as SystemParam>::align(world, system_meta, &mut state.3);
+	}
 
 
     fn get_self<'world>(
