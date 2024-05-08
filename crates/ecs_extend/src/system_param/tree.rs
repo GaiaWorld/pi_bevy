@@ -309,7 +309,7 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 }
 
 impl ParamSetElement for EntityTreeMut<'_> {
-    fn init_set_state(world: &World, system_meta: &mut SystemMeta) -> Self::State {
+    fn init_set_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
         (
 			<Query< 'static, &'static mut  Layer> as ParamSetElement>::init_set_state(world, system_meta),
 			<Query<'static, &'static mut  Up> as ParamSetElement>::init_set_state(world, system_meta),

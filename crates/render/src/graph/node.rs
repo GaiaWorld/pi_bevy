@@ -178,6 +178,7 @@ where
         let mut build_param = match &mut self.build_state {
             Some((state, meta)) => {
                 let tick = world.tick();
+                BP::align(world, meta, state);
                 BP::get_self(world, meta, state, tick)
             },
             None => {
@@ -186,6 +187,7 @@ where
                    
                     Some((state, meta)) => {
                         let tick = world.tick();
+                        BP::align(world, meta, state);
                         BP::get_self(world, meta, state, tick)
                     },
                     None => {
@@ -193,6 +195,7 @@ where
                         self.build_state = Some((BP::init_state(world, &mut meta), meta));
                         let r = self.build_state.as_mut().unwrap();
                         let tick = world.tick();
+                        BP::align(world, &r.1, &mut r.0);
                         BP::get_self(world,  &r.1, &mut r.0, tick)
                     },
                 }
@@ -250,6 +253,7 @@ where
 
             let r = self.run_state.as_mut().unwrap();
             let tick = c.world().tick();
+            RP::align(c.world(), &r.1, &mut r.0);
             let param = RP::get_self(c.world(),  &r.1, &mut r.0, tick);
 
 			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
