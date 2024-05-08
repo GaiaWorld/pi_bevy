@@ -81,8 +81,6 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
 
     let rt_clone = rt.clone(); 
 
-    println!("run1==========");
-
     #[cfg(not(feature = "trace"))]
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
