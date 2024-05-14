@@ -4,7 +4,7 @@
 // };
 // use bevy_math::{DVec2, IVec2, Vec2};
 use nalgebra::Vector2;
-use pi_world::world::Entity;
+use pi_world::{insert::Component, world::Entity};
 
 use crate::CursorIcon;
 
@@ -15,7 +15,7 @@ use crate::CursorIcon;
 /// [`WindowPlugin`](crate::WindowPlugin) will spawn a [`Window`] entity
 /// with this component if [`primary_window`](crate::WindowPlugin::primary_window)
 /// is `Some`.
-#[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Component)]
 pub struct PrimaryWindow;
 
 /// Reference to a [`Window`], whether it be a direct link to a specific entity or
@@ -82,7 +82,7 @@ impl NormalizedWindowRef {
 ///
 /// This component is synchronized with `winit` through `bevy_winit`:
 /// it will reflect the current state of the window and can be modified to change this state.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct Window {
     /// The cursor of this window.
     // pub cursor: Cursor,

@@ -12,7 +12,7 @@ pub use crate::raw_handle::*;
 // use bevy_ecs::{event::{Event, Events}, system::{Resource, Res}, schedule::{IntoSystemConfigs, SystemSet}};
 pub use cursor::*;
 pub use event::*;
-use pi_world::{prelude::{App, Plugin}, single_res::SingleRes};
+use pi_world::{prelude::{App, Plugin}, schedule_config::SystemSet, single_res::SingleRes};
 // pub use system::*;
 pub use window::*;
 
@@ -87,7 +87,7 @@ pub fn should_run(state: SingleRes<FrameState>) -> bool {
     }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, SystemSet)]
 pub struct FrameSet;
 
 // pub trait AddFrameEvent {

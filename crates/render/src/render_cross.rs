@@ -3,19 +3,20 @@
 // use bevy_ecs::{prelude::Component, schedule::SystemSet};
 use pi_render::depend_graph::NodeId;
 use derive_deref::{Deref, DerefMut};
+use pi_world::insert::Component;
 
 /***************************************************用于不同渲染系统中的渲染交叉（如在gui中渲染3d， 在3d中渲染gui）****************************************************/
 /// 渲染图节点
-#[derive(Debug, Default, Deref, DerefMut,  Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Deref, DerefMut,  Clone, PartialEq, Eq, Component)]
 pub struct GraphId(pub NodeId);
 
 /// DepthRange, 0~1
-#[derive(Debug, Default,  Clone)]
+#[derive(Debug, Default,  Clone, Component)]
 pub struct DepthRange {pub start: f32, pub end: f32}
 
 
 /// 渲染方式
-// #[derive(Component)]
+#[derive(Component)]
 pub struct DrawList {
 	/// 要求的深度的长度， 一旦设置，表示 默认0.1, 在0~2单位内（by_draw_list为true时有效）
 	pub require_depth: f32,

@@ -1,6 +1,8 @@
 
 use std::sync::Arc;
 
+use pi_world::insert::Component;
+
 // use bevy_ecs::prelude::Component;
 
 pub trait CreateSurface: 'static + Send + Sync{
@@ -8,7 +10,7 @@ pub trait CreateSurface: 'static + Send + Sync{
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, Component)]
 pub struct HandleWrapper {
 	pub handle: Arc<dyn CreateSurface>,
     // pub window_handle: WindowHandle,

@@ -23,7 +23,7 @@ use pi_render::{
         pipeline::RenderPipeline,
     },
 };
-use pi_world::prelude::{App, PostUpdate, SystemSet, Plugin};
+use pi_world::prelude::{App, PostUpdate, SystemSet, Plugin, IntoSystemSetConfigs, IntoSystemConfigs};
 use std::mem::size_of;
 use wgpu::TextureView;
 
@@ -31,11 +31,11 @@ use wgpu::TextureView;
 pub use bevy_window::FrameSet as PiRenderSystemSet;
 
 /// 图构建系统集（一些资源更新显存可能需要在图构建之后）
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, SystemSet)]
 pub struct GraphBuild;
 
 /// 图运行系统集（一些资源更新显存可能需要在图构建之后）
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, SystemSet)]
 pub struct GraphRun;
 
 /// 帧数据准备（实际上就是在FrameDataPrepare系统集中的system，添加了FrameState::Active的运行条件）
@@ -56,7 +56,8 @@ impl Plugin for PiRenderPlugin {
         // 	.configure_set(PostUpdate, PiRenderSystemSet.run_if(should_run))
         // 	.configure_set(PostUpdate, GraphBuild.in_set(PiRenderSystemSet))
         // 	.configure_set(PostUpdate, GraphRun.in_set(PiRenderSystemSet))
-        // 	.configure_sets(PostUpdate, (GraphBuild, GraphRun).chain());
+        // .configure_sets(PostUpdate, (GraphBuild, GraphRun).chain());
+        app.configure_set(PostUpdate, GraphBuild.before(GraphRun));
         // std::thread::spawn(move || {
         // 	loop {
         // 		{
@@ -90,13 +91,13 @@ impl Plugin for PiRenderPlugin {
                 PostUpdate,
                 build_graph::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
-                >,
+                >.in_set(GraphBuild),
             );
             app.add_system(
                 PostUpdate,
                 run_frame_system::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
-                >,
+                >.in_set(GraphRun),
             );
             pi_hal::runtime::RENDER_RUNTIME.clone()
             // create_single_runtime()
@@ -109,14 +110,14 @@ impl Plugin for PiRenderPlugin {
         // let rt = create_single_runtime();
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
         {
-            app.add_system(PostUpdate, build_graph::<MultiTaskRuntime>);
-            app.add_system(PostUpdate, run_frame_system::<MultiTaskRuntime>);
+            app.add_system(PostUpdate, build_graph::<MultiTaskRuntime>.in_set(GraphBuild));
+            app.add_system(PostUpdate, run_frame_system::<MultiTaskRuntime>.in_set(GraphRun));
         }
 
         #[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
         {
-            app.add_system(PostUpdate, build_graph::<SingleTaskRuntime>);
-            app.add_system(PostUpdate, run_frame_system::<SingleTaskRuntime>);
+            app.add_system(PostUpdate, build_graph::<SingleTaskRuntime>.in_set(GraphBuild));
+            app.add_system(PostUpdate, run_frame_system::<SingleTaskRuntime>.in_set(GraphRun));
         }
 
         let (

@@ -10,16 +10,16 @@ use pi_slotmap_tree::{
 };
 use serde::{Deserialize, Serialize};
 
-use pi_world::{archetype::{Archetype, ArchetypeDependResult}, param_set::{ParamSet, ParamSetElement}, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
+use pi_world::{archetype::{Archetype, ArchetypeDependResult}, insert::Component, param_set::{ParamSet, ParamSetElement}, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
 
 // use pi_print_any::{println_any, out_any};
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, Component)]
 pub struct Root;
 
 pub type TreeKey = Entity;
 
-#[derive(Debug, Clone, Default, Deref, DerefMut, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Deref, DerefMut, Serialize, Deserialize, Component)]
 pub struct Layer(Layer1<TreeKey>);
 impl Layer  {
 	#[inline]
@@ -32,7 +32,7 @@ impl Layer  {
 	}
 }
 
-#[derive(Debug, Clone, Default, Deref, DerefMut, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Deref, DerefMut, Serialize, Deserialize, Component)]
 pub struct Up(Up1<TreeKey>);
 impl Up  {
 	#[inline]
@@ -49,7 +49,7 @@ impl Up  {
 	}
 }
 
-#[derive(Debug, Clone, Default, Deref, DerefMut, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Deref, DerefMut, Serialize, Deserialize, Component)]
 pub struct Down(Down1<TreeKey>);
 impl Down  {
 	#[inline]
@@ -352,6 +352,7 @@ impl<'w> Storage<TreeKey> for TreeStorageMut<'w> {
 		})}
 	}
 	fn up(&self, k: TreeKey) -> &Up1<TreeKey> {
+		println!("up======{:?}", k);
 		unsafe{transmute(self.up_query.get(k).unwrap())}
 	}
 
@@ -400,6 +401,7 @@ impl<'w> StorageMut<TreeKey> for TreeStorageMut<'w> {
 	}
 
 	fn set_layer(&mut self, k: TreeKey, layer: Layer1<TreeKey>) {
+		println!("set_layer======{:?}, {:?}", k, layer);
 		if let Ok(mut write) = self.layer_query.get_mut(k) {
 			*write = Layer(layer);
 		}
