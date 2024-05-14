@@ -16,7 +16,7 @@ use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
-use pi_world::{prelude::SystemParam, system::SystemMeta, world::World};
+use pi_world::{prelude::SystemParam, system::{SystemMeta, TypeInfo}, world::World};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 use wgpu::CommandEncoder;
@@ -170,7 +170,7 @@ where
         if self.run_state.is_none() {
             self.run_state = self.state_pool.get();
             if self.run_state.is_none() {
-                let mut meta = SystemMeta::new::<()>();
+                let mut meta = SystemMeta::new(TypeInfo::of::<()>());
                 self.run_state = Some((RP::init_state(world, &mut meta), meta));
             }
         }
@@ -191,7 +191,7 @@ where
                         BP::get_self(world, meta, state, tick)
                     },
                     None => {
-                        let mut meta = SystemMeta::new::<()>();
+                        let mut meta = SystemMeta::new(TypeInfo::of::<()>());
                         self.build_state = Some((BP::init_state(world, &mut meta), meta));
                         let r = self.build_state.as_mut().unwrap();
                         let tick = world.tick();
