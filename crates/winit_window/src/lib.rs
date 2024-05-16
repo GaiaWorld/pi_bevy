@@ -134,8 +134,7 @@ impl WindowDescribe {
             _ => WindowPosition::Automatic,
         };
         let i = app.world.make_inserter::<(bevy_window::prelude::Window, HandleWrapper, PrimaryWindow)>();
-        let primary = i.insert((window, raw_handle, PrimaryWindow));
-		log::warn!("zzzzzzzzzzzzzz==================");
+        let _ = i.insert((window, raw_handle, PrimaryWindow));
 
         // TODO?
         #[cfg(not(any(target_os = "windows", target_feature = "x11")))]

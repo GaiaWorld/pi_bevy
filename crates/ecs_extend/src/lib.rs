@@ -3,6 +3,7 @@
 #![feature(associated_type_bounds)]
 #![feature(associated_type_defaults)]
 #![feature(return_position_impl_trait_in_trait)]
+#![allow(invalid_reference_casting)]
 
 // #[macro_use]
 // extern crate serde;

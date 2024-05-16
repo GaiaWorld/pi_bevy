@@ -44,7 +44,6 @@ pub fn marked_dirty<'w, 's, 'a, T: Eq + Clone>(
     dirty: &'a mut LayerDirty1<T>,
     id_tree: &EntityTree,
 ) {
-    println!("marked_dirty {:?}", (id, id_tree.get_layer(id)));
     match id_tree.get_layer(id) {
         Some(r) => marked(id, v, dirty_mark_list, dirty, r.layer()),
         _ => (),
@@ -66,8 +65,6 @@ pub fn marked<'w, 's, 'a, T: Eq + Clone>(
             }
             *layer1 = layer;
             dirty.mark(v, layer);
-
-            println!("marked {:?}", (id, layer));
         }
     }
 }

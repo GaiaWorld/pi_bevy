@@ -352,7 +352,6 @@ impl<'w> Storage<TreeKey> for TreeStorageMut<'w> {
 		})}
 	}
 	fn up(&self, k: TreeKey) -> &Up1<TreeKey> {
-		println!("up======{:?}", k);
 		unsafe{transmute(self.up_query.get(k).unwrap())}
 	}
 
@@ -401,7 +400,6 @@ impl<'w> StorageMut<TreeKey> for TreeStorageMut<'w> {
 	}
 
 	fn set_layer(&mut self, k: TreeKey, layer: Layer1<TreeKey>) {
-		println!("set_layer======{:?}, {:?}", k, layer);
 		if let Ok(mut write) = self.layer_query.get_mut(k) {
 			*write = Layer(layer);
 		}
