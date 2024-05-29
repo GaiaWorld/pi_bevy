@@ -168,7 +168,7 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
                         }
                     }))
                     .build();
-                app.world.insert_non_send_resource(guard);
+                app.world.insert_single_res(guard);
                 chrome_layer
             };
 

@@ -199,24 +199,24 @@ impl<'w> EntityTreeMut<'w> {
 
 // #[derive(SystemParam)]
 pub struct TreeStorageMut<'w> {
-	layer_query: Query<'w, &'static mut Layer>,
-	up_query: Query<'w, &'static mut Up>,
-	down_query: Query<'w, &'static mut Down>,
+	// layer_query: Query<'w, &'static mut Layer>,
+	// up_query: Query<'w, &'static mut Up>,
+	// down_query: Query<'w, &'static mut Down>,
 	root: ParamSet<'w, (
-		Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
-		Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+		Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+		Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
 	)>,
 }
 
 
 impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 	type State = (
-        <Query<'static, &'static mut  Layer> as SystemParam>::State,
-		<Query<'static, &'static mut  Up> as SystemParam>::State,
-		<Query<'static, &'static mut Down> as SystemParam>::State,
+        // <Query<'static, &'static mut  Layer> as SystemParam>::State,
+		// <Query<'static, &'static mut  Up> as SystemParam>::State,
+		// <Query<'static, &'static mut Down> as SystemParam>::State,
         <ParamSet<'static, (
-			Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
-			Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
 		)> as SystemParam>::State,
     );
 
@@ -224,12 +224,12 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 
     fn init_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
         (
-			<Query< 'static, &'static mut  Layer> as SystemParam>::init_state(world, system_meta),
-			<Query<'static, &'static mut  Up> as SystemParam>::init_state(world, system_meta),
-			<Query<'static, &'static mut  Down> as SystemParam>::init_state(world, system_meta),
+			// <Query< 'static, &'static mut  Layer> as SystemParam>::init_state(world, system_meta),
+			// <Query<'static, &'static mut  Up> as SystemParam>::init_state(world, system_meta),
+			// <Query<'static, &'static mut  Down> as SystemParam>::init_state(world, system_meta),
             <ParamSet<'static, (
-				Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
-				Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
+				Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+				Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
 			)> as SystemParam>::init_state(world, system_meta),
 		)
     }
@@ -243,13 +243,13 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
         EntityTreeMut{
             tree: Tree::new(
                 TreeStorageMut {
-                    layer_query: <Query< 'static, &'static mut Layer> as SystemParam>::get_param(world, system_meta, &mut state.0, tick),
-                    up_query:  <Query< 'static, &'static mut Up> as SystemParam>::get_param(world, system_meta, &mut state.1, tick),
-                    down_query:  <Query< 'static, &'static mut Down> as SystemParam>::get_param(world, system_meta, &mut state.2, tick),
+                    // layer_query: <Query< 'static, &'static mut Layer> as SystemParam>::get_param(world, system_meta, &mut state.0, tick),
+                    // up_query:  <Query< 'static, &'static mut Up> as SystemParam>::get_param(world, system_meta, &mut state.1, tick),
+                    // down_query:  <Query< 'static, &'static mut Down> as SystemParam>::get_param(world, system_meta, &mut state.2, tick),
 					root: <ParamSet<'static, (
-						Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
-						Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
-					)> as SystemParam>::get_param(world, system_meta, &mut state.3, tick)
+						Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+						Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
+					)> as SystemParam>::get_param(world, system_meta, &mut state.0, tick)
                 }
             )
         }
@@ -263,25 +263,25 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
         archetype: &Archetype,
         result: &mut ArchetypeDependResult,
     ) {
-        <Query< 'static, &'static mut  Layer> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
-        <Query<'static, &'static mut  Up> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
-        <Query<'static, &'static mut  Down> as SystemParam>::archetype_depend(world, system_meta, &state.2, archetype, result);
+        // <Query< 'static, &'static mut  Layer> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
+        // <Query<'static, &'static mut  Up> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
+        // <Query<'static, &'static mut  Down> as SystemParam>::archetype_depend(world, system_meta, &state.2, archetype, result);
         <ParamSet<'static, (
-			Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
-			Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
-		)> as SystemParam>::archetype_depend(world, system_meta, &state.3, archetype, result);
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
+		)> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
     }
 
 	#[inline]
     #[allow(unused_variables)]
     fn align(world: &World, system_meta: &SystemMeta, state: &mut Self::State) {
-		<Query< 'static, &'static mut  Layer> as SystemParam>::align(world, system_meta, &mut state.0);
-        <Query<'static, &'static mut  Up> as SystemParam>::align(world, system_meta, &mut state.1);
-        <Query<'static, &'static mut  Down> as SystemParam>::align(world, system_meta, &mut state.2);
+		// <Query< 'static, &'static mut  Layer> as SystemParam>::align(world, system_meta, &mut state.0);
+        // <Query<'static, &'static mut  Up> as SystemParam>::align(world, system_meta, &mut state.1);
+        // <Query<'static, &'static mut  Down> as SystemParam>::align(world, system_meta, &mut state.2);
         <ParamSet<'static, (
-			Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
-			Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
-		)> as SystemParam>::align(world, system_meta, &mut state.3);
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
+		)> as SystemParam>::align(world, system_meta, &mut state.0);
 	}
 
 
@@ -297,14 +297,17 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 
 impl ParamSetElement for EntityTreeMut<'_> {
     fn init_set_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+		let r = <(
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
+		) as ParamSetElement>::init_set_state(world, system_meta);
         (
-			<Query< 'static, &'static mut  Layer> as ParamSetElement>::init_set_state(world, system_meta),
-			<Query<'static, &'static mut  Up> as ParamSetElement>::init_set_state(world, system_meta),
-			<Query<'static, &'static mut  Down> as ParamSetElement>::init_set_state(world, system_meta),
-			<(
-				Alter<'static, (), (), (Root,), ()>, // 用于插入Root组件
-				Alter<'static, (), (), (), (Root,)> // 用于删除Root组件
-			) as ParamSetElement>::init_set_state(world, system_meta)
+			// <Query< 'static, &'static mut  Layer> as ParamSetElement>::init_set_state(world, system_meta),
+			// <Query<'static, &'static mut  Up> as ParamSetElement>::init_set_state(world, system_meta),
+			// <Query<'static, &'static mut  Down> as ParamSetElement>::init_set_state(world, system_meta),
+			unsafe {
+				transmute(r)
+			}
 		)
     }
 }
@@ -346,91 +349,107 @@ impl<'w> EntityTreeMut<'w> {
 
 impl<'w> Storage<TreeKey> for TreeStorageMut<'w> {
 	fn get_up(&self, k: TreeKey) -> Option<&Up1<TreeKey>> {
-		unsafe{transmute(match self.up_query.get(k) {
-			Ok(r) => Some(r),
+		let s = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+		match s.root.p0().get(k) {
+			Ok(r) => Some(r.1),
 			_ => None,
-		})}
+		}
 	}
 	fn up(&self, k: TreeKey) -> &Up1<TreeKey> {
-		unsafe{transmute(self.up_query.get(k).unwrap())}
+		let s = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+		&s.root.p0().get(k).unwrap().1
 	}
 
 	fn get_layer(&self, k: TreeKey) -> Option<&Layer1<TreeKey>> {
-		unsafe{transmute(match self.layer_query.get( k) {
-			Ok(r) => Some(r),
+		let s = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+		match s.root.p0().get(k) {
+			Ok(r) => Some(r.0),
 			_ => None,
-		})}
+		}
+		// unsafe{transmute(match self.layer_query.get( k) {
+		// 	Ok(r) => Some(r),
+		// 	_ => None,
+		// })}
 	}
 	fn layer(&self, k: TreeKey) -> &Layer1<TreeKey> {
-		unsafe{transmute(self.layer_query.get(k).unwrap())}
+		let s = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+		&s.root.p0().get(k).unwrap().0
+		// unsafe{transmute(self.layer_query.get(k).unwrap())}
 	}
 
 	fn get_down(&self, k: TreeKey) -> Option<&Down1<TreeKey>> {
-		unsafe{transmute(match self.down_query.get(k) {
-			Ok(r) => Some(r),
+		let s = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+		match s.root.p0().get(k) {
+			Ok(r) => Some(r.2),
 			_ => None,
-		})}
+		}
+		// unsafe{transmute(match self.down_query.get(k) {
+		// 	Ok(r) => Some(r),
+		// 	_ => None,
+		// })}
 	}
 	fn down(&self, k: TreeKey) -> &Down1<TreeKey> {
-		unsafe{transmute(self.down_query.get(k).unwrap())}
+		let s = unsafe { &mut *(self as *const Self as usize as *mut Self) };
+		&s.root.p0().get(k).unwrap().2
+		// unsafe{transmute(self.down_query.get(k).unwrap())}
 	}
 }
 
 impl<'w> StorageMut<TreeKey> for TreeStorageMut<'w> {
 	fn get_up_mut(&mut self, k: TreeKey) -> Option<&mut Up1<TreeKey>> {
-		match self.up_query.get_mut(k) {
-			Ok(r) => Some(r.into_inner()),
+		match self.root.p0().get_mut(k) {
+			Ok(r) => Some(r.1.into_inner()),
 			_ => None,
 		}
 	}
 	fn up_mut(&mut self, k: TreeKey) -> &mut Up1<TreeKey> {
-		self.up_query.get_mut(k).unwrap().into_inner()
+		self.root.p0().get_mut(k).unwrap().1.into_inner()
 	}
 
 	fn set_up(&mut self, k: TreeKey, up: Up1<TreeKey>) {
-		if let Ok(mut write) = self.up_query.get_mut(k) {
-			*write = Up(up);
+		if let Ok(mut write) = self.root.p0().get_mut(k) {
+			*write.1 = Up(up);
 		}
 	}
 
 	fn remove_up(&mut self, k: TreeKey) {
-		if let Ok(mut write) = self.up_query.get_mut(k) {
-			*write = Up(Up1::default());
+		if let Ok(mut write) = self.root.p0().get_mut(k) {
+			*write.1 = Up(Up1::default());
 		}
 	}
 
 	fn set_layer(&mut self, k: TreeKey, layer: Layer1<TreeKey>) {
-		if let Ok(mut write) = self.layer_query.get_mut(k) {
-			*write = Layer(layer);
+		if let Ok(mut write) = self.root.p0().get_mut(k) {
+			*write.0 = Layer(layer);
 		}
 	}
 	
 	fn remove_layer(&mut self, k: TreeKey) {
-		if let Ok(mut write) = self.layer_query.get_mut(k) {
-			*write = Layer(Layer1::default());
+		if let Ok(mut write) = self.root.p0().get_mut(k) {
+			*write.0 = Layer(Layer1::default());
 		}
 	}
 
 	fn get_down_mut(&mut self, k: TreeKey) -> Option<&mut Down1<TreeKey>> {
-		match self.down_query.get_mut(k) {
-			Ok(r) => Some(r.into_inner()),
+		match self.root.p0().get_mut(k) {
+			Ok(r) => Some(r.2.into_inner()),
 			_ => None,
 		}
 	}
 
 	fn down_mut(&mut self, k: TreeKey) -> &mut Down1<TreeKey> {
-		self.down_query.get_mut(k).unwrap().into_inner()
+		self.root.p0().get_mut(k).unwrap().2.into_inner()
 	}
 
 	fn set_down(&mut self, k: TreeKey, down: Down1<TreeKey>) {
-		if let Ok(mut write) = self.down_query.get_mut(k) {
-			*write = Down(down);
+		if let Ok(mut write) = self.root.p0().get_mut(k) {
+			*write.2 = Down(down);
 		}
 	}
 
 	fn remove_down(&mut self, k: TreeKey) {
-		if let Ok(mut write) = self.down_query.get_mut(k) {
-			*write = Down(Down1::default());
+		if let Ok(mut write) = self.root.p0().get_mut(k) {
+			*write.2 = Down(Down1::default());
 		}
 	}
 

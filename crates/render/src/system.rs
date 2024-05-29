@@ -45,15 +45,14 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
         _ => return,
     };
 
-    // 从 world 取 res
-    // let ptr_world = world as *mut World as usize;
-
     let first_surface = {
         // let w = unsafe { &mut *(ptr_world as *mut World) };
         first_surface.0.take()
     };
 
     let world_ref: &'static mut World = unsafe { std::mem::transmute(world) };
+    #[cfg(feature = "trace")]
+    let mut world_ref1 = world_ref.unsafe_world();
 	// let world_mut: &'static mut World = unsafe { &mut *(world_ref as *const World as usize as *mut World) };
     let rt = &rt.0;
     let instance = unsafe { std::mem::transmute(&instance.0) } ;
@@ -114,7 +113,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
         // }
         // .instrument(rg_build_span)
         // .await;
-        rg.run(&rt_clone, world_mut).await.unwrap();
+        rg.run(&rt_clone, world_ref).await.unwrap();
     };
 
     rt.block_on(task).unwrap();
@@ -122,8 +121,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
 	{
 		let view: &'static mut Option<ScreenTexture> = unsafe {
 			// 同一个 world 不能 即 resource 又 resource_mut
-			let w = &mut *(ptr_world as *mut World);
-			let views = &mut w.resource_mut::<PiScreenTexture>().0;
+			let views = &mut world_ref1.get_single_res_mut::<PiScreenTexture>().unwrap().0;
 			std::mem::transmute(views)
 		};
 		let present = async move {

@@ -174,52 +174,53 @@ where
                 self.run_state = Some((RP::init_state(world, &mut meta), meta));
             }
         }
+        let r = {
+            let mut build_param = match &mut self.build_state {
+                Some((state, meta)) => {
+                    let tick = world.tick();
+                    BP::align(world, meta, state);
+                    BP::get_self(world, meta, state, tick)
+                },
+                None => {
+                    self.build_state = self.state_pool.get();
+                    match &mut self.build_state {
+                    
+                        Some((state, meta)) => {
+                            let tick = world.tick();
+                            BP::align(world, meta, state);
+                            BP::get_self(world, meta, state, tick)
+                        },
+                        None => {
+                            let mut meta = SystemMeta::new(TypeInfo::of::<()>());
+                            self.build_state = Some((BP::init_state(world, &mut meta), meta));
+                            let r = self.build_state.as_mut().unwrap();
+                            let tick = world.tick();
+                            BP::align(world, &r.1, &mut r.0);
+                            BP::get_self(world,  &r.1, &mut r.0, tick)
+                        },
+                    }
+                },
+            };
+            // let mut build_param = BP::get_self(world, system_meta, state);
 
-        let mut build_param = match &mut self.build_state {
-            Some((state, meta)) => {
-                let tick = world.tick();
-                BP::align(world, meta, state);
-                BP::get_self(world, meta, state, tick)
-            },
-            None => {
-                self.build_state = self.state_pool.get();
-                match &mut self.build_state {
-                   
-                    Some((state, meta)) => {
-                        let tick = world.tick();
-                        BP::align(world, meta, state);
-                        BP::get_self(world, meta, state, tick)
-                    },
-                    None => {
-                        let mut meta = SystemMeta::new(TypeInfo::of::<()>());
-                        self.build_state = Some((BP::init_state(world, &mut meta), meta));
-                        let r = self.build_state.as_mut().unwrap();
-                        let tick = world.tick();
-                        BP::align(world, &r.1, &mut r.0);
-                        BP::get_self(world,  &r.1, &mut r.0, tick)
-                    },
-                }
-            },
+            
+
+            let c = self.context.clone();
+            self.node.build(
+                // world,
+                &mut build_param,
+                c,
+                input,
+                usage,
+                id,
+                from,
+                to,
+            )
         };
-        // let mut build_param = BP::get_self(world, system_meta, state);
-
-		
-
-		let c = self.context.clone();
-
-        let r = self.node.build(
-			// world,
-			&mut build_param,
-			c,
-			input,
-			usage,
-			id,
-			from,
-			to,
-        );
         self.state_pool.set(self.build_state.take().unwrap());
         r
     }
+
 
     #[inline]
     fn run<'a>(
@@ -235,7 +236,7 @@ where
 
         let context = self.context.clone();
         let task = async move {
-            #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
+            #[cfg(all(not(feature = "webgl"), not(feature = "single_thread")))]
             let commands = {
                 // 每节点 一个 CommandEncoder
                 let commands = self
