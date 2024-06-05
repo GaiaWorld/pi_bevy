@@ -19,18 +19,18 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
         SingleRes::<T>::init_state(world, system_meta)
     }
     
-    #[inline]
-    fn res_depend(
-        world: &World,
-        system_meta: &SystemMeta,
-        state: &Self::State,
-        res_tid: &TypeId,
-        res_name: &Cow<'static, str>,
-        single: bool,
-        result: &mut Flags,
-    ) {
-        SingleRes::<T>::res_depend(world, system_meta, state, res_tid, res_name, single, result);
-    }
+    // #[inline]
+    // fn res_depend(
+    //     world: &World,
+    //     system_meta: &SystemMeta,
+    //     state: &Self::State,
+    //     res_tid: &TypeId,
+    //     res_name: &Cow<'static, str>,
+    //     single: bool,
+    //     result: &mut Flags,
+    // ) {
+    //     SingleRes::<T>::res_depend(world, system_meta, state, res_tid, res_name, single, result);
+    // }
 
     #[inline]
     fn get_param<'world>(
@@ -69,18 +69,18 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_
         SingleResMut::<T>::init_state(world, system_meta)
     }
     
-    #[inline]
-    fn res_depend(
-        world: &World,
-        system_meta: &SystemMeta,
-        state: &Self::State,
-        res_tid: &TypeId,
-        res_name: &Cow<'static, str>,
-        single: bool,
-        result: &mut Flags,
-    ) {
-        SingleResMut::<T>::res_depend(world, system_meta, state, res_tid, res_name, single, result);
-    }
+    // #[inline]
+    // fn res_depend(
+    //     world: &World,
+    //     system_meta: &SystemMeta,
+    //     state: &Self::State,
+    //     res_tid: &TypeId,
+    //     res_name: &Cow<'static, str>,
+    //     single: bool,
+    //     result: &mut Flags,
+    // ) {
+    //     SingleResMut::<T>::res_depend(world, system_meta, state, res_tid, res_name, single, result);
+    // }
 
     #[inline]
     fn get_param<'world>(

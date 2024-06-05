@@ -131,17 +131,17 @@ impl<F: FilterComponents + 'static + Send + Sync> SystemParam for LayerDirty<'_,
 		}
     }
 
-    #[inline]
-    fn archetype_depend(
-        world: &World,
-        system_meta: &SystemMeta,
-        state: &Self::State,
-        archetype: &Archetype,
-        result: &mut ArchetypeDependResult,
-    ) {
-        <EntityTree<'static> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
-        <Query<'static, Entity, F> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
-    }
+    // #[inline]
+    // fn archetype_depend(
+    //     world: &World,
+    //     system_meta: &SystemMeta,
+    //     state: &Self::State,
+    //     archetype: &Archetype,
+    //     result: &mut ArchetypeDependResult,
+    // ) {
+    //     <EntityTree<'static> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
+    //     <Query<'static, Entity, F> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
+    // }
 
     fn get_self<'world>(
         world: &'world pi_world::world::World,

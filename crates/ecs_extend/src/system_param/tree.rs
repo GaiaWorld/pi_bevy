@@ -255,22 +255,22 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
         }
     }
 
-	#[inline]
-    fn archetype_depend(
-        world: &World,
-        system_meta: &SystemMeta,
-        state: &Self::State,
-        archetype: &Archetype,
-        result: &mut ArchetypeDependResult,
-    ) {
-        // <Query< 'static, &'static mut  Layer> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
-        // <Query<'static, &'static mut  Up> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
-        // <Query<'static, &'static mut  Down> as SystemParam>::archetype_depend(world, system_meta, &state.2, archetype, result);
-        <ParamSet<'static, (
-			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
-			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
-		)> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
-    }
+	// #[inline]
+    // fn archetype_depend(
+    //     world: &World,
+    //     system_meta: &SystemMeta,
+    //     state: &Self::State,
+    //     archetype: &Archetype,
+    //     result: &mut ArchetypeDependResult,
+    // ) {
+    //     // <Query< 'static, &'static mut  Layer> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
+    //     // <Query<'static, &'static mut  Up> as SystemParam>::archetype_depend(world, system_meta, &state.1, archetype, result);
+    //     // <Query<'static, &'static mut  Down> as SystemParam>::archetype_depend(world, system_meta, &state.2, archetype, result);
+    //     <ParamSet<'static, (
+	// 		Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+	// 		Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
+	// 	)> as SystemParam>::archetype_depend(world, system_meta, &state.0, archetype, result);
+    // }
 
 	#[inline]
     #[allow(unused_variables)]
@@ -295,22 +295,22 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
     }
 }
 
-impl ParamSetElement for EntityTreeMut<'_> {
-    fn init_set_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
-		let r = <(
-			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
-			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
-		) as ParamSetElement>::init_set_state(world, system_meta);
-        (
-			// <Query< 'static, &'static mut  Layer> as ParamSetElement>::init_set_state(world, system_meta),
-			// <Query<'static, &'static mut  Up> as ParamSetElement>::init_set_state(world, system_meta),
-			// <Query<'static, &'static mut  Down> as ParamSetElement>::init_set_state(world, system_meta),
-			unsafe {
-				transmute(r)
-			}
-		)
-    }
-}
+// impl ParamSetElement for EntityTreeMut<'_> {
+//     fn init_set_state(world: &mut World, system_meta: &mut SystemMeta) -> Self::State {
+// 		let r = <(
+// 			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
+// 			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
+// 		) as ParamSetElement>::init_set_state(world, system_meta);
+//         (
+// 			// <Query< 'static, &'static mut  Layer> as ParamSetElement>::init_set_state(world, system_meta),
+// 			// <Query<'static, &'static mut  Up> as ParamSetElement>::init_set_state(world, system_meta),
+// 			// <Query<'static, &'static mut  Down> as ParamSetElement>::init_set_state(world, system_meta),
+// 			unsafe {
+// 				transmute(r)
+// 			}
+// 		)
+//     }
+// }
 
 impl<'w> EntityTreeMut<'w> {
 	pub fn get_up(&self, k: Entity) -> Option<&Up> {

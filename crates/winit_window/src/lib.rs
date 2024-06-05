@@ -69,7 +69,7 @@ impl WinitPlugin {
 
 #[cfg(target_arch = "wasm32")]
 impl Plugin for WinitPlugin {
-    fn build(&self, app: &mut bevy_app::App) {
+    fn build(&self, app: &mut pi_world::prelude::App) {
         // let event_loop = winit::event_loop::EventLoop::new();
         // let window = Arc::new(
         //     winit::window::WindowBuilder::new()
@@ -133,16 +133,17 @@ impl WindowDescribe {
             Ok(r) => WindowPosition::At(r),
             _ => WindowPosition::Automatic,
         };
+        println!("1111111111111111111111");
         let i = app.world.make_inserter::<(bevy_window::prelude::Window, HandleWrapper, PrimaryWindow)>();
         let _ = i.insert((window, raw_handle, PrimaryWindow));
 
         // TODO?
-        #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
-        app.world.send_event(bevy_window::WindowResized {
-            window: primary,
-            width: inner_size.width as f32,
-            height: inner_size.height as f32,
-        });
+        // #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
+        // app.world.send_event(bevy_window::WindowResized {
+        //     window: primary,
+        //     width: inner_size.width as f32,
+        //     height: inner_size.height as f32,
+        // });
 
         // windows.add(window);
         // todo
