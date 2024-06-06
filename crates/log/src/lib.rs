@@ -245,6 +245,20 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
         }
 
         let logger_already_set = LogTracer::init().is_err();
+    
+        #[cfg(feature = "log-file")]
+        {
+            let appender = tracing_appender::rolling::minutely("./", "trace.log");
+            let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
+            let file_layer = tracing_subscriber::fmt::Layer::default().with_writer(non_blocking_appender);
+    
+            // subscriber.with(file_layer);
+            
+            let subscriber_already_set =
+                tracing::subscriber::set_global_default(finished_subscriber.with(file_layer)).is_err();
+        }
+
+        #[cfg(not(feature = "log-file"))]
         let subscriber_already_set =
             tracing::subscriber::set_global_default(finished_subscriber).is_err();
 
