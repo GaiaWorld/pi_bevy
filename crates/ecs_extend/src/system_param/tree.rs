@@ -10,7 +10,7 @@ use pi_slotmap_tree::{
 };
 use serde::{Deserialize, Serialize};
 
-use pi_world::{archetype::{Archetype, ArchetypeDependResult}, insert::Component, param_set::{ParamSet, ParamSetElement}, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
+use pi_world::{insert::Component, param_set::ParamSet, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
 
 // use pi_print_any::{println_any, out_any};
 

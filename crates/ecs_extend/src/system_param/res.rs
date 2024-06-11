@@ -1,13 +1,14 @@
-use std::{any::TypeId, borrow::Cow, mem::transmute};
+use std::mem::transmute;
 
-use pi_world::{archetype::Flags, prelude::{SingleRes, SingleResMut, Tick}, system::SystemMeta, system_params::SystemParam, world::{FromWorld, SingleResource, World}};
+use pi_share::Share;
+use pi_world::{prelude::{SingleRes, SingleResMut, Tick}, single_res::TickRes, system::SystemMeta, system_params::SystemParam, world::{FromWorld, World}};
 use derive_deref::{DerefMut, Deref};
 
 #[derive(Debug, Deref)]
 pub struct OrInitSingleRes<'w, T: FromWorld + 'static + Sync + Send>(SingleRes<'w, T>);
 
 impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T> {
-    type State = (SingleResource, Tick);
+    type State = (Share<TickRes<T>>, Tick);
 	type Item<'world> = OrInitSingleRes<'world, T>;
 
 	#[inline(never)]
@@ -57,7 +58,7 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
 pub struct OrInitSingleResMut<'w, T: FromWorld + 'static + Sync + Send>(SingleResMut<'w, T>);
 
 impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_, T> {
-    type State = SingleResource;
+    type State = Share<TickRes<T>>;
 	type Item<'world> = OrInitSingleResMut<'world, T>;
 
 	#[inline(never)]

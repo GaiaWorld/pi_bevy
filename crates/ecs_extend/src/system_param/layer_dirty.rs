@@ -21,7 +21,6 @@ use pi_dirty::{
 use pi_map::vecmap::VecMap;
 use pi_null::Null;
 use pi_slotmap::Key;
-use pi_world::archetype::{Archetype, ArchetypeDependResult};
 use pi_world::filter::FilterComponents;
 use pi_world::prelude::Tick;
 use pi_world::query::Query;
