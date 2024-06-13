@@ -8,7 +8,7 @@ use derive_deref::{DerefMut, Deref};
 pub struct OrInitSingleRes<'w, T: FromWorld + 'static + Sync + Send>(SingleRes<'w, T>);
 
 impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T> {
-    type State = (Share<TickRes<T>>, Tick);
+    type State = (Option<Share<TickRes<T>>>, usize, Tick);
 	type Item<'world> = OrInitSingleRes<'world, T>;
 
 	#[inline(never)]
@@ -58,7 +58,7 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
 pub struct OrInitSingleResMut<'w, T: FromWorld + 'static + Sync + Send>(SingleResMut<'w, T>);
 
 impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_, T> {
-    type State = Share<TickRes<T>>;
+    type State = (Option<Share<TickRes<T>>>, usize);
 	type Item<'world> = OrInitSingleResMut<'world, T>;
 
 	#[inline(never)]
