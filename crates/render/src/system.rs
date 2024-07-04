@@ -35,9 +35,11 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
-    let primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
+    // let primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
+    let mut editor = world.make_entity_editor();
+    let mut primary_window = editor.make_query::<&Window, With<PrimaryWindow>>();
 
-    let (width, height) = match primary_window.iter().nth(0) {
+    let (width, height) = match primary_window.iter(world).nth(0) {
         Some(primary_window) => (
             primary_window.physical_width(),
             primary_window.physical_height(),
@@ -83,6 +85,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     #[cfg(not(feature = "trace"))]
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
+        println!("prepare_window!! {:?}", (width, height));
         prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
         // ============ 2. 执行渲染图 ============
         // rg.build().unwrap();

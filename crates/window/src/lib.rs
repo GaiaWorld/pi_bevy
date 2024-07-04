@@ -128,7 +128,9 @@ impl Plugin for WindowPlugin {
 		// 	;
 
         if let Some(primary_window) = &self.primary_window {
-            app.world.make_inserter::<(PrimaryWindow, Window)>().insert((PrimaryWindow, primary_window.clone()));
+            // app.world.make_inserter::<(PrimaryWindow, Window)>().insert((PrimaryWindow, primary_window.clone()));
+            let mut editor = app.world.make_entity_editor();
+            let _ = editor.insert_entity((PrimaryWindow, primary_window.clone()));
         }
 
         // match self.exit_condition {
