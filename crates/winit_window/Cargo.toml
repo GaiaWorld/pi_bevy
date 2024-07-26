@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_winit_window"
-version = "0.1.5"
+version = "0.1.8"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
