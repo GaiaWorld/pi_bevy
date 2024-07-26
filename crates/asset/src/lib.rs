@@ -89,7 +89,7 @@ impl AssetConfig {
 pub struct AssetDesc {
 	pub ref_garbage: bool,
 	pub min: usize,
-	pub max: usize,
+	pub weight: usize,
 	pub timeout: usize,
 }
 
@@ -101,7 +101,7 @@ impl<A: Asset, G: Garbageer<A>> ShareAssetMgr<A, G> {
 	pub fn new_with_config(garbage: G, default: &AssetDesc, asset_config: &AssetConfig, allocator: &mut Allocator) -> Self {
 		let desc = asset_config.get::<A>().unwrap_or(default);
 		let r = AssetMgr::new(garbage, desc.ref_garbage, desc.min, desc.timeout);
-		allocator.register(r.clone(), desc.min, desc.max);
+		allocator.register(r.clone(), desc.min, desc.weight);
 		Self(r)
 	}
 
@@ -134,7 +134,7 @@ impl<A: Asset + Size, G: pi_assets::homogeneous::Garbageer<A>> ShareHomogeneousM
 	pub fn new_with_config(garbage: G, default: &AssetDesc, asset_config: &AssetConfig, allocator: &mut Allocator) -> Self {
 		let desc = asset_config.get::<A>().unwrap_or(default);
 		let r = HomogeneousMgr::new(garbage, desc.min, desc.timeout);
-		allocator.register(r.clone(), desc.min, desc.max);
+		allocator.register(r.clone(), desc.min, desc.weight);
 		Self(r)
 	}
 }

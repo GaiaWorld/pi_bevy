@@ -1,9 +1,8 @@
 // use bevy_app::Plugin;
 use bevy_window::{
-    PrimaryWindow, WindowCreated, WindowPosition, WindowResolution, CreateSurface, HandleWrapper,
+    PrimaryWindow, WindowResolution, CreateSurface,
 };
 // use glam::IVec2;
-use nalgebra::Vector2;
 use pi_world::prelude::{App, Plugin};
 use std::sync::Arc;
 use winit::{dpi::PhysicalSize, window::Window};
@@ -129,13 +128,12 @@ impl WindowDescribe {
             inner_size.height as f32 / scale_factor as f32,
         );
         window.resolution.set_scale_factor(scale_factor);
-        window.position = match winit_window.outer_position().map(|r| Vector2::new(r.x, r.y)) {
-            Ok(r) => WindowPosition::At(r),
-            _ => WindowPosition::Automatic,
-        };
+        // window.position = match winit_window.outer_position().map(|r| Vector2::new(r.x, r.y)) {
+        //     Ok(r) => WindowPosition::At(r),
+        //     _ => WindowPosition::Automatic,
+        // };
         println!("1111111111111111111111");
-        let i = app.world.make_inserter::<(bevy_window::prelude::Window, HandleWrapper, PrimaryWindow)>();
-        let _ = i.insert((window, raw_handle, PrimaryWindow));
+        app.world.make_entity_editor().insert_entity((window, raw_handle, PrimaryWindow));
 
         // TODO?
         // #[cfg(not(any(target_os = "windows", target_feature = "x11")))]

@@ -16,7 +16,7 @@ account_info = [] # 每20秒打印一次资产管理器的统计信息
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 derive_deref = "1.1"
-pi_assets = "0.13"
+pi_assets = "0.14"
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default_features = false}
 pi_share = "0.4"

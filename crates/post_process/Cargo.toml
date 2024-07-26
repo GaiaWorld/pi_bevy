@@ -18,7 +18,7 @@ pi_world = "0.1"
 pi_postprocess = { version = "0.1", registry = "yn"}
 pi_render = { version = "0.1", registry = "yn"}
 
-pi_assets = "0.13"
+pi_assets = "0.14"
 pi_share = "0.4"
 pi_hash = "0.1"
 

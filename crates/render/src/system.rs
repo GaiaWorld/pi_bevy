@@ -35,14 +35,17 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
-    let primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
 
-    let (width, height) = match primary_window.iter().nth(0) {
-        Some(primary_window) => (
-            primary_window.physical_width(),
-            primary_window.physical_height(),
-        ),
-        _ => return,
+    let (width, height) = {
+        let mut primary_window = world.make_query::<&Window, With<PrimaryWindow>>();
+        let primary_window = primary_window.get_param(world);
+        match primary_window.iter().nth(0) {
+            Some(primary_window) => (
+                primary_window.physical_width(),
+                primary_window.physical_height(),
+            ),
+            _ => return,
+        }
     };
 
     let first_surface = {

@@ -39,7 +39,7 @@ pi_share = "0.4"
 pi_render = { version = "0.1", registry = "yn" }
 render_derive = { version = "0.1", registry = "yn" }
 pi_bevy_asset = { path = "../asset", version = "0.1", registry = "yn" }
-pi_assets = "0.13"
+pi_assets = "0.14"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 
 js-sys = "0.3"
