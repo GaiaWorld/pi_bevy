@@ -24,11 +24,12 @@ pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
 ) -> (HandleWrapper, wgpu::PresentMode) {
     let options = world.get_single_res::<PiRenderOptions>().unwrap().0.clone();
     // let windows = world.resource_mut::<bevy::prelude::Windows>();
-    let primary_window_handle = {
-        let mut primary_window = world.make_query::<&HandleWrapper, With<PrimaryWindow>>();
-        let primary_window = primary_window.get_param(world);
-        primary_window.iter().nth(0).unwrap().clone()
-    };
+
+    // let primary_window = world.make_queryer::<&HandleWrapper, With<PrimaryWindow>>();
+    // let primary_window_handle = primary_window.iter().nth(0).unwrap().clone();
+    let mut editor = world.make_entity_editor();
+    let mut primary_window = editor.make_query::<&HandleWrapper, With<PrimaryWindow>>();
+    let primary_window_handle = primary_window.iter(world).nth(0).unwrap().clone();
     let mode = options.present_mode;
 
     init_render_impl(world, rt, &primary_window_handle, options);

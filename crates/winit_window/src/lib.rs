@@ -116,24 +116,27 @@ impl WindowDescribe {
                 height: size.1,
             });
         }
-
         let inner_size = winit_window.inner_size();
+       
         let scale_factor = winit_window.scale_factor();
         let raw_handle = bevy_window::HandleWrapper {
             handle: Arc::new(WindowWrapper(self.window.clone())),
         };
         let mut window = bevy_window::prelude::Window::default();
         window.resolution = WindowResolution::new(
-            inner_size.width as f32 / scale_factor as f32,
-            inner_size.height as f32 / scale_factor as f32,
+            inner_size.width as f32/*  / scale_factor as f32 */,
+            inner_size.height as f32 /* / scale_factor as f32 */,
         );
-        window.resolution.set_scale_factor(scale_factor);
+        window.resolution.set_scale_factor(1.0);
         // window.position = match winit_window.outer_position().map(|r| Vector2::new(r.x, r.y)) {
         //     Ok(r) => WindowPosition::At(r),
         //     _ => WindowPosition::Automatic,
         // };
-        println!("1111111111111111111111");
-        app.world.make_entity_editor().insert_entity((window, raw_handle, PrimaryWindow));
+        
+        let mut editor = app.world.make_entity_editor();
+        let _ = editor.insert_entity((window, raw_handle, PrimaryWindow));
+        // let i = app.world.make_inserter::<(bevy_window::prelude::Window, HandleWrapper, PrimaryWindow)>();
+        // let _ = i.insert((window, raw_handle, PrimaryWindow));
 
         // TODO?
         // #[cfg(not(any(target_os = "windows", target_feature = "x11")))]
