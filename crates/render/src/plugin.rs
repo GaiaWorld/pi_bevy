@@ -142,7 +142,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 30 * 1024 * 1024,
-                        weight: 600 * 1024 * 1024,
+                        weight: 50,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,
@@ -153,7 +153,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 10 * size_of::<UnuseTexture>(),
-                        weight: 20 * size_of::<UnuseTexture>(),
+                        weight: 5,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,
@@ -164,7 +164,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 10 * 1024 * 1024,
-                        weight: 50 * 1024 * 1024,
+                        weight: 1,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,
@@ -175,7 +175,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 10 * 1024,
-                        weight: 20 * 1024,
+                        weight: 1,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,
@@ -186,7 +186,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 5 * 1024 * 1024,
-                        weight: 10 * 1024 * 1024,
+                        weight: 1,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,
@@ -197,7 +197,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 10 * 1024 * 1024,
-                        weight: 600 * 1024 * 1024,
+                        weight: 50,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,
@@ -208,7 +208,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 10 * 1024 * 1024,
-                        weight: 600 * 1024 * 1024,
+                        weight: 50,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,
@@ -219,7 +219,7 @@ impl Plugin for PiRenderPlugin {
                     &AssetDesc {
                         ref_garbage: false,
                         min: 5 * 1024 * 1024,
-                        weight: 10 * 1024 * 1024,
+                        weight: 1,
                         timeout: 10 * 60 * 1000,
                     },
                     &asset_config,

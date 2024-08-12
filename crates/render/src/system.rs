@@ -85,7 +85,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     #[cfg(not(feature = "trace"))]
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
-        println!("prepare_window!! {:?}", (width, height));
+        // println!("prepare_window!! {:?}", (width, height));
         prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
         // ============ 2. 执行渲染图 ============
         // rg.build().unwrap();

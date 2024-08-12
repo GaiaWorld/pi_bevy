@@ -11,6 +11,7 @@ use pi_bevy_winit_window::WinitPlugin;
 use pi_render::rhi::options::RenderOptions;
 use pi_world::prelude::{App, Plugin};
 use winit::event::{Event, WindowEvent};
+use pi_world::prelude::WorldPluginExtent;
 
 pub const FILTER: &'static str = "wgpu=warn";
 
@@ -72,6 +73,7 @@ fn main() {
                     app.add_plugins(PiAssetPlugin {
                         total_capacity: 256 * 1024 * 1024,
                         asset_config: AssetConfig::default(),
+                        allocator: None,
                     });
                     app.add_plugins(PiRenderPlugin::default());
                 }

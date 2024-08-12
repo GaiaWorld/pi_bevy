@@ -26,6 +26,7 @@ fn main() {
     app.add_plugins(PiAssetPlugin {
         total_capacity: 256 * 1024 * 1024,
         asset_config: AssetConfig::default(),
+        allocator: None,
     });
     app.add_plugins(PiRenderPlugin::default());
 

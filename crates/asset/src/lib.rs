@@ -10,7 +10,7 @@ use pi_render::renderer::texture::{ImageTexture, ImageTextureView};
 use pi_render::renderer::vertex_buffer::EVertexBufferRange;
 use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_render::rhi::pipeline::RenderPipeline;
-use pi_share::Share;
+use pi_share::{Share, ShareCell};
 use pi_world::{prelude::{App, PostUpdate, Plugin}, single_res::SingleResMut, prelude::Local};
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
@@ -21,10 +21,11 @@ use derive_deref::{Deref, DerefMut};
 pub struct PiAssetPlugin {
 	pub total_capacity: usize,
 	pub asset_config: AssetConfig,
+	pub allocator: Option<Share<ShareCell<pi_assets::allocator::Allocator>>>,
 }
 impl Default for PiAssetPlugin {
 	fn default() -> Self {
-		Self { total_capacity: 32 * 1024 * 1024, asset_config: AssetConfig::default() }
+		Self { total_capacity: 32 * 1024 * 1024, asset_config: AssetConfig::default(), allocator: None }
 	}
 }
 
@@ -35,11 +36,18 @@ impl Plugin for PiAssetPlugin {
 		} else {
 			self.total_capacity
 		};
-		app.world.insert_single_res(Allocator(pi_assets::allocator::Allocator::new(total_capacity)));
+		match &self.allocator {
+			Some(r) => {
+				app.world.insert_single_res(Allocator(r.clone()));
+				// 外部设置的资产分配器， 应该由外部负责资产整理
+			},
+			None => {
+				app.world.insert_single_res(Allocator(Share::new(ShareCell::new(pi_assets::allocator::Allocator::new(total_capacity)))));
+				// 帧推结束前，整理资产（这里采用在帧推结束前整理资产， 而不是利用容量分配器自带的定时整理， 可以防止整理立即打断正在进行的其他system）
+				app.add_system(PostUpdate, collect);
+			},
+		};
 		app.world.insert_single_res(self.asset_config.clone());
-
-		// 帧推结束前，整理资产（这里采用在帧推结束前整理资产， 而不是利用容量分配器自带的定时整理， 可以防止整理立即打断正在进行的其他system）
-		app.add_system(PostUpdate, collect);
 
 		#[cfg(feature="account_info")]
 		app.add_systems(pi_world::prelude::Last, account);
@@ -55,16 +63,16 @@ impl Default for LastCollectTime {
 }
 
 /// 整理容量
-pub fn collect(mut allocator: SingleResMut<Allocator>, last_collect_time: Local<LastCollectTime>) {
+pub fn collect(allocator: SingleResMut<Allocator>, last_collect_time: Local<LastCollectTime>) {
 	// 暂时设置为每秒整理， 这里间隔配置？TODO
 	if now_millisecond() - last_collect_time.0 > 1000 {
-		allocator.collect(now_millisecond())
+		allocator.borrow_mut().collect(now_millisecond())
 	}
 }
 
 /// 容量分配器
 #[derive( Deref, DerefMut)]
-pub struct Allocator(pub pi_assets::allocator::Allocator);
+pub struct Allocator(pub Share<ShareCell<pi_assets::allocator::Allocator>>);
 
 /// 资产配置
 #[derive(Debug, Clone, Default)]
@@ -87,10 +95,10 @@ impl AssetConfig {
 /// 资产容量和超时描述
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AssetDesc {
-	pub ref_garbage: bool,
 	pub min: usize,
 	pub weight: usize,
 	pub timeout: usize,
+	pub ref_garbage: bool,
 }
 
 /// 资源、资产管理器
@@ -101,7 +109,7 @@ impl<A: Asset, G: Garbageer<A>> ShareAssetMgr<A, G> {
 	pub fn new_with_config(garbage: G, default: &AssetDesc, asset_config: &AssetConfig, allocator: &mut Allocator) -> Self {
 		let desc = asset_config.get::<A>().unwrap_or(default);
 		let r = AssetMgr::new(garbage, desc.ref_garbage, desc.min, desc.timeout);
-		allocator.register(r.clone(), desc.min, desc.weight);
+		allocator.borrow_mut().register(r.clone(), desc.min, desc.weight);
 		Self(r)
 	}
 
@@ -134,7 +142,7 @@ impl<A: Asset + Size, G: pi_assets::homogeneous::Garbageer<A>> ShareHomogeneousM
 	pub fn new_with_config(garbage: G, default: &AssetDesc, asset_config: &AssetConfig, allocator: &mut Allocator) -> Self {
 		let desc = asset_config.get::<A>().unwrap_or(default);
 		let r = HomogeneousMgr::new(garbage, desc.min, desc.timeout);
-		allocator.register(r.clone(), desc.min, desc.weight);
+		allocator.borrow_mut().register(r.clone(), desc.min, desc.weight);
 		Self(r)
 	}
 }
