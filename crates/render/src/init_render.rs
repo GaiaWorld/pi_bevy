@@ -59,8 +59,7 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
 
     let surface = window.handle.create_surface(&instance);
 
-    let allocator = world.get_single_res_mut::<pi_bevy_asset::Allocator>().unwrap();
-    let allocator1: &'static mut Allocator = unsafe {transmute(allocator)};
+    let allocator = world.get_single_res_mut::<pi_bevy_asset::Allocator>().unwrap().clone();
     let SetupResult {
         surface,
         instance,
@@ -68,7 +67,7 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
         queue,
         adapter_info,
     } = rt
-        .block_on(setup_render_context(instance, surface, options, allocator1))
+        .block_on(setup_render_context(instance, surface, options, allocator))
         .unwrap();
 
     let instance = instance.unwrap();
@@ -101,15 +100,16 @@ async fn setup_render_context<'a>(
     instance: RenderInstance,
     surface: wgpu::Surface<'a>,
     options: RenderOptions,
-    alloter: &mut Allocator,
+    mut alloter: pi_bevy_asset::Allocator,
 ) -> SetupResult<'a> {
     let request_adapter_options = wgpu::RequestAdapterOptions {
         power_preference: options.power_preference,
         compatible_surface: Some(&surface),
         ..Default::default()
     };
+    let mut alloter = alloter.0.borrow_mut();
     let (device, queue, adapter_info) =
-        initialize_renderer(&instance, &options, &request_adapter_options, alloter).await;
+        initialize_renderer(&instance, &options, &request_adapter_options, &mut alloter).await;
 
     let config = wgpu::SurfaceConfiguration {
         format: wgpu::TextureFormat::pi_render_default(),

@@ -71,7 +71,7 @@ pub fn collect(allocator: SingleResMut<Allocator>, last_collect_time: Local<Last
 }
 
 /// 容量分配器
-#[derive( Deref, DerefMut)]
+#[derive( Deref, DerefMut, Clone)]
 pub struct Allocator(pub Share<ShareCell<pi_assets::allocator::Allocator>>);
 
 /// 资产配置
