@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use pi_assets::allocator::Allocator;
 // use bevy_ecs::prelude::Resource;
 // use bevy_log::LogPlugin;
 // use bevy_app::App;
@@ -9,6 +10,7 @@ use pi_bevy_render_plugin::{
 };
 use pi_bevy_winit_window::WinitPlugin;
 use pi_render::rhi::options::RenderOptions;
+use pi_share::{Share, ShareCell};
 use pi_world::prelude::{App, Plugin};
 use winit::event::{Event, WindowEvent};
 use pi_world::prelude::WorldPluginExtent;
@@ -57,7 +59,7 @@ fn main() {
                     is_first = false;
 
                     let option = PiRenderOptions(RenderOptions {
-                        backends: wgpu::Backends::PRIMARY,
+                        backends: wgpu::Backends::GL,
 
                         limits: wgpu::Limits::downlevel_webgl2_defaults(),
 
@@ -71,9 +73,9 @@ fn main() {
                         ..Default::default()
                     }));
                     app.add_plugins(PiAssetPlugin {
-                        total_capacity: 256 * 1024 * 1024,
+                        total_capacity: 64 * 1024 * 1024,
                         asset_config: AssetConfig::default(),
-                        allocator: None,
+                        allocator: Some(Share::new(ShareCell::new(Allocator::new(16 * 1024 * 1024)) )),
                     });
                     app.add_plugins(PiRenderPlugin::default());
                 }
