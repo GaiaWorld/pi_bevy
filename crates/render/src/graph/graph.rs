@@ -163,7 +163,7 @@ impl RenderGraph {
 
 	/// 添加 名为 name 的 节点
 	#[inline]
-	pub fn add_sub_graph<I, O, R, BP, RP>(
+	pub fn add_sub_graph(
 		&mut self,
 		name: impl Into<Cow<'static, str>>,
 	) -> Result<NodeId, GraphError>{
