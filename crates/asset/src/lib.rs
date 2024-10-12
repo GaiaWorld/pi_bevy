@@ -6,7 +6,7 @@ use pi_assets::{mgr::AssetMgr, asset::{GarbageEmpty, Asset, Garbageer, Size}, ho
 use pi_hash::XHashMap;
 use pi_render::renderer::bind_group::{BindGroup, BindGroupLayout};
 use pi_render::renderer::sampler::SamplerRes;
-use pi_render::renderer::texture::{ImageTexture, ImageTextureView};
+use pi_render::renderer::texture::{ResImageTexture, ImageTextureView};
 use pi_render::renderer::vertex_buffer::EVertexBufferRange;
 use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_render::rhi::pipeline::RenderPipeline;
@@ -189,7 +189,7 @@ impl AssetMgrConfigs {
     }
 }
 
-impl TAssetCapacity for ImageTexture {
+impl TAssetCapacity for ResImageTexture {
 	const ASSET_TYPE: &'static str = "IMAGE_TEXTURE";
 	fn capacity() -> AssetCapacity {
         AssetCapacity { flag: false, min: 1024 * 1024, max: 10 * 1024 * 1024, timeout: 10 * 1000 }
