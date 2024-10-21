@@ -1,5 +1,5 @@
 //! 利用 DependGraph 实现 渲染图
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::{borrow::Cow, sync::atomic::{AtomicBool, Ordering}};
 
 use crate::state_pool::SystemStatePool;
 
@@ -80,6 +80,7 @@ where
 	RP: SystemParam,
 {
     node: R,
+    name: Cow<'static, str>,
     state_pool: SystemStatePool,
     build_state: Option<(<BP as SystemParam>::State, SystemMeta)>,
 	run_state: Option<(<RP as SystemParam>::State, SystemMeta)>,
@@ -95,9 +96,10 @@ where
 	RP: SystemParam,
 {
     #[inline]
-    pub(crate) fn new(node: R, context: RenderContext, state_pool: SystemStatePool) -> Self {
+    pub(crate) fn new(node: R, context: RenderContext, state_pool: SystemStatePool, name: Cow<'static, str>) -> Self {
         Self {
             node,
+            name,
             context,
             state_pool,
             build_state: None,
@@ -272,7 +274,7 @@ where
             );
 
             #[cfg(feature = "trace")]
-            let output = output.instrument(tracing::info_span!("GraphNode run"));
+            let output = output.instrument(tracing::info_span!("GraphNode run:{:?}", name = self.name.as_ref()));
 
             let output = output.await.unwrap();
 			// pi_hal::runtime::LOGS.lock().0.push("node run end".to_string());

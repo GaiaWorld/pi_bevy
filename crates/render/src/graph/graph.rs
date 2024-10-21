@@ -105,8 +105,8 @@ impl RenderGraph {
             queue: self.queue.clone(),
             commands: self.commands.clone(),
         };
-
-        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone());
+        let name = name.into();
+        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone(), name.clone());
         let r = self.imp.add_node(name, node, parent_graph_id, true);
 
         if r.is_ok() {
@@ -143,8 +143,8 @@ impl RenderGraph {
             queue: self.queue.clone(),
             commands: self.commands.clone(),
         };
-
-        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone());
+        let name = name.into();
+        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone(), name.clone());
         let r = self.imp.add_node(name, node, parent_graph_id, false);
 
         if r.is_ok() {
@@ -246,6 +246,15 @@ impl RenderGraph {
     ) -> Result<(), GraphError> {
         self.imp.set_finish(label, is_finish)
     }
+
+    #[inline]
+    pub fn set_enable(
+        &mut self,
+        label: impl Into<NodeLabel>,
+        is_enable: bool,
+    ) -> Result<(), GraphError> {
+        self.imp.set_enable(label, is_enable)
+    }
 }
 
 /// 渲染图的 执行 相关
@@ -289,10 +298,10 @@ impl RenderGraph {
             .await;
 		// 图执行完毕， 通知外部可进行下一步渲染
 		
-		let node_count = self.imp.can_run_count();
         // 用 异步值 等待 队列的 提交 全部完成
         #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
         {
+            let node_count = self.imp.can_run_nodes().len();
             let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
             let wait1 = wait.clone();
             task_queue.push(node_count, Box::pin(async move {
@@ -304,10 +313,17 @@ impl RenderGraph {
 
         #[cfg(any(feature = "webgl",feature = "single_thread"))]
         {
-            let mut cmd_ref = self.commands.0.borrow_mut();
-			let r = std::mem::replace(&mut *cmd_ref, None);
-			let cmd = Share::into_inner(r.unwrap().0).unwrap().into_inner();
-            self.queue.submit(vec![cmd.finish()]);
+            let task = async move {
+                let mut cmd_ref = self.commands.0.borrow_mut();
+                let r = std::mem::replace(&mut *cmd_ref, None);
+                let cmd = Share::into_inner(r.unwrap().0).unwrap().into_inner();
+                self.queue.submit(vec![cmd.finish()]);
+            };
+            #[cfg(feature = "trace")]
+            use tracing::Instrument;
+            #[cfg(feature = "trace")]
+            let task = task.instrument(tracing::warn_span!("submit"));
+            task.await;
         }
 
         ret
