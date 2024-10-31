@@ -232,9 +232,10 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
 			// 	// finished_subscriber = subscriber.with(tracing_browser_subscriber::BrowserLayer::new());
 			// }
 
-			// #[cfg(all(not(feature="tracing_chrome_wasm"), feature = "tracing-wasm"))] 
+			// #[cfg(all(not(feature="tracing_chrome_wasm"), feature = "tracing-wasm"))]
+            let mut c_b =  tracing_wasm::WASMLayerConfigBuilder::default();
 			finished_subscriber = subscriber.with(tracing_wasm::WASMLayer::new(
-				tracing_wasm::WASMLayerConfig::default(),
+                c_b.set_report_logs_in_timings(false).build(),
 			));
 			
         }
