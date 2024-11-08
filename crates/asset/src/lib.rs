@@ -11,7 +11,7 @@ use pi_render::renderer::vertex_buffer::EVertexBufferRange;
 use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_render::rhi::pipeline::RenderPipeline;
 use pi_share::{Share, ShareCell};
-use pi_world::{prelude::{App, PostUpdate, Plugin}, single_res::SingleResMut, prelude::Local};
+use pi_world::{prelude::{App, PostUpdate, Plugin}, single_res::{SingleResMut, SingleRes}, prelude::Local};
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
 use pi_null::Null;
@@ -19,13 +19,14 @@ use derive_deref::{Deref, DerefMut};
 
 /// 资产功能插件， 负责添加容量分配器`Allocator`作为单例， 添加容量配置单例`AssetConfig`, 添加system `collect`负责定时整理资产
 pub struct PiAssetPlugin {
+	pub collect_interval: u64, // 整理间隔， 以ms为单位
 	pub total_capacity: usize,
 	pub asset_config: AssetConfig,
 	pub allocator: Option<Share<ShareCell<pi_assets::allocator::Allocator>>>,
 }
 impl Default for PiAssetPlugin {
 	fn default() -> Self {
-		Self { total_capacity: 32 * 1024 * 1024, asset_config: AssetConfig::default(), allocator: None }
+		Self { total_capacity: 32 * 1024 * 1024, asset_config: AssetConfig::default(), allocator: None, collect_interval: 1000 }
 	}
 }
 
@@ -40,6 +41,7 @@ impl Plugin for PiAssetPlugin {
 			Some(r) => {
 				app.world.insert_single_res(Allocator(r.clone()));
 				// 外部设置的资产分配器， 应该由外部负责资产整理
+				app.add_system(PostUpdate, collect);
 			},
 			None => {
 				app.world.insert_single_res(Allocator(Share::new(ShareCell::new(pi_assets::allocator::Allocator::new(total_capacity)))));
@@ -48,6 +50,7 @@ impl Plugin for PiAssetPlugin {
 			},
 		};
 		app.world.insert_single_res(self.asset_config.clone());
+		app.world.insert_single_res(CollectInterval(self.collect_interval));
 
 		#[cfg(feature="account_info")]
 		app.add_systems(pi_world::prelude::Last, account);
@@ -56,6 +59,8 @@ impl Plugin for PiAssetPlugin {
 
 // 上次容量整理时间
 pub struct LastCollectTime(pub u64);
+#[derive(Debug, Clone, Default)]
+pub struct CollectInterval(pub u64);
 impl Default for LastCollectTime {
     fn default() -> Self {
         Self(now_millisecond())
@@ -63,9 +68,9 @@ impl Default for LastCollectTime {
 }
 
 /// 整理容量
-pub fn collect(allocator: SingleResMut<Allocator>, last_collect_time: Local<LastCollectTime>) {
+pub fn collect(allocator: SingleResMut<Allocator>, last_collect_time: Local<LastCollectTime>, collect_interval: SingleRes<CollectInterval>) {
 	// 暂时设置为每秒整理， 这里间隔配置？TODO
-	if now_millisecond() - last_collect_time.0 > 1000 {
+	if now_millisecond() - last_collect_time.0 > collect_interval.0 {
 		allocator.borrow_mut().collect(now_millisecond())
 	}
 }
