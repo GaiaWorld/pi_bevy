@@ -26,7 +26,7 @@ pi_world_macros = { path = "../pi_world/macros" }
 
 [patch.yn]
 pi_sdf = { path = "../pi_sdf" }
-# pi_wgpu = {path = "../pi_wgpu"}
+pi_wgpu = {path = "../pi_wgpu"}
 # pi_egl = {path = "../pi_egl"}
 # winit = { path = "../winit"}
 pi_postprocess = { path = "../pi_postprocess"}

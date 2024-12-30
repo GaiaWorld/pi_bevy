@@ -45,6 +45,7 @@ use tracing_log::LogTracer;
 #[cfg(feature = "tracing-chrome")]
 use tracing_subscriber::fmt::{format::DefaultFields, FormattedFields};
 use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
+use tracing_core::event::Event;
 
 /// Adds logging to Apps. This plugin is part of the `DefaultPlugins`. Adding
 /// this plugin will setup a collector appropriate to your target platform:
@@ -246,22 +247,26 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
         }
 
         let logger_already_set = LogTracer::init().is_err();
-    
+        
+        let subscriber_already_set: bool;
         #[cfg(feature = "log-file")]
         {
             let appender = tracing_appender::rolling::minutely("./", "trace.log");
-            let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
-            let file_layer = tracing_subscriber::fmt::Layer::default().with_writer(non_blocking_appender);
+            // let (non_blocking_appender, _guard) = tracing_appender::non_blocking(appender);
+            let file_layer = tracing_subscriber::fmt::Layer::default().with_writer(appender).event_format(MyFormatter);
     
             // subscriber.with(file_layer);
             
-            let subscriber_already_set =
+            subscriber_already_set =
                 tracing::subscriber::set_global_default(finished_subscriber.with(file_layer)).is_err();
         }
 
-        #[cfg(not(feature = "log-file"))]
-        let subscriber_already_set =
+        #[cfg(not(feature = "log-file"))] 
+        {
+            subscriber_already_set =
             tracing::subscriber::set_global_default(finished_subscriber).is_err();
+        }
+        
 
         match (logger_already_set, subscriber_already_set) {
             (true, true) => tracing::warn!(
@@ -273,3 +278,23 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
         }
     }
 }
+
+struct MyFormatter;
+
+impl<S, N> tracing_subscriber::fmt::FormatEvent<S, N> for MyFormatter
+where
+    S: tracing_core::Subscriber + for<'a> tracing_subscriber::registry::LookupSpan<'a>,
+    N: for<'a> tracing_subscriber::fmt::FormatFields<'a> + 'static, {
+
+    fn format_event(&self, ctx: &tracing_subscriber::fmt::FmtContext<'_, S, N>, mut writer: tracing_subscriber::fmt::format::Writer<'_>, event: &Event<'_>) -> std::fmt::Result {
+        // 输出日志消息
+        ctx.field_format().format_fields(writer.by_ref(), event)?;
+
+        // 换行
+        writeln!(writer)?;
+
+        Ok(())
+    }
+}
+
+
