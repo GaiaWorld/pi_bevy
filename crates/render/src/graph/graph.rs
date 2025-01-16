@@ -6,10 +6,9 @@ use super::{
     GraphError, RenderContext,
 };
 use crate::{
-    clear_node::ClearNode,
+    clear_node::{ClearNode, CLEAR_WIDNOW_GRAPH, CLEAR_WIDNOW_NODE},
     node::{AsyncTaskQueue, NodeContext, ShareTaskQueue, TaskQueue},
     state_pool::SystemStatePool,
-    CLEAR_WIDNOW_NODE,
 };
 // use bevy_ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::AsyncRuntime;
@@ -18,7 +17,7 @@ use pi_render::{
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareMutex, ShareRefCell};
-use pi_world::{prelude::SystemParam, world::World};
+use pi_world::{prelude::SystemParam, world::{Entity, World}};
 use std::{borrow::Cow, mem::transmute, sync::atomic::AtomicBool};
 use pi_null::Null;
 /// 渲染图
@@ -31,7 +30,7 @@ pub struct RenderGraph {
 
     node_count: u32,
 
-    imp: DependGraph<NodeContext>,
+    imp: DependGraph<NodeContext, Entity>,
 
     async_submit_queue: ShareTaskQueue,
 }
@@ -66,9 +65,11 @@ impl RenderGraph {
 
         // 一开始，就将 Clear 扔到 graph
         // 注：每帧 必须运行一次 窗口的 清屏，否则 wgpu 会报错
+        let clear_graph_id: NodeId = graph.imp.add_sub_graph(CLEAR_WIDNOW_GRAPH).unwrap();
         let clear_node = ClearNode;
-        graph.add_node(CLEAR_WIDNOW_NODE, clear_node, NodeId::null()).unwrap();
+        graph.add_node(CLEAR_WIDNOW_NODE, clear_node, clear_graph_id).unwrap();
         graph.set_finish(CLEAR_WIDNOW_NODE, true).unwrap();
+        let _ = graph.add_depend(clear_graph_id, graph.imp.main_graph_id());
 
         graph
     }
@@ -84,7 +85,11 @@ impl RenderGraph {
     pub fn get_next_ids(&self, id: NodeId) -> Option<&[NodeId]> {
         self.imp.get_next_ids(id)
     }
-
+    /// 主图id
+    #[inline]
+    pub fn main_graph_id(&self) -> NodeId {
+        self.imp.main_graph_id()
+    }
     /// 添加 名为 name 的 节点
     #[inline]
     pub fn add_node<I, O, R, BP, RP>(
@@ -111,16 +116,18 @@ impl RenderGraph {
 
         if r.is_ok() {
             self.node_count += 1;
-
-            if self.node_count > 1 {
-                let id = *r.as_ref().unwrap();
-                // 清屏节点 在 所有节点 之前
-                self.add_depend(CLEAR_WIDNOW_NODE, id).unwrap();
-                // // 两个以上的节点，清屏节点设置为 非终止节点
-                // self.set_finish(CLEAR_WIDNOW_NODE, false).unwrap();
-            }
         }
         r
+    }
+
+    /// 设置bind
+    pub fn set_bind(&mut self, id: NodeId, bind: Entity) {
+        self.imp.set_bind(id, bind);
+    }
+
+    /// 获取bind
+    pub fn get_bind(&self, id: NodeId) -> Entity {
+        self.imp.get_bind(id)
     }
 
 	/// 添加一个不运行的节点
@@ -149,14 +156,6 @@ impl RenderGraph {
 
         if r.is_ok() {
             self.node_count += 1;
-
-            if self.node_count > 1 {
-                let id = *r.as_ref().unwrap();
-                // 清屏节点 在 所有节点 之前
-                self.add_depend(CLEAR_WIDNOW_NODE, id).unwrap();
-                // // 两个以上的节点，清屏节点设置为 非终止节点
-                // self.set_finish(CLEAR_WIDNOW_NODE, false).unwrap();
-            }
         }
         r
     }
@@ -167,13 +166,7 @@ impl RenderGraph {
 		&mut self,
 		name: impl Into<Cow<'static, str>>,
 	) -> Result<NodeId, GraphError>{
-		let r = self.imp.add_sub_graph(name);
-		if r.is_ok() {
-			let id = *r.as_ref().unwrap();
-			// 清屏节点 在 所有节点 之前
-			self.add_depend(CLEAR_WIDNOW_NODE, id).unwrap();
-		}
-		r
+		self.imp.add_sub_graph(name)
 	}
 
 	/// 设置子图的父图， 只能在该图与其他节点创建连接关系之前设置， 否则设置不成功
@@ -191,9 +184,6 @@ impl RenderGraph {
         let r = self.imp.remove(label);
         if r.is_ok() {
             self.node_count -= 1;
-            if self.node_count == 1 {
-                self.set_finish(CLEAR_WIDNOW_NODE, true).unwrap();
-            }
         }
         r
     }

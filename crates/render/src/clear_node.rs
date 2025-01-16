@@ -15,6 +15,7 @@ use wgpu::StoreOp;
 pub(crate) struct ClearNode;
 
 pub const CLEAR_WIDNOW_NODE: &str = "clear_window";
+pub const CLEAR_WIDNOW_GRAPH: &str = "clear_graph";
 
 impl Node for ClearNode {
     type Input = ();

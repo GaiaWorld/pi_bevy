@@ -17,6 +17,7 @@ mod plugin;
 mod render_windows;
 mod resource;
 mod system;
+pub mod asimage_url;
 
 use std::sync::atomic::AtomicBool;
 
@@ -34,7 +35,7 @@ lazy_static! {
 }
 
 /// 标签
-pub use clear_node::CLEAR_WIDNOW_NODE;
+pub use clear_node::CLEAR_WIDNOW_GRAPH;
 
 #[derive(Default, Clone, NodeParam)]
 pub struct SimpleInOut {
