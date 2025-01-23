@@ -1,9 +1,9 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, CLEAR_WIDNOW_NODE, NodeId};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
-use pi_world::{prelude::{App, Plugin}, schedule::Update, single_res::{SingleRes, SingleResMut}, world::{Entity, World}};
+use pi_world::{prelude::{App, Plugin}, schedule::Update, single_res::{SingleRes, SingleResMut}, world::Entity};
 use wgpu::Extent3d;
 use pi_null::Null;
 
@@ -330,7 +330,7 @@ impl Node for WindowRendererClearNode {
 	fn build<'a>(
 		&'a mut self,
 		// _world: &'a World,
-        param: &mut Self::BuildParam,
+        _param: &mut Self::BuildParam,
 		// _param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
 		_context: pi_bevy_render_plugin::RenderContext,
 		_input: &'a Self::Input,
@@ -345,7 +345,7 @@ impl Node for WindowRendererClearNode {
     fn run<'a>(
         &'a mut self,
         // _world: &'a World,
-        param: &'a Self::RunParam,
+        _param: &'a Self::RunParam,
         _context: pi_bevy_render_plugin::RenderContext,
         _commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
         _input: &'a Self::Input,
@@ -425,7 +425,6 @@ impl Plugin for PluginWindowRender {
                 let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode, NodeId::null()).unwrap();
                 let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode, NodeId::null()).unwrap();
                 rg.set_finish(WindowRenderer::KEY, true).unwrap();
-                rg.add_depend(CLEAR_WIDNOW_NODE, WindowRenderer::CLEAR_KEY).unwrap();
                 (node_clear, node_render)
             };
             
