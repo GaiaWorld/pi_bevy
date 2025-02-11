@@ -120,6 +120,12 @@ impl RenderGraph {
         r
     }
 
+    // 设置是否为传输节点
+    pub fn set_is_transfer(&mut self, id: NodeId, is_transfer: bool) {
+        self.imp.set_is_transfer(id, is_transfer);
+    }
+
+
     /// 设置bind
     pub fn set_bind(&mut self, id: NodeId, bind: Entity) {
         self.imp.set_bind(id, bind);
