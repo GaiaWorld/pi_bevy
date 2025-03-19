@@ -56,7 +56,7 @@ pub fn load_from_asimage_url(url: &str, query: &Query<(OrDefault<RenderTarget>, 
     };
     
     let entity = Entity::from(KeyData::from_ffi((u64::from(version) << 32) | u64::from(index)));
-    log::warn!("entity=========={:?}", (entity, index, version));
+    // log::warn!("entity=========={:?}", (entity, index, version));
     match query.get(entity) {
         Ok((r, id)) => match &r.0 {
             Some(r) =>  return Ok(Some((r.clone(), id.clone(), entity))),
