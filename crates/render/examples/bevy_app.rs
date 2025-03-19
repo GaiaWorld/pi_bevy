@@ -27,6 +27,7 @@ fn main() {
         total_capacity: 256 * 1024 * 1024,
         asset_config: AssetConfig::default(),
         allocator: None,
+        collect_interval: 16,
     });
     app.add_plugins(PiRenderPlugin::default());
 

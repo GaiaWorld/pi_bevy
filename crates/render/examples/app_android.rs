@@ -76,6 +76,7 @@ fn main() {
                         total_capacity: 64 * 1024 * 1024,
                         asset_config: AssetConfig::default(),
                         allocator: Some(Share::new(ShareCell::new(Allocator::new(16 * 1024 * 1024)) )),
+                        collect_interval: 16,
                     });
                     app.add_plugins(PiRenderPlugin::default());
                 }

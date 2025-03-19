@@ -37,7 +37,7 @@ pub struct RenderGraph {
 #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
 use crate::node::AsyncQueue;
 #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
-use pi_async_rt::prelude::AsyncValueNonBlocking;
+use pi_async_rt::prelude::AsyncValue;
 
 /// 渲染图的 拓扑信息 相关 方法
 impl RenderGraph {
@@ -298,7 +298,7 @@ impl RenderGraph {
         #[cfg(all(not(feature = "webgl"),not(feature = "single_thread")))]
         {
             let node_count = self.imp.can_run_nodes().len();
-            let wait: AsyncValueNonBlocking<()> = AsyncValueNonBlocking::new();
+            let wait: AsyncValue<()> = AsyncValue::new();
             let wait1 = wait.clone();
             task_queue.push(node_count, Box::pin(async move {
                 wait1.set(());

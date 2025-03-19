@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_asset"
-version = "0.1.8"
+version = "0.2.0"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -16,17 +16,17 @@ account_info = [] # 每20秒打印一次资产管理器的统计信息
 # bevy_ecs = "0.9"
 # bevy_derive = "0.9"
 derive_deref = "1.1"
-pi_assets = "0.14"
+pi_assets = "0.15"
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default_features = false}
-pi_share = "0.4"
+pi_share = "0.5"
 pi_hash = "0.1"
 pi_null = "0.1"
-serde = { version = "1.0", features = ["derive"], option=true }
-pi_world = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+pi_world = "0.2"
 crossbeam="0.8"
-pi_time = "0.3"
+pi_time = "0.5"
 log = "0.4"
 
-pi_atom = { version="0.5", features = ["serde"] }
-pi_render = { version = "0.1", registry = "yn" }
+pi_atom = { version="0.6", features = ["serde"] }
+pi_render = { version = "0.2", registry = "yn" }

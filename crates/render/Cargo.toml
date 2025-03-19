@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_render_plugin"
-version = "0.1.20"
+version = "0.2.0"
 authors = ["moyy <myy412001799@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -15,32 +15,32 @@ keywords = ["pi", "bevy", "plugin"]
 # bevy_window = "0.9"
 pi_null = "0.1"
 pi_map = "0.2"
-pi_time = "0.3"
+pi_time = "0.5"
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default-features = false}
-pi_world = "0.1"
+pi_world = "0.2"
 # bevy_window = "0.11"
-bevy_window = {path = "../window", version = "0.1", registry = "yn", package = "pi_bevy_window" }
+bevy_window = {path = "../window", version = "0.2", registry = "yn", package = "pi_bevy_window" }
 raw-window-handle = "0.6"
 derive_deref = "1.1"
 
 log = "0.4"
 thiserror = "1.0"
-wgpu = {version = "0.1", registry = "yn", package="pi_wgpu"}
-wgpu1 = {version = "0.19", package = "wgpu", feature = ["fragile-send-sync-non-atomic-wasm"]}
+wgpu = {version = "0.2", registry = "yn", package="pi_wgpu"}
+wgpu1 = {version = "0.19", package = "wgpu"}
 crossbeam = "0.8"
 futures = "0.3"
 
 half = "=2.2.1"
 pi_hash = "0.1"
-pi_hal = {version = "0.1", registry = "yn"}
+pi_hal = {version = "0.2", registry = "yn"}
 pi_futures = "0.1"
-pi-async-rt = "0.1"
-pi_share = "0.4"
-pi_render = { version = "0.1", registry = "yn" }
-render_derive = { version = "0.1", registry = "yn" }
-pi_bevy_asset = { path = "../asset", version = "0.1", registry = "yn" }
-pi_assets = "0.14"
+pi-async-rt = "0.2"
+pi_share = "0.5"
+pi_render = { version = "0.2", registry = "yn" }
+render_derive = { version = "0.2", registry = "yn" }
+pi_bevy_asset = { path = "../asset", version = "0.2", registry = "yn" }
+pi_assets = "0.15"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 
 js-sys = "0.3"
@@ -48,7 +48,7 @@ web-sys = { version = "0.3", features = ["HtmlCanvasElement"] }
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 wasm-bindgen-futures = { version = "0.4" }
 lazy_static = "1.4"
-pi_key_alloter = {version = "0.5", features = ["serde"]}
+pi_key_alloter = {version = "0.6", features = ["serde"]}
 
 [features]
 trace = []
@@ -58,7 +58,7 @@ single_thread = [] # 本地平台，设置该feature有效，运行时为单线�
 [dev-dependencies]
 # bevy_ecs = { version = "0.11", default-features = false}
 winit = { registry = "yn", version = "0.27"}
-pi_bevy_winit_window = { path = "../winit_window", varsion = "0.1", registry = "yn" }
+pi_bevy_winit_window = { path = "../winit_window", version = "0.2", registry = "yn" }
 lazy_static = '1.4'
 # bevy_log = "0.11"
 # bevy_a11y = "0.11"

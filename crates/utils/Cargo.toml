@@ -1,6 +1,6 @@
 [package]
 name = "pi_world_extend_utils"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 authors = ["suncy <@gmail.com>"]
 
@@ -9,7 +9,7 @@ authors = ["suncy <@gmail.com>"]
 
 
 [dependencies]
-pi_world = "0.1"
+pi_world = "0.2"
 log = "0.4"
-serde = { version = "1.0", features = ["derive"], option = true }
-pi_key_alloter = "0.5"
+serde = { version = "1.0", features = ["derive"]}
+pi_key_alloter = "0.6"
