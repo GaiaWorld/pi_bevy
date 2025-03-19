@@ -21,7 +21,7 @@ pi_dirty = "0.1"
 pi_share = "0.5"
 pi_time = "0.5"
 # pi_ecs="0.1"
-pi_slotmap_tree = "0.3"
+pi_slotmap_tree = "0.4"
 # bevy_ecs="0.9"
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default_features = false}
