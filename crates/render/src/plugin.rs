@@ -12,7 +12,7 @@ use crate::{
 pub use bevy_window::{should_run, FrameState};
 use pi_assets::asset::GarbageEmpty;
 use pi_async_rt::prelude::*;
-use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr};
+use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr, collect};
 use pi_render::renderer::sampler::SamplerRes;
 use pi_render::{
     components::view::target_alloc::{SafeAtlasAllocator, UnuseTexture},
@@ -91,7 +91,9 @@ impl Plugin for PiRenderPlugin {
                 PostUpdate,
                 build_graph::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
-                >.in_set(GraphBuild),
+                >
+                .in_set(GraphBuild)
+                .after(collect),
             );
             app.add_system(
                 PostUpdate,
@@ -110,13 +112,13 @@ impl Plugin for PiRenderPlugin {
         // let rt = create_single_runtime();
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
         {
-            app.add_system(PostUpdate, build_graph::<MultiTaskRuntime>.in_set(GraphBuild));
+            app.add_system(PostUpdate, build_graph::<MultiTaskRuntime>.in_set(GraphBuild).after(collect));
             app.add_system(PostUpdate, run_frame_system::<MultiTaskRuntime>.in_set(GraphRun));
         }
 
         #[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
         {
-            app.add_system(PostUpdate, build_graph::<SingleTaskRuntime>.in_set(GraphBuild));
+            app.add_system(PostUpdate, build_graph::<SingleTaskRuntime>.in_set(GraphBuild).after(collect));
             app.add_system(PostUpdate, run_frame_system::<SingleTaskRuntime>.in_set(GraphRun));
         }
 
