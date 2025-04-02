@@ -241,8 +241,8 @@ impl<'w, F: FilterComponents> LayerDirty<'w, F>
     }
 }
 
-pub struct OutDirty<'a>(NextDirty<'a, Entity>, &'a mut DirtyMark);
-pub struct RemainDirty<'a>(PreDirty<'a, Entity>);
+pub struct OutDirty<'a>(pub NextDirty<'a, Entity>, pub &'a mut DirtyMark);
+pub struct RemainDirty<'a>(pub PreDirty<'a, Entity>);
 
 impl<'a> OutDirty<'a> {
     pub fn iter(&'a mut self) -> OutDirtyIter<'a> {
@@ -280,12 +280,12 @@ impl<'a> RemainDirty<'a> {
 
 /// 手动迭代器（需要自己控制脏标记）
 pub struct ManualLayerDirtyIter<'w, 'a> {
-    matchs: bool,
-    iter_inner: DirtyIterator<'a, Entity>,
+    pub matchs: bool,
+    pub iter_inner: DirtyIterator<'a, Entity>,
 
-    mark_inner: &'a mut DirtyMark,
+    pub mark_inner: &'a mut DirtyMark,
 
-    tree: &'a EntityTree<'w>,
+    pub tree: &'a EntityTree<'w>,
 }
 
 impl<'w, 'a> Iterator for ManualLayerDirtyIter<'w, 'a> {
@@ -331,12 +331,12 @@ impl<'w, 'a> Iterator for ManualLayerDirtyIter<'w, 'a> {
 
 /// 逆序迭代，从叶子节点向父迭代
 pub struct LayerReverseDirtyIter<'w, 'a> {
-    matchs: bool,
-    iter_inner: ReverseDirtyIterator<'a, Entity>,
+    pub matchs: bool,
+    pub iter_inner: ReverseDirtyIterator<'a, Entity>,
 
-    mark_inner: &'a mut DirtyMark,
+    pub mark_inner: &'a mut DirtyMark,
 
-    tree: &'a EntityTree<'w>,
+    pub tree: &'a EntityTree<'w>,
 }
 
 impl<'w, 'a> Iterator for LayerReverseDirtyIter<'w, 'a> {
@@ -443,14 +443,14 @@ pub trait Dirty: 'static {
 
 pub struct AutoLayerDirtyIter<'w, 'a> {
     // mark: PhantomData<&'a F>,
-    matchs: bool,
-    iter_inner: DirtyIterator<'a, Entity>,
+    pub matchs: bool,
+    pub iter_inner: DirtyIterator<'a, Entity>,
 
-    mark_inner: &'a mut DirtyMark,
+    pub mark_inner: &'a mut DirtyMark,
 
-    tree: &'a EntityTree<'w>,
+    pub tree: &'a EntityTree<'w>,
     // archetype_id: Local,
-    pre_iter: Option<RecursiveIterator<'a, EntityTree<'w>>>,
+    pub pre_iter: Option<RecursiveIterator<'a, EntityTree<'w>>>,
     // layers: &'a mut  ReadFetch<C>,
 }
 
