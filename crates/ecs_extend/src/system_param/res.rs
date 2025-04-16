@@ -1,14 +1,13 @@
 use std::mem::transmute;
 
-use pi_share::Share;
-use pi_world::{prelude::{SingleRes, SingleResMut, Tick}, single_res::TickRes, system::SystemMeta, system_params::SystemParam, world::{FromWorld, World}};
+use pi_world::{prelude::{SingleRes, SingleResMut}, single_res::ResState, system::SystemMeta, system_params::SystemParam, world::{FromWorld, World}};
 use derive_deref::{DerefMut, Deref};
 
 #[derive(Debug, Deref)]
 pub struct OrInitSingleRes<'w, T: FromWorld + 'static + Sync + Send>(SingleRes<'w, T>);
 
 impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T> {
-    type State = (Option<Share<TickRes<T>>>, usize, Tick);
+    type State = ResState<T>;
 	type Item<'world> = OrInitSingleRes<'world, T>;
 
 	#[inline(never)]
@@ -17,7 +16,9 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
             let v = T::from_world(world);
             world.insert_single_res(v);
         }
-        SingleRes::<T>::init_state(world, system_meta)
+        let mut r = SingleRes::<T>::init_state(world, system_meta);
+        SingleRes::<T>::init(&mut r);
+        r
     }
     
     // #[inline]
@@ -35,21 +36,15 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
 
     #[inline]
     fn get_param<'world>(
-        world: &'world World,
-        system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
-        tick: Tick,
     ) -> Self::Item<'world> {
-        OrInitSingleRes(SingleRes::get_param(world, system_meta, state, tick))
+        OrInitSingleRes(SingleRes::get_param(state))
     }
     #[inline]
     fn get_self<'world>(
-        world: &'world World,
-        system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
-        tick: Tick,
     ) -> Self {
-        unsafe { transmute(Self::get_param(world, system_meta, state, tick)) }
+        unsafe { transmute(Self::get_param(state)) }
     }
 }
 
@@ -58,7 +53,7 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleRes<'_, T
 pub struct OrInitSingleResMut<'w, T: FromWorld + 'static + Sync + Send>(SingleResMut<'w, T>);
 
 impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_, T> {
-    type State = (Option<Share<TickRes<T>>>, usize);
+    type State = ResState<T>;
 	type Item<'world> = OrInitSingleResMut<'world, T>;
 
 	#[inline(never)]
@@ -67,7 +62,9 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_
             let v = T::from_world(world);
             world.insert_single_res(v);
         }
-        SingleResMut::<T>::init_state(world, system_meta)
+        let mut r = SingleResMut::<T>::init_state(world, system_meta);
+        SingleResMut::<T>::init(&mut r);
+        r
     }
     
     // #[inline]
@@ -85,21 +82,15 @@ impl<T: FromWorld + 'static + Sync + Send> SystemParam for OrInitSingleResMut<'_
 
     #[inline]
     fn get_param<'world>(
-        world: &'world World,
-        system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
-        tick: Tick,
     ) -> Self::Item<'world> {
-        OrInitSingleResMut(SingleResMut::<T>::get_param(world, system_meta, state, tick))
+        OrInitSingleResMut(SingleResMut::<T>::get_param(state))
     }
     #[inline]
     fn get_self<'world>(
-        world: &'world World,
-        system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
-        tick: Tick,
     ) -> Self {
-        unsafe { transmute(Self::get_param(world, system_meta, state, tick)) }
+        unsafe { transmute(Self::get_param(state)) }
     }
 }
 

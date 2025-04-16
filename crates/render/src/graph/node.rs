@@ -167,38 +167,40 @@ where
 		from: &'a [NodeId],
 		to: &'a [NodeId],
     ) -> Result<O, String> {
+        // log::warn!("build================={:?}", build);
 		let world: &mut World = context.world_mut();
 
         if self.run_state.is_none() {
             self.run_state = self.state_pool.get();
             if self.run_state.is_none() {
                 let mut meta = SystemMeta::new(TypeInfo::of::<()>());
-                self.run_state = Some((RP::init_state(world, &mut meta), meta));
+                let mut state = RP::init_state(world, &mut meta);
+                RP::init(&mut state);
+                self.run_state = Some((state, meta));
             }
         }
         let r = {
             let mut build_param = match &mut self.build_state {
                 Some((state, meta)) => {
-                    let tick = world.tick();
-                    BP::align(world, meta, state);
-                    BP::get_self(world, meta, state, tick)
+                    BP::align(state);
+                    BP::get_self(state)
                 },
                 None => {
                     self.build_state = self.state_pool.get();
                     match &mut self.build_state {
                     
-                        Some((state, meta)) => {
-                            let tick = world.tick();
-                            BP::align(world, meta, state);
-                            BP::get_self(world, meta, state, tick)
+                        Some((state, _meta)) => {
+                            BP::align(state);
+                            BP::get_self(state)
                         },
                         None => {
                             let mut meta = SystemMeta::new(TypeInfo::of::<()>());
-                            self.build_state = Some((BP::init_state(world, &mut meta), meta));
+                            let mut state = BP::init_state(world, &mut meta);
+                            BP::init(&mut state);
+                            self.build_state = Some((state, meta));
                             let r = self.build_state.as_mut().unwrap();
-                            let tick = world.tick();
-                            BP::align(world, &r.1, &mut r.0);
-                            BP::get_self(world,  &r.1, &mut r.0, tick)
+                            BP::align(&mut r.0);
+                            BP::get_self(&mut r.0)
                         },
                     }
                 },
@@ -255,9 +257,9 @@ where
             let commands = self.context.commands.0.borrow().as_ref().unwrap().clone();
 
             let r = self.run_state.as_mut().unwrap();
-            let tick = c.world().tick();
-            RP::align(c.world(), &r.1, &mut r.0);
-            let param = RP::get_self(c.world(),  &r.1, &mut r.0, tick);
+            // let tick = c.world().tick();
+            RP::align(&mut r.0);
+            let param = RP::get_self( &mut r.0);
 
 			// pi_hal::runtime::LOGS.lock().0.push("node run before".to_string());
             let output = self.node.run(

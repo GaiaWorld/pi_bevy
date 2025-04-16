@@ -10,7 +10,7 @@ use pi_slotmap_tree::{
 };
 use serde::{Deserialize, Serialize};
 
-use pi_world::{insert::Component, param_set::ParamSet, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta, world::Tick};
+use pi_world::{insert::Component, param_set::ParamSet, prelude::{Alter, Entity, Query, SystemParam, World}, system::SystemMeta};
 
 // use pi_print_any::{println_any, out_any};
 
@@ -235,10 +235,10 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
     }
 
     fn get_param<'world>(
-        world: &'world World,
-        system_meta: &'world SystemMeta,
+        // world: &'world World,
+        // system_meta: &'world SystemMeta,
         state: &'world mut Self::State,
-		tick: Tick,
+		// tick: Tick,
     ) -> Self::Item<'world> {
         EntityTreeMut{
             tree: Tree::new(
@@ -249,7 +249,7 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 					root: <ParamSet<'static, (
 						Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
 						Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
-					)> as SystemParam>::get_param(world, system_meta, &mut state.0, tick)
+					)> as SystemParam>::get_param( &mut state.0)
                 }
             )
         }
@@ -274,24 +274,21 @@ impl pi_world::system_params::SystemParam for EntityTreeMut<'_> {
 
 	#[inline]
     #[allow(unused_variables)]
-    fn align(world: &World, system_meta: &SystemMeta, state: &mut Self::State) {
+    fn align(state: &mut Self::State) {
 		// <Query< 'static, &'static mut  Layer> as SystemParam>::align(world, system_meta, &mut state.0);
         // <Query<'static, &'static mut  Up> as SystemParam>::align(world, system_meta, &mut state.1);
         // <Query<'static, &'static mut  Down> as SystemParam>::align(world, system_meta, &mut state.2);
         <ParamSet<'static, (
 			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (Root,), ()>, // 用于插入Root组件
 			Alter<'static, (&'static mut Layer, &'static mut Up, &'static mut Down), (), (), (Root,)> // 用于删除Root组件
-		)> as SystemParam>::align(world, system_meta, &mut state.0);
+		)> as SystemParam>::align(&mut state.0);
 	}
 
 
     fn get_self<'world>(
-        world: &'world pi_world::world::World,
-        system_meta: &'world pi_world::system::SystemMeta,
         state: &'world mut Self::State,
-		tick: Tick,
     ) -> Self {
-        unsafe { transmute(Self::get_param(world, system_meta, state, tick)) }
+        unsafe { transmute(Self::get_param(state)) }
     }
 }
 

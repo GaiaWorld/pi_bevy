@@ -10,7 +10,7 @@ use crate::{
 use bevy_window::{PrimaryWindow, Window};
 use pi_async_rt::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
-use pi_world::{world::World, filter::With, single_res::{SingleRes, SingleResMut}};
+use pi_world::{filter::With, query::Query, single_res::{SingleRes, SingleResMut}, world::World};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 
@@ -25,21 +25,20 @@ use tracing::Instrument;
 pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World, 
     mut first_surface: SingleResMut<PiFirstSurface>,
-     rt: SingleRes<PiAsyncRuntime<A>>,
-     instance: SingleRes<PiRenderInstance>,
-     device: SingleRes<PiRenderDevice>,
+    rt: SingleRes<PiAsyncRuntime<A>>,
+    instance: SingleRes<PiRenderInstance>,
+    device: SingleRes<PiRenderDevice>,
     mut views: SingleResMut<PiScreenTexture>,
     mut window: SingleResMut<PiRenderWindow>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
     mut rg: SingleResMut<PiRenderGraph>,
 ) {
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
     // let primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
-    let mut editor = world.make_entity_editor();
-    let mut primary_window = editor.make_query::<&Window, With<PrimaryWindow>>();
 
-    let (width, height) = match primary_window.iter(world).nth(0) {
+    let (width, height) = match primary_window.iter().nth(0) {
         Some(primary_window) => (
             primary_window.physical_width(),
             primary_window.physical_height(),

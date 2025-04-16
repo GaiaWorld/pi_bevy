@@ -23,6 +23,7 @@ resolver = "2"
 pi_assets = {path="../pi_assets"}
 pi_world = { path = "../pi_world" }
 pi_world_macros = { path = "../pi_world/macros" }
+pi_share = {path = "../pi_share"}
 
 [patch.yn]
 pi_sdf = { path = "../pi_sdf" }
@@ -30,7 +31,7 @@ pi_wgpu = {path = "../pi_wgpu"}
 # pi_egl = {path = "../pi_egl"}
 # winit = { path = "../winit"}
 pi_postprocess = { path = "../pi_post_process"}
-pi_hal = { path = "../pi_hal" }
+# pi_hal = { path = "../pi_hal" }
 # pi_async_graph = { path = "../pi_async_graph" }
 # pi_graph = { path = "../pi_graph" }
 # pi_map = { path = "../pi_map" }
