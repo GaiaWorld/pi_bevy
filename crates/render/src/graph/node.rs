@@ -158,6 +158,30 @@ where
     type Output = O;
 
     #[inline]
+    fn init<'a>(
+        &'a mut self,
+        context: &'a mut NodeContext,
+        // input: &'a Self::Input,
+        // usage: &'a ParamUsage,
+		// id: NodeId, 
+		// from: &[NodeId],
+		// to: &[NodeId],
+    ) -> Result<(), String> {
+        let world: &mut World = context.world_mut();
+
+        if self.run_state.is_none() {
+            self.run_state = self.state_pool.get();
+            if self.run_state.is_none() {
+                let mut meta = SystemMeta::new(TypeInfo::of::<()>());
+                let mut state = RP::init_state(world, &mut meta);
+                RP::init(&mut state);
+                self.run_state = Some((state, meta));
+            }
+        }
+        Ok(())
+    }
+
+    #[inline]
     fn build<'a>(
         &'a mut self,
         context: &'a mut NodeContext,
@@ -170,15 +194,6 @@ where
         // log::warn!("build================={:?}", build);
 		let world: &mut World = context.world_mut();
 
-        if self.run_state.is_none() {
-            self.run_state = self.state_pool.get();
-            if self.run_state.is_none() {
-                let mut meta = SystemMeta::new(TypeInfo::of::<()>());
-                let mut state = RP::init_state(world, &mut meta);
-                RP::init(&mut state);
-                self.run_state = Some((state, meta));
-            }
-        }
         let r = {
             let mut build_param = match &mut self.build_state {
                 Some((state, meta)) => {

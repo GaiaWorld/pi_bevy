@@ -251,6 +251,24 @@ impl RenderGraph {
     ) -> Result<(), GraphError> {
         self.imp.set_enable(label, is_enable)
     }
+
+    #[inline]
+    pub fn set_is_build(
+        &mut self,
+        label: impl Into<NodeLabel>,
+        is_enable: bool,
+    ) -> Result<(), GraphError> {
+        self.imp.set_is_build(label, is_enable)
+    }
+
+    #[inline]
+    pub fn set_is_run(
+        &mut self,
+        label: impl Into<NodeLabel>,
+        is_run: bool,
+    ) -> Result<(), GraphError> {
+        self.imp.set_is_run(label, is_run)
+    }
 }
 
 /// 渲染图的 执行 相关
