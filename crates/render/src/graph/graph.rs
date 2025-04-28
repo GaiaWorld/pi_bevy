@@ -382,4 +382,13 @@ impl RenderGraph {
             .imp
             .schedule_graph()
 	}
+
+    /// 可运行的节点的数量
+	pub fn can_run_nodes(&self) -> &[NodeId] {
+		self.imp.can_run_nodes()
+	}
+
+    pub fn can_build_nodes(&self) -> &[NodeId] {
+        self.imp.can_build_nodes()
+    }
 }
