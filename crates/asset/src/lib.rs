@@ -11,7 +11,7 @@ use pi_render::renderer::vertex_buffer::EVertexBufferRange;
 use pi_render::rhi::asset::{TextureRes, RenderRes};
 use pi_render::rhi::pipeline::RenderPipeline;
 use pi_share::{Share, ShareCell};
-use pi_world::{prelude::{App, Local, Plugin, PostUpdate}, schedule_config::IntoSystemConfigs, single_res::{SingleRes, SingleResMut}};
+use pi_world::{prelude::{App, Local, Plugin, PostUpdate, End}, schedule_config::IntoSystemConfigs, single_res::{SingleRes, SingleResMut}};
 use serde::{Serialize, Deserialize};
 use pi_time::now_millisecond;
 use pi_null::Null;
@@ -41,19 +41,19 @@ impl Plugin for PiAssetPlugin {
 			Some(r) => {
 				app.world.insert_single_res(Allocator(r.clone()));
 				// 外部设置的资产分配器， 应该由外部负责资产整理
-				app.add_system(PostUpdate, collect);
+				app.add_system(End, collect);
 			},
 			None => {
 				app.world.insert_single_res(Allocator(Share::new(ShareCell::new(pi_assets::allocator::Allocator::new(total_capacity)))));
 				// 帧推结束前，整理资产（这里采用在帧推结束前整理资产， 而不是利用容量分配器自带的定时整理， 可以防止整理立即打断正在进行的其他system）
-				app.add_system(PostUpdate, collect);
+				app.add_system(End, collect);
 			},
 		};
 		app.world.insert_single_res(self.asset_config.clone());
 		app.world.insert_single_res(CollectInterval(self.collect_interval));
 
 		#[cfg(feature="account_info")]
-		app.add_systems(pi_world::prelude::Last, account);
+		app.add_systems(End, account.after(collect));
 	}
 }
 

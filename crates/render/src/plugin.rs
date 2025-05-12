@@ -23,7 +23,7 @@ use pi_render::{
         pipeline::RenderPipeline,
     },
 };
-use pi_world::prelude::{App, PostUpdate, SystemSet, Plugin, IntoSystemSetConfigs, IntoSystemConfigs};
+use pi_world::prelude::{App, PostUpdate, Last, SystemSet, Plugin, IntoSystemSetConfigs, IntoSystemConfigs};
 use std::mem::size_of;
 use wgpu::TextureView;
 
@@ -57,7 +57,7 @@ impl Plugin for PiRenderPlugin {
         // 	.configure_set(PostUpdate, GraphBuild.in_set(PiRenderSystemSet))
         // 	.configure_set(PostUpdate, GraphRun.in_set(PiRenderSystemSet))
         // .configure_sets(PostUpdate, (GraphBuild, GraphRun).chain());
-        app.configure_set(PostUpdate, GraphBuild.before(GraphRun));
+        // app.configure_set(PostUpdate, GraphBuild.before(GraphRun));
         // std::thread::spawn(move || {
         // 	loop {
         // 		{
@@ -96,7 +96,7 @@ impl Plugin for PiRenderPlugin {
                 .after(collect),
             );
             app.add_system(
-                PostUpdate,
+                Last,
                 run_frame_system::<
                     pi_async_rt::rt::serial_local_compatible_wasm_runtime::LocalTaskRuntime,
                 >.in_set(GraphRun),
@@ -113,13 +113,13 @@ impl Plugin for PiRenderPlugin {
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "single_thread")))]
         {
             app.add_system(PostUpdate, build_graph::<MultiTaskRuntime>.in_set(GraphBuild).after(collect));
-            app.add_system(PostUpdate, run_frame_system::<MultiTaskRuntime>.in_set(GraphRun));
+            app.add_system(Last, run_frame_system::<MultiTaskRuntime>.in_set(GraphRun));
         }
 
         #[cfg(all(not(target_arch = "wasm32"), feature = "single_thread"))]
         {
             app.add_system(PostUpdate, build_graph::<SingleTaskRuntime>.in_set(GraphBuild).after(collect));
-            app.add_system(PostUpdate, run_frame_system::<SingleTaskRuntime>.in_set(GraphRun));
+            app.add_system(Last, run_frame_system::<SingleTaskRuntime>.in_set(GraphRun));
         }
 
         let (
