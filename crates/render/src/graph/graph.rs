@@ -49,6 +49,10 @@ impl RenderGraph {
         self.imp.dump_graphviz()
     }
 
+    pub fn dump_toop_graphviz(&self) -> String {
+        self.imp.dump_toop_graphviz()
+    }
+
     /// 创建
     #[inline]
     pub fn new(device: RenderDevice, queue: RenderQueue) -> Self {
