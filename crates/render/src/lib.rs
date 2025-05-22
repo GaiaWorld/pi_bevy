@@ -23,7 +23,8 @@ use std::sync::atomic::AtomicBool;
 
 /// 渲染图
 pub use graph::*;
-use pi_render::components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView};
+use pi_render::{components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView}, depend_graph::param::DownGrade};
+use pi_share::Share;
 /// 渲染 插件
 pub use plugin::*;
 use render_derive::NodeParam;
@@ -41,6 +42,28 @@ pub use clear_node::CLEAR_WIDNOW_GRAPH;
 pub struct SimpleInOut {
     pub target: Option<ShareTargetView>,
 	pub valid_rect: Option<(u32, u32, u32, u32)>, // x, y, w, h
+}
+
+impl DownGrade for SimpleInOut {
+    fn downgrade(&mut self) {
+        match &mut self.target {
+            Some(t) => {
+                *t = Share::new((**t).downgrade());
+            },
+            None => (),
+        }
+    }
+}
+
+impl std::fmt::Debug for SimpleInOut {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let r = match &self.target {
+            Some(r ) => Some(r.target().colors[0].0.id),
+            None => None,
+        };
+
+        f.debug_struct("SimpleInOut").field("target", &r ).field("valid_rect", &self.valid_rect).finish()
+    }
 }
 // TODO, Send问题， 临时解决
 unsafe impl Send for SimpleInOut {}

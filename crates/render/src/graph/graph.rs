@@ -13,7 +13,7 @@ use crate::{
 // use bevy_ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_render::{
-    depend_graph::{graph::DependGraph, graph_data::NGraph},
+    depend_graph::{graph::DependGraph, graph_data::NGraph, param::DownGrade},
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareMutex, ShareRefCell};
@@ -103,7 +103,7 @@ impl RenderGraph {
 		parent_graph_id: NodeId,
     ) -> Result<NodeId, GraphError>
     where
-        I: InParam + Default,
+        I: InParam + DownGrade + Default,
         O: OutParam + Default + Clone,
         R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
         BP: SystemParam + 'static,
@@ -149,7 +149,7 @@ impl RenderGraph {
 		parent_graph_id: NodeId,
     ) -> Result<NodeId, GraphError>
     where
-        I: InParam + Default,
+        I: InParam + DownGrade + Default,
         O: OutParam + Default + Clone,
         R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
         BP: SystemParam + 'static,
