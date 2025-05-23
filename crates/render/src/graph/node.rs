@@ -49,10 +49,10 @@ pub trait Node: 'static + ThreadSync {
 		to: &'a [NodeId],
     ) -> Result<Self::Output, String>;
 
-	// // 节点被使用完毕后(所有出度节点的build方法执行完成)， 会调用此方法
-	// fn reset<'a>(
-    //     &'a mut self,
-    // ) {}
+	// 节点被使用完毕后(所有出度节点的build方法执行完成)， 会调用此方法
+	fn reset<'a>(
+        &'a mut self,
+    ) {}
 
     /// 执行，每帧会调用一次
     fn run<'a>(
@@ -321,6 +321,12 @@ where
             Ok(output)
         };
         Box::pin(task)
+    }
+    
+    fn reset<'a>(
+            &'a mut self,
+    ) {
+        self.node.reset();
     }
 }
 
