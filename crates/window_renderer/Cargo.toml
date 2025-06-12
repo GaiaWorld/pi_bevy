@@ -1,6 +1,6 @@
 [package]
 name = "pi_window_renderer"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["bp0002 <bp950722@outlook.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -14,10 +14,10 @@ pi_world = "0.2"
 pi_null = "0.1"
 log = "0.4"
 thiserror = "1.0"
-wgpu = {version = "0.2", registry = "yn", package="pi_wgpu"}
+wgpu = {version = "0.3", registry = "yn", package="pi_wgpu"}
 crossbeam="0.8"
 futures="0.3"
-naga = { version = "0.19"}
+naga = { version = "25.0.*"}
 bytemuck = { version = "1.4", features = ["derive"] }
 
 pi_hash = "0.1"
@@ -25,14 +25,17 @@ pi_futures = "0.1"
 pi-async-rt = "0.2"
 pi_share = "0.5"
 render_derive = { version = "0.2", registry = "yn" }
-pi_render = { version = "0.2", registry = "yn" }
-pi_bevy_asset = { path = "../asset", version = "0.2", registry = "yn" }
-pi_bevy_render_plugin = { path = "../render", version = "0.2", registry = "yn" }
+pi_render = { version = "0.3", registry = "yn" }
+pi_bevy_asset = { path = "../asset", version = "0.3", registry = "yn" }
+pi_bevy_render_plugin = { path = "../render", version = "0.3", registry = "yn" }
 pi_assets = "0.15"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 
 [features]
 trace = []
+
+[patch.yn]
+pi_wgpu = { path = "../../../pi_wgpu" }
 
 [dev-dependencies]
 # bevy_ecs = "0.11"

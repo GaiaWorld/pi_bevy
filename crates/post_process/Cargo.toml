@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_post_process"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -15,12 +15,12 @@ keywords = ["pi", "bevy"]
 pi_world = "0.2"
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default-features = false}
-pi_postprocess = { version = "0.2", registry = "yn"}
-pi_render = { version = "0.2", registry = "yn"}
+pi_postprocess = { version = "0.3", registry = "yn"}
+pi_render = { version = "0.3", registry = "yn"}
 
 pi_assets = "0.15"
 pi_share = "0.5"
 pi_hash = "0.1"
 
-pi_bevy_render_plugin = { path = "../render", version = "0.2", registry = "yn" }
-pi_bevy_asset = { path = "../asset", version = "0.2", registry = "yn" }
+pi_bevy_render_plugin = { path = "../render", version = "0.3", registry = "yn" }
+pi_bevy_asset = { path = "../asset", version = "0.3", registry = "yn" }

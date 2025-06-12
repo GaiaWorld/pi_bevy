@@ -65,7 +65,7 @@ impl WindowRenderer {
             source: wgpu::ShaderSource::Glsl {
                 shader: std::borrow::Cow::Borrowed(include_str!("./pass.vert")),
                 stage: naga::ShaderStage::Vertex,
-                defines: naga::FastHashMap::default(),
+                defines: &[],
             },
         });
 
@@ -74,7 +74,7 @@ impl WindowRenderer {
             source: wgpu::ShaderSource::Glsl {
                 shader: std::borrow::Cow::Borrowed(include_str!("./pass.frag")),
                 stage: naga::ShaderStage::Fragment,
-                defines: naga::FastHashMap::default(),
+                defines: &[],
             },
         });
 
@@ -148,6 +148,7 @@ impl WindowRenderer {
                 mip_level_count: None,
                 base_array_layer: 0,
                 array_layer_count: None,
+                usage: Some(texture.usage()),
             });
             self.texture = Some(Arc::new(texture));
             self.view = Some(Arc::new(view));
@@ -173,6 +174,7 @@ impl WindowRenderer {
                 mip_level_count: None,
                 base_array_layer: 0,
                 array_layer_count: None,
+                usage: Some(texture.usage()),
             });
             self.depth_texture = Some(Arc::new(texture));
             self.depth_view = Some(Arc::new(view));
@@ -201,7 +203,7 @@ impl WindowRenderer {
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState  {
                     module: &self.vs,
-                    entry_point: "main",
+                    entry_point: Some("main"),
                     buffers: &[
                         wgpu::VertexBufferLayout {
                             array_stride: 2 * 4,
@@ -211,6 +213,7 @@ impl WindowRenderer {
                             ],
                         }
                     ],
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
                 },
                 primitive: wgpu::PrimitiveState {
                     polygon_mode: wgpu::PolygonMode::Fill,
@@ -220,9 +223,15 @@ impl WindowRenderer {
                 depth_stencil: None,
                 multisample: wgpu::MultisampleState { count: 1, mask: !0, alpha_to_coverage_enabled: false  },
                 fragment: Some(
-                    wgpu::FragmentState { module: &self.fs, entry_point: "main", targets: &[Some(wgpu::ColorTargetState { format: self.surface_format, blend: None, write_mask: wgpu::ColorWrites::ALL })]  }
+                    wgpu::FragmentState {
+                        module: &self.fs,
+                        entry_point: Some("main"),
+                        targets: &[Some(wgpu::ColorTargetState { format: self.surface_format, blend: None, write_mask: wgpu::ColorWrites::ALL })],
+                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                    }
                 ),
-                multiview: None
+                multiview: None,
+                cache: None,
             });
             
             log::warn!("FinaleRender ChangeSize Ok!");

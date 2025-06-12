@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_window"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -15,7 +15,7 @@ keywords = ["pi", "bevy", "window"]
 
 raw-window-handle = "0.6"
 log = "0.4"
-wgpu = {version = "0.2", registry = "yn", package="pi_wgpu"}
+wgpu = {version = "0.3", registry = "yn", package="pi_wgpu"}
 pi_world = "0.2"
 
 [dependencies.nalgebra]

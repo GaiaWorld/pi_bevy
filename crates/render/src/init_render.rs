@@ -50,11 +50,12 @@ fn init_render_impl<A: AsyncRuntime + AsyncRuntimeExt>(
     options: RenderOptions,
 ) {
     let backends = options.backends;
-    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
         backends,
-        dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
+        // dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
         flags: InstanceFlags::VALIDATION,
-        gles_minor_version: Gles3MinorVersion::Automatic,
+        // gles_minor_version: Gles3MinorVersion::Automatic,
+        ..Default::default()
     });
 
     let surface = window.handle.create_surface(&instance);

@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_winit_window"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -12,12 +12,12 @@ keywords = ["pi", "bevy", "window", "winit"]
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default-features = false}
 pi_world = "0.2"
-bevy_window = {path = "../window", version = "0.2", registry = "yn", package = "pi_bevy_window" }
+bevy_window = {path = "../window", version = "0.3", registry = "yn", package = "pi_bevy_window" }
 winit = { registry = "yn", version = "0.27"}
 # glam="0.24"
 raw-window-handle = "0.6"
 log = "0.4"
-wgpu = {version = "0.2", registry = "yn", package="pi_wgpu"}
+wgpu = {version = "0.3", registry = "yn", package="pi_wgpu"}
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = {version="0.3", features = [

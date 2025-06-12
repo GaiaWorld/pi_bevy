@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_asset"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["suncy <@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -29,4 +29,4 @@ pi_time = "0.5"
 log = "0.4"
 
 pi_atom = { version="0.6", features = ["serde"] }
-pi_render = { version = "0.2", registry = "yn" }
+pi_render = { version = "0.3", registry = "yn" }
