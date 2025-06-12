@@ -313,7 +313,7 @@ impl Node for WindowRendererNode {
                 }
             );
             rpass.set_pipeline(param.1.pipeline.as_ref().unwrap());
-            rpass.set_bind_group(0, param.1.bindgroup.as_ref().unwrap(), &[]);
+            rpass.set_bind_group(0, param.1.bindgroup.as_ref().unwrap().value(), &[]);
             rpass.set_vertex_buffer(0, param.1.vertex.slice(..).deref().clone());
             rpass.draw(0..6, 0..1);
 
