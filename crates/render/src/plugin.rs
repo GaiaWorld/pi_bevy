@@ -26,6 +26,7 @@ use pi_render::{
 use pi_world::prelude::{App, PostUpdate, Last, SystemSet, Plugin, IntoSystemSetConfigs, IntoSystemConfigs};
 use std::mem::size_of;
 use wgpu::TextureView;
+use pi_render::components::view::target_alloc::FboRes;
 
 /// ================ 阶段标签 ================
 pub use bevy_window::FrameSet as PiRenderSystemSet;
@@ -130,6 +131,7 @@ impl Plugin for PiRenderPlugin {
             bind_group_res,
             texture_res,
             texture_asset_res,
+            fbo_res,
             pipeline_res,
         ) = {
             // let w = &mut app.world;
@@ -216,6 +218,17 @@ impl Plugin for PiRenderPlugin {
                     &asset_config,
                     &mut allocator,
                 ),
+                ShareAssetMgr::<FboRes>::new_with_config(
+                    GarbageEmpty(),
+                    &AssetDesc {
+                        ref_garbage: false,
+                        min: 10 * 1024 * 1024,
+                        weight: 0,
+                        timeout: 2 * 1000,
+                    },
+                    &asset_config,
+                    &mut allocator,
+                ),
                 ShareAssetMgr::<RenderRes<RenderPipeline>>::new_with_config(
                     GarbageEmpty(),
                     &AssetDesc {
@@ -264,7 +277,7 @@ impl Plugin for PiRenderPlugin {
         app.world
             .insert_single_res(PiSafeAtlasAllocator(SafeAtlasAllocator::new(
                 device.0.clone(),
-                texture_asset_res.0,
+                fbo_res.0,
                 share_unuse.0,
                 texture_key_alloter.0.clone(),
             )));
