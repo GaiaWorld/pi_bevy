@@ -3,10 +3,7 @@ use std::{borrow::Cow, sync::atomic::{AtomicBool, Ordering}};
 
 use crate::state_pool::SystemStatePool;
 
-use super::{
-    param::{InParam, OutParam},
-    RenderContext,
-};
+use super::RenderContext;
 // use bevy_ecs::{
 //     system::{ SystemState}
 // };
@@ -16,7 +13,7 @@ use pi_async_rt::prelude::AsyncRuntime;
 use pi_futures::BoxFuture;
 use pi_render::depend_graph::node::DependNode;
 use pi_share::{Share, ShareMutex, ShareRefCell, ThreadSync};
-use pi_world::{prelude::SystemParam, system::{SystemMeta, TypeInfo}, world::World};
+use pi_world::{prelude::SystemParam, system::{SystemMeta, TypeInfo}, world::{Entity, World}};
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 use wgpu::CommandEncoder;
@@ -25,11 +22,9 @@ pub use pi_render::depend_graph::node::{NodeId, NodeLabel, ParamUsage};
 
 /// 渲染节点，给 外部 扩展 使用
 pub trait Node: 'static + ThreadSync {
-    /// 输入参数
-    type Input: InParam + Default;
 
-    /// 输出参数
-    type Output: OutParam + Default + Clone;
+    /// Bevy Reset 系统参数
+    type ResetParam: SystemParam;
 
     /// Bevy Build 系统参数
     type BuildParam: SystemParam;
@@ -37,63 +32,60 @@ pub trait Node: 'static + ThreadSync {
 	/// Bevy Run 系统参数
     type RunParam: SystemParam;
 
+    /// 重置节点， 通常用于释放构建时产生的资源
+    /// 在所有的后继节点执行后执行
+    fn reset<'a>(
+        &'a mut self,
+        param: &'a mut Self::ResetParam,
+        context: RenderContext,
+		id: Entity,
+    );
+
 	fn build<'a>(
         &'a mut self,
-        // world: &'a mut World,
         param: &'a mut Self::BuildParam,
         context: RenderContext,
-		input: &'a Self::Input,
-        usage: &'a ParamUsage,
-		id: NodeId,
-		from: &'a [NodeId],
-		to: &'a [NodeId],
-    ) -> Result<Self::Output, String>;
-
-	// 节点被使用完毕后(所有出度节点的build方法执行完成)， 会调用此方法
-	fn reset<'a>(
-        &'a mut self,
-    ) {}
-
+		id: Entity,
+		from: &'a [Entity],
+		to: &'a [Entity],
+    ) -> Result<(), String>;
     /// 执行，每帧会调用一次
     fn run<'a>(
         &'a mut self,
-        // world: &'a World,
         param: &'a Self::RunParam,
         context: RenderContext,
         commands: ShareRefCell<CommandEncoder>,
-        input: &'a Self::Input,
-        usage: &'a ParamUsage,
-		id: NodeId,
-		from: &'a [NodeId],
-		to: &'a [NodeId],
+		id: Entity,
+		from: &'a [Entity],
+		to: &'a [Entity],
     ) -> BoxFuture<'a, Result<(), String>>;
 }
 
 // ====================== crate内 使用的 数据结构
 
-pub(crate) struct NodeImpl<I, O, R, BP, RP>
+pub(crate) struct NodeImpl<R, BP, RP, ResetP>
 where
-    I: InParam + Default,
-    O: OutParam + Default + Clone,
-    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    R: Node<BuildParam = BP, RunParam = RP, ResetParam = ResetP>,
     BP: SystemParam,
 	RP: SystemParam,
+    ResetP: SystemParam,
 {
     node: R,
+    #[allow(dead_code)]
     name: Cow<'static, str>,
     state_pool: SystemStatePool,
     build_state: Option<(<BP as SystemParam>::State, SystemMeta)>,
 	run_state: Option<(<RP as SystemParam>::State, SystemMeta)>,
+    reset_state: Option<(<ResetP as SystemParam>::State, SystemMeta)>,
     context: RenderContext,
 }
 
-impl<I, O, R, BP, RP> NodeImpl<I, O, R, BP, RP>
+impl<R, BP, RP, ResetP> NodeImpl<R, BP, RP, ResetP>
 where
-    I: InParam + Default,
-    O: OutParam + Default + Clone,
-    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    R: Node<BuildParam = BP, RunParam = RP, ResetParam = ResetP>,
     BP: SystemParam,
 	RP: SystemParam,
+    ResetP: SystemParam,
 {
     #[inline]
     pub(crate) fn new(node: R, context: RenderContext, state_pool: SystemStatePool, name: Cow<'static, str>) -> Self {
@@ -104,6 +96,7 @@ where
             state_pool,
             build_state: None,
 			run_state: None,
+            reset_state: None,
         }
     }
 }
@@ -127,13 +120,12 @@ impl NodeContext {
     }
 }
 
-impl<I, O, R, BP, RP> Drop for NodeImpl<I, O, R, BP, RP>
+impl<R, BP, RP, ResetP> Drop for NodeImpl<R, BP, RP, ResetP>
 where
-    I: InParam + Default,
-    O: OutParam + Default + Clone,
-    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    R: Node<BuildParam = BP, RunParam = RP, ResetParam = ResetP>,
     BP: SystemParam,
 	RP: SystemParam,
+    ResetP: SystemParam,
 {
     fn drop(&mut self) {
         // 将 state 拿出来，扔到 state_pool 中
@@ -146,16 +138,13 @@ where
     }
 }
 
-impl<I, O, R, BP, RP> DependNode<NodeContext> for NodeImpl<I, O, R, BP, RP>
+impl<R, BP, RP, ResetP> DependNode<NodeContext, Entity> for NodeImpl<R, BP, RP, ResetP>
 where
-    I: InParam + Default,
-    O: OutParam + Default + Clone,
-    R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+    R: Node<BuildParam = BP, RunParam = RP, ResetParam = ResetP>,
     BP: SystemParam + 'static,
 	RP: SystemParam + 'static,
+    ResetP: SystemParam + 'static, 
 {
-    type Input = I;
-    type Output = O;
 
     #[inline]
     fn init<'a>(
@@ -185,18 +174,18 @@ where
     fn build<'a>(
         &'a mut self,
         context: &'a mut NodeContext,
-		input: &'a Self::Input,
-        usage: &'a ParamUsage,
-		id: NodeId,
-		from: &'a [NodeId],
-		to: &'a [NodeId],
-    ) -> Result<O, String> {
+		// input: &'a Self::Input,
+        // usage: &'a ParamUsage,
+		id: Entity,
+		from: &'a [Entity],
+		to: &'a [Entity],
+    ) -> Result<(), String> {
         // log::warn!("build================={:?}", build);
 		let world: &mut World = context.world_mut();
 
         let r = {
             let mut build_param = match &mut self.build_state {
-                Some((state, meta)) => {
+                Some((state, _meta)) => {
                     BP::align(state);
                     BP::get_self(state)
                 },
@@ -229,8 +218,8 @@ where
                 // world,
                 &mut build_param,
                 c,
-                input,
-                usage,
+                // input,
+                // usage,
                 id,
                 from,
                 to,
@@ -246,11 +235,11 @@ where
         &'a mut self,
 		index: usize,
         c: &'a NodeContext,
-        input: &'a Self::Input,
-        usage: &'a ParamUsage,
-		id: NodeId,
-		from: &'a [NodeId],
-		to: &'a [NodeId],
+        // input: &'a Self::Input,
+        // usage: &'a ParamUsage,
+		id: Entity,
+		from: &'a [Entity],
+		to: &'a [Entity],
     ) -> BoxFuture<'a, Result<(), String>> {
 
         let context = self.context.clone();
@@ -283,8 +272,8 @@ where
                 &param,
                 context,
                 commands.clone(),
-                input,
-                usage,
+                // input,
+                // usage,
 				id,
 				from,
 				to,
@@ -324,9 +313,38 @@ where
     }
     
     fn reset<'a>(
-            &'a mut self,
+        &'a mut self,
+        context: &'a mut NodeContext,
+        id: Entity,
     ) {
-        self.node.reset();
+        let world: &mut World = context.world_mut();
+        let mut reset_param = match &mut self.reset_state {
+            Some((state, _meta)) => {
+                ResetP::align(state);
+                ResetP::get_self(state)
+            },
+            None => {
+                self.reset_state = self.state_pool.get();
+                match &mut self.reset_state {
+                
+                    Some((state, _meta)) => {
+                        ResetP::align(state);
+                        ResetP::get_self(state)
+                    },
+                    None => {
+                        let mut meta = SystemMeta::new(TypeInfo::of::<()>());
+                        let mut state = ResetP::init_state(world, &mut meta);
+                        ResetP::init(&mut state);
+                        self.reset_state = Some((state, meta));
+                        let r = self.reset_state.as_mut().unwrap();
+                        ResetP::align(&mut r.0);
+                        ResetP::get_self(&mut r.0)
+                    },
+                }
+            },
+        };
+        let context = self.context.clone();
+        self.node.reset(&mut reset_param, context, id);
     }
 }
 

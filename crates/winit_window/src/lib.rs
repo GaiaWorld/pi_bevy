@@ -118,7 +118,7 @@ impl WindowDescribe {
         }
         let inner_size = winit_window.inner_size();
        
-        let scale_factor = winit_window.scale_factor();
+        // let scale_factor = winit_window.scale_factor();
         let raw_handle = bevy_window::HandleWrapper {
             handle: Arc::new(WindowWrapper(self.window.clone())),
         };

@@ -23,7 +23,7 @@ use pi_render::{
         pipeline::RenderPipeline,
     },
 };
-use pi_world::prelude::{App, PostUpdate, Last, SystemSet, Plugin, IntoSystemSetConfigs, IntoSystemConfigs};
+use pi_world::prelude::{App, PostUpdate, Last, SystemSet, Plugin, IntoSystemConfigs};
 use std::mem::size_of;
 use wgpu::TextureView;
 use pi_render::components::view::target_alloc::FboRes;

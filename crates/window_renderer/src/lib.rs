@@ -1,7 +1,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, SimpleInOut, NodeId};
+use pi_bevy_render_plugin::{node::Node, PiScreenTexture, PiRenderDevice, PiRenderWindow, PiRenderGraph, NodeId};
 use pi_render::{rhi::{pipeline::RenderPipeline, device::RenderDevice, BufferInitDescriptor, bind_group::BindGroup, sampler::SamplerDesc, bind_group_layout::BindGroupLayout, texture::PiRenderDefault, buffer::Buffer}, renderer::sampler::SamplerRes};
 use pi_world::{prelude::{App, Plugin}, schedule::Update, single_res::{SingleRes, SingleResMut}, world::Entity};
 use wgpu::Extent3d;
@@ -254,10 +254,9 @@ impl WindowRenderer {
 
 pub struct WindowRendererNode;
 impl Node for WindowRendererNode {
-    type Input = SimpleInOut;
-
-    type Output = ();
-
+    
+     
+    type ResetParam = ();
     type BuildParam = ();
 	type RunParam = (SingleRes<'static, PiScreenTexture>, SingleRes<'static, WindowRenderer>);
 
@@ -266,12 +265,12 @@ impl Node for WindowRendererNode {
 		// _world: &'a  World,
 		_param: &'a mut Self::BuildParam,
 		_context: pi_bevy_render_plugin::RenderContext,
-		_input: &'a Self::Input,
-		_usage: &'a pi_bevy_render_plugin::node::ParamUsage,
-		_id: NodeId,
-		_from: &'a [NodeId],
-		_to: &'a [NodeId],
-	) -> Result<Self::Output, String> {
+		// _input: &'a Self::Input,
+		// _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: Entity,
+		_from: &'a [Entity],
+		_to: &'a [Entity],
+	) -> Result<(), String> {
 		Ok(())
 	}
 
@@ -282,12 +281,12 @@ impl Node for WindowRendererNode {
         // param: &'a mut bevy_ecs::system::SystemState<Self::RunParam>,
         _context: pi_bevy_render_plugin::RenderContext,
         mut commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
-        _: &'a Self::Input,
-        _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
-		_id: NodeId,
-		_from: &'a [NodeId],
-		_to: &'a [NodeId],
-    ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
+        // _: &'a Self::Input,
+        // _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: Entity,
+		_from: &'a [Entity],
+		_to: &'a [Entity],
+    ) -> pi_futures::BoxFuture<'a, Result<(), String>> {
 
         // let (screen, final_render) = param.get(world);
         // let final_render = world.get_single_res::<WindowRenderer>().unwrap().clone();
@@ -323,16 +322,25 @@ impl Node for WindowRendererNode {
             Ok(())
         })
     }
-
     
+    fn reset<'a>(
+        &'a mut self,
+        // world: &'a mut World,
+        _param: &'a mut Self::ResetParam,
+        _context: pi_bevy_render_plugin::RenderContext,
+            // input: &'a Self::Input,
+        // usage: &'a ParamUsage,
+        _id: Entity,
+            // from: &'a [Entity],
+            // to: &'a [Entity],
+    ) {}
 }
 
 pub struct WindowRendererClearNode;
 impl Node for WindowRendererClearNode {
-    type Input = ();
 
-    type Output = ();
-
+     
+    type ResetParam = ();
     type BuildParam = ();
 	type RunParam = SingleRes<'static, WindowRenderer>;
 
@@ -342,12 +350,12 @@ impl Node for WindowRendererClearNode {
         _param: &mut Self::BuildParam,
 		// _param: &'a mut bevy_ecs::system::SystemState<Self::BuildParam>,
 		_context: pi_bevy_render_plugin::RenderContext,
-		_input: &'a Self::Input,
-		_usage: &'a pi_bevy_render_plugin::node::ParamUsage,
-		_id: NodeId,
-		_from: &'a [NodeId],
-		_to: &'a [NodeId],
-	) -> Result<Self::Output, String> {
+		// _input: &'a Self::Input,
+		// _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: Entity,
+		_from: &'a [Entity],
+		_to: &'a [Entity],
+	) -> Result<(), String> {
 		Ok(())
 	}
 
@@ -357,12 +365,12 @@ impl Node for WindowRendererClearNode {
         _param: &'a Self::RunParam,
         _context: pi_bevy_render_plugin::RenderContext,
         _commands: pi_share::ShareRefCell<wgpu::CommandEncoder>,
-        _input: &'a Self::Input,
-        _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
-		_id: NodeId,
-		_from: &'a [NodeId],
-		_to: &'a [NodeId],
-    ) -> pi_futures::BoxFuture<'a, Result<Self::Output, String>> {
+        // _input: &'a Self::Input,
+        // _usage: &'a pi_bevy_render_plugin::node::ParamUsage,
+		_id: Entity,
+		_from: &'a [Entity],
+		_to: &'a [Entity],
+    ) -> pi_futures::BoxFuture<'a, Result<(), String>> {
         // let final_render = param.get(world);
         // if let (Some(view), Some(depth_view)) = (final_render.view(), &final_render.depth_view) {
         //     let rpass = commands.begin_render_pass(
@@ -403,8 +411,18 @@ impl Node for WindowRendererClearNode {
             Ok(())
         })
     }
-
-   
+    
+    fn reset<'a>(
+        &'a mut self,
+        // world: &'a mut World,
+        _param: &'a mut Self::ResetParam,
+        _context: pi_bevy_render_plugin::RenderContext,
+            // input: &'a Self::Input,
+        // usage: &'a ParamUsage,
+        _id: Entity,
+        // from: &'a [Entity],
+        // to: &'a [Entity],
+    ) {}
 }
 
 fn sys_changesize(
@@ -431,8 +449,8 @@ impl Plugin for PluginWindowRender {
 
             let (node_clear, node_render) = {
                 let rg = app.world.get_single_res_mut::<PiRenderGraph>().unwrap();
-                let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode, NodeId::null()).unwrap();
-                let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode, NodeId::null()).unwrap();
+                let node_clear = rg.add_node(WindowRenderer::CLEAR_KEY, WindowRendererClearNode, NodeId::null(), Null::null()).unwrap();
+                let node_render = rg.add_node(WindowRenderer::KEY, WindowRendererNode, NodeId::null(), Null::null()).unwrap();
                 rg.set_finish(WindowRenderer::KEY, true).unwrap();
                 (node_clear, node_render)
             };

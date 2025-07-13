@@ -2,7 +2,6 @@
 
 use super::{
     node::{Node, NodeId, NodeImpl, NodeLabel},
-    param::{InParam, OutParam},
     GraphError, RenderContext,
 };
 use crate::{
@@ -13,13 +12,14 @@ use crate::{
 // use bevy_ecs::{system::SystemParam, world::World};
 use pi_async_rt::prelude::AsyncRuntime;
 use pi_render::{
-    depend_graph::{graph::DependGraph, graph_data::NGraph, param::DownGrade},
+    depend_graph::{graph::DependGraph, graph_data::NGraph},
     rhi::{device::RenderDevice, RenderQueue},
 };
 use pi_share::{Share, ShareMutex, ShareRefCell};
 use pi_world::{prelude::SystemParam, world::{Entity, World}};
 use std::{borrow::Cow, mem::transmute, sync::atomic::AtomicBool};
 use pi_null::Null;
+
 /// 渲染图
 pub struct RenderGraph {
     device: RenderDevice,
@@ -71,7 +71,7 @@ impl RenderGraph {
         // 注：每帧 必须运行一次 窗口的 清屏，否则 wgpu 会报错
         let clear_graph_id: NodeId = graph.imp.add_sub_graph(CLEAR_WIDNOW_GRAPH).unwrap();
         let clear_node = ClearNode;
-        graph.add_node(CLEAR_WIDNOW_NODE, clear_node, clear_graph_id).unwrap();
+        graph.add_node(CLEAR_WIDNOW_NODE, clear_node, clear_graph_id, Null::null()).unwrap();
         graph.set_finish(CLEAR_WIDNOW_NODE, true).unwrap();
         let _ = graph.add_depend(clear_graph_id, graph.imp.main_graph_id());
 
@@ -95,19 +95,20 @@ impl RenderGraph {
         self.imp.main_graph_id()
     }
     /// 添加 名为 name 的 节点
+    /// j
     #[inline]
-    pub fn add_node<I, O, R, BP, RP>(
+    pub fn add_node<R, BP, RP, ResetP>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         node: R,
 		parent_graph_id: NodeId,
+        data_id: Entity,
     ) -> Result<NodeId, GraphError>
     where
-        I: InParam + DownGrade + Default,
-        O: OutParam + Default + Clone,
-        R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+        R: Node<BuildParam = BP, RunParam = RP, ResetParam = ResetP>,
         BP: SystemParam + 'static,
 		RP: SystemParam + 'static,
+        ResetP: SystemParam + 'static,
     {
         let context = RenderContext {
             device: self.device.clone(),
@@ -115,13 +116,17 @@ impl RenderGraph {
             commands: self.commands.clone(),
         };
         let name = name.into();
-        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone(), name.clone());
+        let node = NodeImpl::<R, BP, RP, ResetP>::new(node, context, self.state_pool.clone(), name.clone());
         let r = self.imp.add_node(name, node, parent_graph_id, true);
 
-        if r.is_ok() {
-            self.node_count += 1;
+        match r {
+            Ok(node_id) => {
+                self.node_count += 1;
+                self.imp.set_data_id(node_id, data_id);
+                Ok(node_id)
+            },
+            Err(e) => Err(e),
         }
-        r
     }
 
     // 设置是否为传输节点
@@ -129,31 +134,25 @@ impl RenderGraph {
         self.imp.set_is_transfer(id, is_transfer);
     }
 
-
-    /// 设置bind
-    pub fn set_bind(&mut self, id: NodeId, bind: Entity) {
-        self.imp.set_bind(id, bind);
-    }
-
-    /// 获取bind
-    pub fn get_bind(&self, id: NodeId) -> Entity {
-        self.imp.get_bind(id)
+    /// 获取dataid
+    pub fn get_data_id(&self, node_id: NodeId) -> Entity {
+        self.imp.get_data_id(node_id)
     }
 
 	/// 添加一个不运行的节点
     #[inline]
-    pub fn add_node_not_run<I, O, R, BP, RP>(
+    pub fn add_node_not_run<R, BP, RP, ResetP>(
         &mut self,
         name: impl Into<Cow<'static, str>>,
         node: R,
 		parent_graph_id: NodeId,
+        data_id: Entity,
     ) -> Result<NodeId, GraphError>
     where
-        I: InParam + DownGrade + Default,
-        O: OutParam + Default + Clone,
-        R: Node<BuildParam = BP, RunParam = RP, Input = I, Output = O>,
+        R: Node<BuildParam = BP, RunParam = RP, ResetParam = ResetP>,
         BP: SystemParam + 'static,
 		RP: SystemParam + 'static,
+        ResetP: SystemParam + 'static,
     {
         let context = RenderContext {
             device: self.device.clone(),
@@ -161,13 +160,17 @@ impl RenderGraph {
             commands: self.commands.clone(),
         };
         let name = name.into();
-        let node = NodeImpl::<I, O, R, BP, RP>::new(node, context, self.state_pool.clone(), name.clone());
+        let node = NodeImpl::<R, BP, RP, ResetP>::new(node, context, self.state_pool.clone(), name.clone());
         let r = self.imp.add_node(name, node, parent_graph_id, false);
 
-        if r.is_ok() {
-            self.node_count += 1;
+        match r {
+            Ok(node_id) => {
+                self.node_count += 1;
+                self.imp.set_data_id(node_id, data_id);
+                Ok(node_id)
+            },
+            Err(e) => Err(e),
         }
-        r
     }
 
 	/// 添加 名为 name 的 节点

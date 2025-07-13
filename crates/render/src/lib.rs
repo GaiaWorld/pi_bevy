@@ -11,7 +11,7 @@ mod async_queue;
 mod clear_node;
 pub mod render_cross;
 pub mod constant;
-mod graph;
+pub mod graph;
 mod init_render;
 mod plugin;
 mod render_windows;
@@ -23,11 +23,10 @@ use std::sync::atomic::AtomicBool;
 
 /// 渲染图
 pub use graph::*;
-use pi_render::{components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView}, depend_graph::param::DownGrade};
-use pi_share::Share;
+use pi_render::components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView};
+use pi_world::insert::Component;
 /// 渲染 插件
 pub use plugin::*;
-use render_derive::NodeParam;
 /// 单例
 pub use resource::*;
 
@@ -38,21 +37,10 @@ lazy_static! {
 /// 标签
 pub use clear_node::CLEAR_WIDNOW_GRAPH;
 
-#[derive(Default, Clone, NodeParam)]
+#[derive(Default, Clone, Component)]
 pub struct SimpleInOut {
     pub target: Option<ShareTargetView>,
 	pub valid_rect: Option<(u32, u32, u32, u32)>, // x, y, w, h
-}
-
-impl DownGrade for SimpleInOut {
-    fn downgrade(&mut self) {
-        match &mut self.target {
-            Some(t) => {
-                *t = Share::new((**t).downgrade());
-            },
-            None => (),
-        }
-    }
 }
 
 impl std::fmt::Debug for SimpleInOut {
