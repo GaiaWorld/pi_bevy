@@ -19,12 +19,15 @@ mod resource;
 mod system;
 pub mod asimage_url;
 
-use std::sync::atomic::AtomicBool;
+use std::{ops::{Deref, DerefMut}, sync::atomic::AtomicBool};
 
+use derive_deref::{Deref, DerefMut};
 /// 渲染图
 pub use graph::*;
 use pi_render::components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView};
 use pi_world::insert::Component;
+use pi_hash::{XHashMap, XHashSet};
+use pi_world_macros::Resource;
 /// 渲染 插件
 pub use plugin::*;
 /// 单例
@@ -33,6 +36,11 @@ pub use resource::*;
 lazy_static! {
     pub static ref IS_RESUMED: AtomicBool = AtomicBool::new(true);
 }
+
+#[derive(Resource, Default, DerefMut, Deref)]
+pub struct ResStateTextureLoader(pi_render::renderer::texture_loader::loader::StateTextureLoader);
+#[derive(Resource, Default, DerefMut, Deref)]
+pub struct ResTextureCombineAtlas2DMgr(pi_render::renderer::texture_loader::texture_atlas::TextureCombineAtlas2DMgr);
 
 /// 标签
 pub use clear_node::CLEAR_WIDNOW_GRAPH;
