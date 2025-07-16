@@ -298,7 +298,7 @@ impl Node for WindowRendererNode {
                     label: Some(WindowRenderer::KEY),
                     color_attachments: &[
                         Some(wgpu::RenderPassColorAttachment {
-                            view: param.0.0.as_ref().unwrap().view.as_ref().unwrap(),
+                            view: param.0.0.as_ref().unwrap().view().as_ref().unwrap(),
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Load,

@@ -16,7 +16,7 @@ pub struct DepthRange {pub start: f32, pub end: f32}
 
 
 /// 渲染方式
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct DrawList {
 	/// 要求的深度的长度， 一旦设置，表示 默认0.1, 在0~2单位内（by_draw_list为true时有效）
 	pub require_depth: f32,
