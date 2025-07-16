@@ -14,6 +14,7 @@ use pi_assets::asset::GarbageEmpty;
 use pi_async_rt::prelude::*;
 use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr, collect};
 use pi_render::renderer::sampler::SamplerRes;
+use pi_render::renderer::texture::ImageTextureFrame;
 use pi_render::{
     components::view::target_alloc::{SafeAtlasAllocator, UnuseTexture},
     rhi::{
@@ -131,6 +132,7 @@ impl Plugin for PiRenderPlugin {
             bind_group_res,
             texture_res,
             texture_asset_res,
+            texture_frame_asset_res,
             fbo_res,
             pipeline_res,
         ) = {
@@ -218,6 +220,17 @@ impl Plugin for PiRenderPlugin {
                     &asset_config,
                     &mut allocator,
                 ),
+                ShareAssetMgr::<ImageTextureFrame>::new_with_config(
+                    GarbageEmpty(),
+                    &AssetDesc {
+                        ref_garbage: false,
+                        min: 10 * 1024 * 1024,
+                        weight: 50,
+                        timeout: 10 * 60 * 1000,
+                    },
+                    &asset_config,
+                    &mut allocator,
+                ),
                 ShareAssetMgr::<FboRes>::new_with_config(
                     GarbageEmpty(),
                     &AssetDesc {
@@ -258,6 +271,8 @@ impl Plugin for PiRenderPlugin {
         app.world.insert_single_res(texture_res);
 
         app.world.insert_single_res(texture_asset_res.clone());
+        app.world.insert_single_res(texture_frame_asset_res.clone());
+        
         app.world.insert_single_res(pipeline_res);
         // app.insert_resource(AssetMgr::<RenderRes<Program>>::new(
         // 	GarbageEmpty(),
