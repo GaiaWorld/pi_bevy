@@ -3,7 +3,9 @@
 // use bevy_ecs::{prelude::Component, schedule::SystemSet};
 use pi_render::depend_graph::NodeId;
 use derive_deref::{Deref, DerefMut};
-use pi_world::insert::Component;
+use pi_world::{insert::Component, world::Entity};
+use pi_hash::XHashMap;
+use pi_world_macros::Resource;
 
 /***************************************************用于不同渲染系统中的渲染交叉（如在gui中渲染3d， 在3d中渲染gui）****************************************************/
 /// 渲染图节点
@@ -14,6 +16,9 @@ pub struct GraphId(pub NodeId);
 #[derive(Debug, Default,  Clone, Component)]
 pub struct DepthRange {pub start: f32, pub end: f32}
 
+/// 绑定交叉渲染时DrawList数组对应的Entity数组
+#[derive(Resource, Default)]
+pub struct CrossRenderDrawListEntities(pub XHashMap<Entity, Vec<Entity>>);
 
 /// 渲染方式
 #[derive(Component)]
