@@ -19,6 +19,7 @@ pi_time = "0.5"
 # bevy_ecs = "0.11"
 # bevy_app = {version = "0.11", default-features = false}
 pi_world = "0.2"
+pi_world_macros     = "0.1"
 # bevy_window = "0.11"
 bevy_window = {path = "../window", version = "0.3", registry = "yn", package = "pi_bevy_window" }
 raw-window-handle = "0.6"
@@ -30,6 +31,7 @@ wgpu = {version = "0.3", registry = "yn", package="pi_wgpu"}
 wgpu1 = {version = "25.0.*", package = "wgpu"}
 crossbeam = "0.8"
 futures = "0.3"
+smallvec            = "*"
 
 half = "*"
 pi_hash = "0.1"

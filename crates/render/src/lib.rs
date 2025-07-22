@@ -45,6 +45,7 @@ pub struct ResTextureCombineAtlas2DMgr(pi_render::renderer::texture_loader::text
 
 /// 标签
 pub use clear_node::CLEAR_WIDNOW_GRAPH;
+pub use clear_node::ScreenWithPostprocess;
 
 #[derive(Default, Clone, NodeParam)]
 pub struct SimpleInOut {
