@@ -1,5 +1,5 @@
 use crate::system::build_graph;
-use crate::TextureKeyAlloter;
+use crate::{ScreenWithPostprocess, TextureKeyAlloter};
 use crate::{
     init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
     PiAsyncRuntime, PiClearOptions, PiRenderDevice, PiRenderOptions, PiRenderWindow,
@@ -14,6 +14,7 @@ use pi_assets::asset::GarbageEmpty;
 use pi_async_rt::prelude::*;
 use pi_bevy_asset::{Allocator, AssetConfig, AssetDesc, ShareAssetMgr, ShareHomogeneousMgr, collect};
 use pi_render::renderer::sampler::SamplerRes;
+use pi_render::renderer::texture::ImageTextureFrame;
 use pi_render::{
     components::view::target_alloc::{SafeAtlasAllocator, UnuseTexture},
     rhi::{
@@ -23,9 +24,10 @@ use pi_render::{
         pipeline::RenderPipeline,
     },
 };
-use pi_world::prelude::{App, PostUpdate, Last, SystemSet, Plugin, IntoSystemSetConfigs, IntoSystemConfigs};
+use pi_world::prelude::{App, PostUpdate, Last, SystemSet, Plugin, IntoSystemConfigs};
 use std::mem::size_of;
 use wgpu::TextureView;
+use pi_render::components::view::target_alloc::FboRes;
 
 /// ================ 阶段标签 ================
 pub use bevy_window::FrameSet as PiRenderSystemSet;
@@ -75,6 +77,8 @@ impl Plugin for PiRenderPlugin {
         app.world.insert_single_res(self.frame_init_state);
 
         app.world.insert_single_res(PiScreenTexture::default());
+        app.world.insert_single_res(ScreenWithPostprocess::default());
+        log::error!("Insert ScreenWithPostprocess");
 
         if app.world.get_single_res::<PiRenderOptions>().is_none() {
             app.world.insert_single_res(PiRenderOptions::default());
@@ -130,6 +134,8 @@ impl Plugin for PiRenderPlugin {
             bind_group_res,
             texture_res,
             texture_asset_res,
+            texture_frame_asset_res,
+            fbo_res,
             pipeline_res,
         ) = {
             // let w = &mut app.world;
@@ -216,6 +222,28 @@ impl Plugin for PiRenderPlugin {
                     &asset_config,
                     &mut allocator,
                 ),
+                ShareAssetMgr::<ImageTextureFrame>::new_with_config(
+                    GarbageEmpty(),
+                    &AssetDesc {
+                        ref_garbage: false,
+                        min: 10 * 1024 * 1024,
+                        weight: 50,
+                        timeout: 10 * 60 * 1000,
+                    },
+                    &asset_config,
+                    &mut allocator,
+                ),
+                ShareAssetMgr::<FboRes>::new_with_config(
+                    GarbageEmpty(),
+                    &AssetDesc {
+                        ref_garbage: false,
+                        min: 10 * 1024 * 1024,
+                        weight: 0,
+                        timeout: 2 * 1000,
+                    },
+                    &asset_config,
+                    &mut allocator,
+                ),
                 ShareAssetMgr::<RenderRes<RenderPipeline>>::new_with_config(
                     GarbageEmpty(),
                     &AssetDesc {
@@ -245,6 +273,8 @@ impl Plugin for PiRenderPlugin {
         app.world.insert_single_res(texture_res);
 
         app.world.insert_single_res(texture_asset_res.clone());
+        app.world.insert_single_res(texture_frame_asset_res.clone());
+        
         app.world.insert_single_res(pipeline_res);
         // app.insert_resource(AssetMgr::<RenderRes<Program>>::new(
         // 	GarbageEmpty(),
@@ -264,7 +294,7 @@ impl Plugin for PiRenderPlugin {
         app.world
             .insert_single_res(PiSafeAtlasAllocator(SafeAtlasAllocator::new(
                 device.0.clone(),
-                texture_asset_res.0,
+                fbo_res.0,
                 share_unuse.0,
                 texture_key_alloter.0.clone(),
             )));

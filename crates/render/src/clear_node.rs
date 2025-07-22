@@ -1,27 +1,26 @@
-use crate::{constant::texture_sampler::ColorFormat, node::Node, PiClearOptions, PiScreenTexture, RenderContext, SimpleInOut};
+use crate::{constant::texture_sampler::ColorFormat, node::Node, PiClearOptions, PiSafeAtlasAllocator, PiScreenTexture, RenderContext, SimpleInOut};
 // use bevy_ecs::{
 //     system::{Res, SystemState},
 //     world::World,
 // };
 use pi_futures::BoxFuture;
-use pi_render::{components::view::target_alloc::{SafeAtlasAllocator, SafeTargetView, TargetDescriptor, TargetType, TextureDescriptor}, depend_graph::node::ParamUsage};
+use pi_render::{components::view::target_alloc::{SafeAtlasAllocator, SafeTargetView, TargetDescriptor, TargetType, TextureDescriptor}};
 use pi_share::{Share, ShareRefCell};
-use pi_render::depend_graph::NodeId;
-use pi_world::single_res::{SingleRes, SingleResMut};
+use pi_world::{single_res::{SingleRes, SingleResMut}, world::Entity};
 use pi_world_macros::Resource;
-use wgpu::{StoreOp, TextureView};
+use wgpu::{StoreOp, Texture, TextureView};
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct ScreenWithPostprocess(pub bool, pub Option<Share<SafeTargetView>>);
 impl ScreenWithPostprocess {
-    pub fn view<'a>(&'a self, screen: &'a PiScreenTexture) -> Option<&'a TextureView> {
+    pub fn tex_and_view<'a>(&'a self, screen: &'a PiScreenTexture) -> (Option<&'a Texture>, Option<&'a TextureView>) {
         if let Some(tex) = &self.1 {
-            Some(&tex.target().colors[0].0.texture_view)
+            (Some(&tex.as_ref().target().colors[0].0.texture), Some(&tex.target().colors[0].0.texture_view))
         } else {
             if let Some(screen) = &screen.0 {
-                screen.view()
+                (screen.texture(), screen.view())
             } else {
-                None
+                (None, None)
             }
         }
     }
@@ -35,22 +34,19 @@ pub const CLEAR_WIDNOW_NODE: &str = "clear_window";
 pub const CLEAR_WIDNOW_GRAPH: &str = "clear_graph";
 
 impl Node for ClearNode {
-    type Input = ();
-    type Output = ();
-    type BuildParam = (SingleResMut<'static, ScreenWithPostprocess>, SingleRes<'static, SafeAtlasAllocator>, SingleRes<'static, PiScreenTexture>, );
+    type BuildParam = (SingleResMut<'static, ScreenWithPostprocess>, SingleRes<'static, PiSafeAtlasAllocator>, SingleRes<'static, PiScreenTexture>, );
 	type RunParam = (SingleRes<'static, PiScreenTexture>, SingleRes<'static, PiClearOptions>, SingleRes<'static, ScreenWithPostprocess>);
-
+    type ResetParam = ();
+    
 	fn build<'a>(
 		&'a mut self,
 		// _world: &'a  World,
 		_param: &'a mut Self::BuildParam,
 		_context: RenderContext,
-		_input: &'a Self::Input,
-		_usage: &'a ParamUsage,
-		_id: NodeId,
-		_from: &'a [NodeId],
-		_to: &'a [NodeId],
-	) -> Result<Self::Output, String> {
+		_id: Entity,
+		_from: &'a [Entity],
+		_to: &'a [Entity],
+	) -> Result<(), String> {
         if _param.0.0 {
             if let Some(screen) = &_param.2.0 {
                 if let Some(screen) = screen.texture() {
@@ -83,7 +79,7 @@ impl Node for ClearNode {
                         default_height: height,
                     });
                     let t: Vec<Share<SafeTargetView>> = vec![];
-                    let rt = _param.1.allocate_alone_not_share(width, height, target_type, &t, true);
+                    let rt = _param.1.allocate_alone_not_share(width, height, target_type, t.iter(), true);
                     _param.0.1 = Some(Share::new(rt));
                 }
             }
@@ -101,12 +97,12 @@ impl Node for ClearNode {
         param: &'a Self::RunParam,
         _context: RenderContext,
         commands: ShareRefCell<wgpu::CommandEncoder>,
-        _input: &'a Self::Input,
-        _usage: &'a ParamUsage,
-		_id: NodeId,
-		_from: &'a [NodeId],
-		_to: &'a [NodeId],
-    ) -> BoxFuture<'a, Result<Self::Output, String>> {
+        // _input: &'a Self::Input,
+        // _usage: &'a ParamUsage,
+		_id: Entity,
+		_from: &'a [Entity],
+		_to: &'a [Entity],
+    ) -> BoxFuture<'a, Result<(), String>> {
         let (view, clear) = {
             // let view = world.get_single_res::<PiScreenTexture>().unwrap().0.as_ref().unwrap().view.as_ref().unwrap().clone();
             // let clear = world.get_single_res::<PiClearOptions>().unwrap().clone();
@@ -115,7 +111,12 @@ impl Node for ClearNode {
             let view = if let Some(rt) = &param.2.1 {
                 &rt.target().colors[0].0.texture_view
             } else {
-                param.0.as_ref().unwrap().view().unwrap()
+                if let Some(view) = param.0.as_ref().unwrap().view() {
+                    view
+                } else {
+                    return Box::pin(async move { Ok(()) });
+                }
+                // param.0.as_ref().unwrap().view().as_ref().unwrap()
             };
 
             // let clear = clear.0.clone();
@@ -144,6 +145,20 @@ impl Node for ClearNode {
 
             Ok(())
         })
+    }
+    
+    fn reset<'a>(
+        &'a mut self,
+        // world: &'a mut World,
+        _param: &'a mut Self::ResetParam,
+        _context: RenderContext,
+            // input: &'a Self::Input,
+        // usage: &'a ParamUsage,
+        _id: Entity,
+            // from: &'a [Entity],
+            // to: &'a [Entity],
+    ) {
+        
     }
 
    

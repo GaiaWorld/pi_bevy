@@ -1,4 +1,4 @@
-use std::mem::transmute;
+
 
 use crate::PiFirstSurface;
 use crate::{
@@ -15,8 +15,7 @@ use pi_render::rhi::{
     options::RenderOptions,
     RenderInstance, RenderQueue,
 };
-use pi_assets::allocator::Allocator;
-use wgpu::{InstanceFlags, Gles3MinorVersion};
+use wgpu::InstanceFlags;
 
 pub(crate) fn init_render<A: AsyncRuntime + AsyncRuntimeExt>(
     world: &mut World,
@@ -101,7 +100,7 @@ async fn setup_render_context<'a>(
     instance: RenderInstance,
     surface: wgpu::Surface<'a>,
     options: RenderOptions,
-    mut alloter: pi_bevy_asset::Allocator,
+    alloter: pi_bevy_asset::Allocator,
 ) -> SetupResult<'a> {
     let request_adapter_options = wgpu::RequestAdapterOptions {
         power_preference: options.power_preference,

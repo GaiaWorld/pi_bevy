@@ -11,7 +11,7 @@ mod async_queue;
 mod clear_node;
 pub mod render_cross;
 pub mod constant;
-mod graph;
+pub mod graph;
 mod init_render;
 mod plugin;
 mod render_windows;
@@ -19,18 +19,15 @@ mod resource;
 mod system;
 pub mod asimage_url;
 
-use std::{ops::{Deref, DerefMut}, sync::atomic::AtomicBool};
+use std::sync::atomic::AtomicBool;
 
 use derive_deref::{Deref, DerefMut};
 /// 渲染图
 pub use graph::*;
-use pi_hash::{XHashMap, XHashSet};
-use pi_render::{components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView}, depend_graph::param::DownGrade, renderer::{errors::EError, texture::KeyImageTextureFrame}};
-use pi_share::Share;
-use pi_world_macros::Resource;
+use pi_render::components::view::target_alloc::{GetTargetView, ShareTargetView, TargetView};
+use pi_world::insert::Component;
 /// 渲染 插件
 pub use plugin::*;
-use render_derive::NodeParam;
 /// 单例
 pub use resource::*;
 
@@ -38,30 +35,19 @@ lazy_static! {
     pub static ref IS_RESUMED: AtomicBool = AtomicBool::new(true);
 }
 
-#[derive(Resource, Default, DerefMut, Deref)]
+#[derive(Default, DerefMut, Deref)]
 pub struct ResStateTextureLoader(pi_render::renderer::texture_loader::loader::StateTextureLoader);
-#[derive(Resource, Default, DerefMut, Deref)]
+#[derive(Default, DerefMut, Deref)]
 pub struct ResTextureCombineAtlas2DMgr(pi_render::renderer::texture_loader::texture_atlas::TextureCombineAtlas2DMgr);
 
 /// 标签
 pub use clear_node::CLEAR_WIDNOW_GRAPH;
 pub use clear_node::ScreenWithPostprocess;
 
-#[derive(Default, Clone, NodeParam)]
+#[derive(Default, Clone, Component)]
 pub struct SimpleInOut {
     pub target: Option<ShareTargetView>,
 	pub valid_rect: Option<(u32, u32, u32, u32)>, // x, y, w, h
-}
-
-impl DownGrade for SimpleInOut {
-    fn downgrade(&mut self) {
-        match &mut self.target {
-            Some(t) => {
-                *t = Share::new((**t).downgrade());
-            },
-            None => (),
-        }
-    }
 }
 
 impl std::fmt::Debug for SimpleInOut {
