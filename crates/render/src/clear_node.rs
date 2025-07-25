@@ -40,7 +40,6 @@ impl Node for ClearNode {
     
 	fn build<'a>(
 		&'a mut self,
-		// _world: &'a  World,
 		_param: &'a mut Self::BuildParam,
 		_context: RenderContext,
 		_id: Entity,
@@ -103,16 +102,17 @@ impl Node for ClearNode {
 		_from: &'a [Entity],
 		_to: &'a [Entity],
     ) -> BoxFuture<'a, Result<(), String>> {
-        let (view, clear) = {
+        let (view, clear, width, height) = {
             // let view = world.get_single_res::<PiScreenTexture>().unwrap().0.as_ref().unwrap().view.as_ref().unwrap().clone();
             // let clear = world.get_single_res::<PiClearOptions>().unwrap().clone();
             // let (s, clear) = param;
 
-            let view = if let Some(rt) = &param.2.1 {
-                &rt.target().colors[0].0.texture_view
+            let (view, width, height) = if let Some(rt) = &param.2.1 {
+                (&rt.target().colors[0].0.texture_view, rt.target().colors[0].0.width, rt.target().colors[0].0.height)
             } else {
                 if let Some(view) = param.0.as_ref().unwrap().view() {
-                    view
+                    let texture = param.0.as_ref().unwrap().texture().unwrap();
+                    (view, texture.width(), texture.height())
                 } else {
                     return Box::pin(async move { Ok(()) });
                 }
@@ -121,14 +121,14 @@ impl Node for ClearNode {
 
             // let clear = clear.0.clone();
 
-            (view, &*param.1)
+            (view, &*param.1, width, height)
         };
 
         Box::pin(async move {
             let mut encoder = commands.0.as_ref().borrow_mut();
 
             let depth_stencil_attachment = None;
-            let _rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 depth_stencil_attachment,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -142,21 +142,18 @@ impl Node for ClearNode {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
-
+            rpass.set_viewport(0.0, 0.0, width as f32, height as f32, 0.0, 1.0);
+            // 清屏
+            rpass.set_scissor_rect(0, 0, width, height);
             Ok(())
         })
     }
     
     fn reset<'a>(
         &'a mut self,
-        // world: &'a mut World,
         _param: &'a mut Self::ResetParam,
         _context: RenderContext,
-            // input: &'a Self::Input,
-        // usage: &'a ParamUsage,
         _id: Entity,
-            // from: &'a [Entity],
-            // to: &'a [Entity],
     ) {
         
     }
