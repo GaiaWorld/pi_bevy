@@ -16,7 +16,7 @@ mod init_render;
 mod plugin;
 mod render_windows;
 mod resource;
-mod system;
+pub mod system;
 pub mod asimage_url;
 
 use std::sync::atomic::AtomicBool;

@@ -11,6 +11,7 @@ use bevy_window::{PrimaryWindow, Window};
 use pi_async_rt::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
 use pi_world::{filter::With, query::Query, single_res::{SingleRes, SingleResMut}, world::World};
+pub struct FrameSender(pub crossbeam_channel::Sender<()>);
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 
@@ -33,6 +34,11 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     primary_window: Query<&Window, With<PrimaryWindow>>,
     mut rg: SingleResMut<PiRenderGraph>,
 ) {
+    if let Some(s) = world.get_single_res::<FrameSender>(){
+        // println!("========= run_frame_system");
+        let _= s.0.send(());
+    }
+
     if !IS_RESUMED.load(Ordering::Relaxed){
         return;
     }
