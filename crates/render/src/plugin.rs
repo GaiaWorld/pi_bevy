@@ -1,5 +1,5 @@
 use crate::system::build_graph;
-use crate::TextureKeyAlloter;
+use crate::{ScreenWithPostprocess, TextureKeyAlloter};
 use crate::{
     init_render::init_render, render_windows::RenderWindow, system::run_frame_system,
     PiAsyncRuntime, PiClearOptions, PiRenderDevice, PiRenderOptions, PiRenderWindow,
@@ -77,6 +77,8 @@ impl Plugin for PiRenderPlugin {
         app.world.insert_single_res(self.frame_init_state);
 
         app.world.insert_single_res(PiScreenTexture::default());
+        app.world.insert_single_res(ScreenWithPostprocess::default());
+        log::error!("Insert ScreenWithPostprocess");
 
         if app.world.get_single_res::<PiRenderOptions>().is_none() {
             app.world.insert_single_res(PiRenderOptions::default());
