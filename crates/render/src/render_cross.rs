@@ -5,6 +5,7 @@ use pi_render::depend_graph::NodeId;
 use derive_deref::{Deref, DerefMut};
 use pi_world::{insert::Component, world::Entity};
 use pi_hash::XHashMap;
+use wgpu::Color;
 
 /***************************************************用于不同渲染系统中的渲染交叉（如在gui中渲染3d， 在3d中渲染gui）****************************************************/
 /// 渲染图节点
@@ -26,6 +27,9 @@ pub struct DrawList {
 	pub require_depth: f32,
 	/// 是否用渲染列表的方式绘制
 	pub draw_list: pi_render::renderer::draw_obj_list::DrawList,
+	pub clear_color: Option<Color>,
+	pub clear_depth: Option<f32>,
+	pub clear_stencil: Option<u32>,
 }
 
 // impl Default for RenderWay {
