@@ -27,8 +27,11 @@ pub struct DrawList {
 	pub require_depth: f32,
 	/// 是否用渲染列表的方式绘制
 	pub draw_list: pi_render::renderer::draw_obj_list::DrawList,
+	/// 颜色清屏 - None 表示不清屏
 	pub clear_color: Option<Color>,
+	/// 深度清屏 - None 表示不清屏
 	pub clear_depth: Option<f32>,
+	/// 蒙版清屏 - None 表示不清屏
 	pub clear_stencil: Option<u32>,
 }
 
