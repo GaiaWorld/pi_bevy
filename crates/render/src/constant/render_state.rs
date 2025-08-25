@@ -1,10 +1,11 @@
 
 
 
+use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum StencilOperation {
     /// Keep stencil value unchanged.
     /// #[default]
@@ -42,7 +43,7 @@ impl StencilOperation {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BlendFactor {
     /// 0.0
     Zero = 0,
@@ -91,7 +92,7 @@ impl BlendFactor {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BlendOperation {
     /// Src + Dst
     Add,
@@ -144,7 +145,7 @@ impl EColorSpace {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CompareFunction {
     /// Function never passes
     Never = 1,
@@ -199,7 +200,7 @@ impl CompareFunction {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct StencilFaceState {
     /// Comparison function that determines if the fail_op or pass_op is used on the stencil buffer.
     pub compare: CompareFunction,
@@ -227,7 +228,7 @@ impl StencilFaceState {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum CullMode {
     Off,
     Back,
@@ -244,7 +245,7 @@ impl CullMode {
 }
 
 /// * 默认值 Fill
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum PrimitiveTopology {
     /// Vertex data is a list of points. Each vertex is a new point.
     PointList = 0,
@@ -279,7 +280,7 @@ impl PrimitiveTopology {
 
 // #[derive(Debug, Clone, Copy)]
 /// * 默认值 Fill
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum PolygonMode {
     Fill = 0,
     /// Polygons are drawn as line segments
@@ -298,7 +299,7 @@ impl PolygonMode {
 }
 
 /// * 默认值 Ccw
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum FrontFace {
     Ccw = 0,
     /// Triangles with vertices in clockwise order are considered the front face.

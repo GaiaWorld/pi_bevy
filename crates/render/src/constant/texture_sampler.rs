@@ -2,8 +2,9 @@
 use pi_render::rhi::sampler::{EAddressMode, EFilterMode, EAnisotropyClamp, SamplerDesc};
 
 use super::render_state::CompareFunction;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum ColorFormat {
     // Normal 8 bit formats
     /// Red channel only. 8 bit integer per channel. [0, 255] converted to/from float [0, 1] in shader.
@@ -209,7 +210,7 @@ impl ColorFormat {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum DepthStencilFormat {
     None,
     // Depth and stencil formats
