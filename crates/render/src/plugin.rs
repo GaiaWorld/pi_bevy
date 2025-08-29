@@ -293,7 +293,7 @@ impl Plugin for PiRenderPlugin {
         let device = app.world.get_single_res::<PiRenderDevice>().unwrap();
         app.world
             .insert_single_res(PiSafeAtlasAllocator(SafeAtlasAllocator::new(
-                device.0.clone(),
+                (*device.0).clone(),
                 fbo_res.0,
                 share_unuse.0,
                 texture_key_alloter.0.clone(),
