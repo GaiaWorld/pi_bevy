@@ -18,6 +18,7 @@ mod render_windows;
 mod resource;
 pub mod system;
 pub mod asimage_url;
+pub mod cmd_play;
 
 use std::sync::atomic::AtomicBool;
 
@@ -30,6 +31,8 @@ use pi_world::insert::Component;
 pub use plugin::*;
 /// 单例
 pub use resource::*;
+/// 单例
+pub use cmd_play::*;
 
 lazy_static! {
     pub static ref IS_RESUMED: AtomicBool = AtomicBool::new(true);

@@ -32,6 +32,7 @@ wgpu1 = {version = "25.0.*", package = "wgpu"}
 crossbeam = "0.8"
 futures = "0.3"
 smallvec            = "*"
+bitflags = "1.2"
 
 half = "*"
 pi_hash = "0.1"
@@ -45,6 +46,7 @@ pi_bevy_asset = { path = "../asset", version = "0.3", registry = "yn" }
 pi_assets = "0.15"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 
+postcard = {version = "1.0", features = ["use-std"]}
 serde_derive    = "1.0"
 serde           = { version = "1.0", features = ["derive"] }
 

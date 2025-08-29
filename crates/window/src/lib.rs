@@ -133,6 +133,8 @@ impl Plugin for WindowPlugin {
             let _ = editor.insert_entity((PrimaryWindow, primary_window.clone()));
         }
 
+        app.world.insert_single_res(FrameState::default());
+
         // match self.exit_condition {
         //     ExitCondition::OnPrimaryClosed => {
         //         app.add_systems(PostUpdate, exit_on_primary_closed);
