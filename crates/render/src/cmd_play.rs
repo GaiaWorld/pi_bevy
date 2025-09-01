@@ -139,7 +139,7 @@ impl Records {
         if let Some(list) = self.list.last_mut() {
             list.entities.push(entity);
         } else {
-            log::error!(">>> list ilen is 0");
+            // log::error!(">>> list ilen is 0");
         }
     }
     pub fn record(&mut self, key: KeyRecord, serialized: Vec<u8>) {
@@ -149,7 +149,6 @@ impl Records {
     }
 
     pub fn replay(world: &mut World) {
-        log::error!(">>> replay");
 
         let records = world.get_single_res::<Records>().unwrap();
         let records_list_len = records.list.len();
@@ -190,6 +189,16 @@ impl Records {
         let mut next_state_index = play_state.next_state_index;
     loop {
         let records = world.get_single_res::<Records>().unwrap();
+        // 已经播放到最后一个，设置当前播放状态
+        if next_state_index >= records.list.len() {
+            let play_state = world.get_single_res_mut::<PlayState>().unwrap();
+            play_state.is_running = false;
+            play_state.cur_frame_count = 0;
+            // **records = Records::default();
+            play_state.playresult = EReplayResult::IsLast;
+            return;
+        }
+
         let r = &records.list[next_state_index];
         let frame_index = r.frame_index as f32 ;
         let play_state = world.get_single_res_mut::<PlayState>().unwrap();
@@ -217,13 +226,10 @@ impl Records {
                 newentities.push(world.spawn_empty());
             }
 
-            log::error!("Commands Count: {:?}", (r.cmds.len(), r.frame_index));
-            log::error!("Entitiy Count: {:?}", r.entities);
             let play_state = world.get_single_res_mut::<PlayState>().unwrap();
             let node_map = &mut play_state.node_map;
             for i in 0..newlen {
                 if node_map.contains_key(&createlist[i]) == false {
-                    log::error!("{:?}", (createlist[i], newentities[i]));
                     node_map.insert(createlist[i], newentities[i]);
                 }
             }
@@ -269,11 +275,6 @@ pub fn sys_cmd_replay(world: &mut World) {
     Records::replay(world);
 }
 
-pub fn sys_frame_count(
-    mut records: SingleResMut<Records>,
-) {
-    records.cur_frame_count += 1; // 记录帧数量
-}
 pub struct GlobalCmdTracePlugin {
     pub option: TraceOption,
 }
@@ -283,14 +284,20 @@ impl Plugin for GlobalCmdTracePlugin {
         app.configure_set(First, StageCMDTrace::Before         .before(StageCMDTrace::Trace));
         app.configure_set(First, StageCMDTrace::After         .after(StageCMDTrace::Trace));
 
+        app.world.insert_single_res::<PlayState>(PlayState { option: self.option.clone(), ..Default::default() });
+        app.world.init_single_res::<RunState>();
+
+        let mut records = Records::default();
         match self.option {
             TraceOption::Record => {
                 app.add_system(First, sys_cmd_record
                     .in_set(StageCMDTrace::Trace)
                 );
-                app.add_system(First, sys_frame_count
-                    .in_set(StageCMDTrace::After)
-                );
+
+                let frame_index = 0;
+                records.cur_frame_count = frame_index;
+                records.run_state.push((RunState::default(), frame_index));
+                records.list.push(Record { frame_index, state: RunState::default(), ..Default::default() });
             }
             TraceOption::Play => {
                 app.add_system(First, sys_cmd_replay
@@ -300,8 +307,6 @@ impl Plugin for GlobalCmdTracePlugin {
             TraceOption::None => {},
         };
 
-        app.world.insert_single_res::<PlayState>(PlayState { option: self.option.clone(), ..Default::default() });
-        app.world.init_single_res::<Records>();
-        app.world.init_single_res::<RunState>();
+        app.world.insert_single_res(records);
     }
 }
