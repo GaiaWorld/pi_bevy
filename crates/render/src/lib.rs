@@ -19,6 +19,7 @@ mod resource;
 pub mod system;
 pub mod asimage_url;
 pub mod cmd_play;
+pub mod spector;
 
 use std::sync::atomic::AtomicBool;
 

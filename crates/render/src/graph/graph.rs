@@ -30,7 +30,7 @@ pub struct RenderGraph {
 
     node_count: u32,
 
-    imp: DependGraph<NodeContext, Entity>,
+    pub imp: DependGraph<NodeContext, Entity>,
 
     async_submit_queue: ShareTaskQueue,
 }

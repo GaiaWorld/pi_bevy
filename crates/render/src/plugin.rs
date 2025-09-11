@@ -78,7 +78,6 @@ impl Plugin for PiRenderPlugin {
 
         app.world.insert_single_res(PiScreenTexture::default());
         app.world.insert_single_res(ScreenWithPostprocess::default());
-        log::error!("Insert ScreenWithPostprocess");
 
         if app.world.get_single_res::<PiRenderOptions>().is_none() {
             app.world.insert_single_res(PiRenderOptions::default());
@@ -293,7 +292,7 @@ impl Plugin for PiRenderPlugin {
         let device = app.world.get_single_res::<PiRenderDevice>().unwrap();
         app.world
             .insert_single_res(PiSafeAtlasAllocator(SafeAtlasAllocator::new(
-                (device.0).clone(),
+                (*device.0).clone(),
                 fbo_res.0,
                 share_unuse.0,
                 texture_key_alloter.0.clone(),

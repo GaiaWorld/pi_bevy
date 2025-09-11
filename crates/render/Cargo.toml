@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_render_plugin"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["moyy <myy412001799@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -57,6 +57,20 @@ wasm-bindgen-futures = { version = "0.4" }
 lazy_static = "1.4"
 pi_key_alloter = {version = "0.6", features = ["serde"]}
 crossbeam-channel = "0.5"
+# FOR Spector
+serde_json = "1.0"
+json = { version = "0.12" }
+pi_async_httpc = { version="0.6" }
+pi_ws = { version="0.6" }
+pi_tcp = { version="0.5" }
+float-ord = "0.3"
+async-trait = "0.1"
+spin_sleep = "1.1"
+num_cpus = "1.13"
+html5ever = "0.27"
+markup5ever_rcdom = "0.3"
+ahash = "0.8"
+
 [features]
 trace = []
 webgl = ["pi_render/webgl"]

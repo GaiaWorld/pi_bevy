@@ -460,6 +460,7 @@ impl<'w> StorageMut<TreeKey> for TreeStorageMut<'w> {
 	}
 }
 
-
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Component)]
+pub struct EntityTag(pub u8);
 
 

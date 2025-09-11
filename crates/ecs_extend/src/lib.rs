@@ -25,7 +25,7 @@ pub mod action;
 pub mod prelude {
     pub use crate::{
         system_param::{
-			tree::{Layer, Down, Up, EntityTreeMut, EntityTree, Root},
+			tree::{Layer, Down, Up, EntityTreeMut, EntityTree, Root, EntityTag},
 			layer_dirty::{LayerDirty, DirtyMark},
 			res::{OrInitSingleRes, OrInitSingleResMut}
 		},
