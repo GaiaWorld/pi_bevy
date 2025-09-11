@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_render_plugin"
-version = "0.3.4"
+version = "0.3.5"
 authors = ["moyy <myy412001799@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -57,6 +57,8 @@ wasm-bindgen-futures = { version = "0.4" }
 lazy_static = "1.4"
 pi_key_alloter = {version = "0.6", features = ["serde"]}
 crossbeam-channel = "0.5"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # FOR Spector
 serde_json = "1.0"
 json = { version = "0.12" }

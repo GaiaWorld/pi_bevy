@@ -19,14 +19,7 @@ use serde::{Deserialize, Serialize};
 pub static CMDS: OnceLock<Arc<SegQueue<(String, WsSocket<TcpSocket>)>>> = OnceLock::new();
 pub static SOCKETS: OnceLock<Mutex<HashMap<usize, WsSocket<TcpSocket>>>> = OnceLock::new();
 
-#[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct SpectorNode {
-    pub uniqueID: f64,
-    pub info: String,
-    pub tag: String,
-    pub childs: Vec<SpectorNode>,
-}
+pub use crate::SpectorNode;
 
 #[derive(Serialize, Debug, Clone, Default)]
 #[allow(non_snake_case)]

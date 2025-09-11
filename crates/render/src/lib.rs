@@ -7,6 +7,7 @@
 #[macro_use]
 extern crate lazy_static;
 
+use serde::{Deserialize, Serialize};
 mod async_queue;
 mod clear_node;
 pub mod render_cross;
@@ -19,7 +20,17 @@ mod resource;
 pub mod system;
 pub mod asimage_url;
 pub mod cmd_play;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod spector;
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct SpectorNode {
+    pub uniqueID: f64,
+    pub info: String,
+    pub tag: String,
+    pub childs: Vec<SpectorNode>,
+}
 
 use std::sync::atomic::AtomicBool;
 
