@@ -7,7 +7,14 @@
 #[macro_use]
 extern crate lazy_static;
 
+use pi_world::world::World;
+use pi_world::query::Query;
+use pi_world::schedule::First;
+use pi_world::world::Entity;
+use pi_world::filter::With;
 use serde::{Deserialize, Serialize};
+use pi_bevy_ecs_extend::prelude::{EntityTag, Root, Down, Up};
+use pi_null::Null;
 mod async_queue;
 mod clear_node;
 pub mod render_cross;
@@ -32,6 +39,15 @@ pub struct SpectorNode {
     pub childs: Vec<SpectorNode>,
 }
 
+#[derive(Serialize, Debug, Clone, Default)]
+#[allow(non_snake_case)]
+pub struct Cmd<T: serde::Serialize> {
+    pub cmd: String,
+    pub payload: T,
+}
+
+
+use std::mem::transmute;
 use std::sync::atomic::AtomicBool;
 
 use derive_deref::{Deref, DerefMut};
@@ -303,4 +319,58 @@ pub mod asset_config {
             &self.0
         }
     }
+}
+
+
+pub fn get_document_tree(world: &mut World, root: Entity) -> SpectorNode {
+    let mut query = world.query::<(&Down, &Up, Option<&EntityTag>)>();
+    let query = query.get_param(world);
+    let mut n = SpectorNode::default();
+    init_node( root, &mut n, &query);
+    return n;
+}
+
+pub fn get_roots(world: &mut World) -> Vec<Entity> {
+    let mut query = world.query::<Entity, (With<Root>)>();
+    return query.iter(world).collect();
+}
+
+
+pub fn init_node( 
+    id: Entity, 
+    node: &mut SpectorNode, 
+    query: &Query<(&Down, &Up, Option<&EntityTag>)>,
+) {
+    let (down, _, tag) = query.get(id).unwrap();
+    node.tag = "div".to_string();
+    if let Some(tag) = tag {
+        node.tag = tag.0.to_string();
+    }
+    node.uniqueID = unsafe {transmute(id)};
+    node.info = format!("ID={:?}", id);
+
+    let mut cur_child = down.head();
+    while !cur_child.is_null() {
+        let mut n = SpectorNode::default();
+        init_node( cur_child, &mut n, query);
+        node.childs.push(n);
+        let (_c_down, c_up, tag) = query.get(cur_child).unwrap();
+        cur_child = c_up.next();
+    }
+}
+
+/// cmd `request-document`
+pub fn _request_document(world: &mut World) -> Vec<Cmd<SpectorNode>> {
+    let roots = get_roots(world);
+    // log::error!("root======{:?}", &roots);
+    let mut result = vec![];
+    for root in roots.into_iter() {
+        let msg = get_document_tree(world, root);
+        let cmd = Cmd {
+            cmd: "document-data".to_string(),
+            payload: msg,
+        };
+        result.push(cmd);
+    }
+    result
 }

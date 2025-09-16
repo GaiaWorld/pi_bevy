@@ -1,3 +1,4 @@
+use std::mem::transmute;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::io::Result;
 
@@ -5,7 +6,10 @@ use ahash::HashMap;
 use crossbeam::queue::SegQueue;
 use futures::future::{BoxFuture, FutureExt, LocalBoxFuture};
 use json::JsonValue;
+use pi_world::query::Query;
 use pi_world::schedule::First;
+use pi_world::world::Entity;
+use pi_world::filter::With;
 use pi_ws::{connect::WsSocket, server::WebsocketListener, utils::{ChildProtocol, WsFrameType, WsSession}};
 use pi_tcp::{
     SocketConfig, SocketEvent,
@@ -14,19 +18,12 @@ use pi_tcp::{
 };
 use pi_world::{app::App, prelude::{Plugin, World}, schedule::{End, Last}};
 use pi_async_rt::rt::serial::AsyncRuntimeBuilder;
-use serde::{Deserialize, Serialize};
 
 pub static CMDS: OnceLock<Arc<SegQueue<(String, WsSocket<TcpSocket>)>>> = OnceLock::new();
 pub static SOCKETS: OnceLock<Mutex<HashMap<usize, WsSocket<TcpSocket>>>> = OnceLock::new();
 
 pub use crate::SpectorNode;
-
-#[derive(Serialize, Debug, Clone, Default)]
-#[allow(non_snake_case)]
-pub struct Cmd<T: serde::Serialize> {
-    pub cmd: String,
-    pub payload: T,
-}
+pub use crate::{init_node, get_document_tree, get_roots, Cmd};
 
 pub fn send_cmd<T: serde::Serialize>(cmd: Cmd<T>, sockets: &HashMap<usize, WsSocket<TcpSocket>>) {
     let cmd_string = serde_json::to_string(&cmd).unwrap();

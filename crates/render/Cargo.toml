@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_render_plugin"
-version = "0.3.5"
+version = "0.3.6"
 authors = ["moyy <myy412001799@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -43,6 +43,7 @@ pi_share = "0.5"
 pi_render = { version = "0.3", registry = "yn" }
 render_derive = { version = "0.2", registry = "yn" }
 pi_bevy_asset = { path = "../asset", version = "0.3", registry = "yn" }
+pi_bevy_ecs_extend = { path = "../ecs_extend", version = "0.3", registry = "yn" }
 pi_assets = "0.15"
 tracing = { version = "0.1", default-features = false, features = ["std"] }
 
