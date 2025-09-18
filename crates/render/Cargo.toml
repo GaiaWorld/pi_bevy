@@ -1,6 +1,6 @@
 [package]
 name = "pi_bevy_render_plugin"
-version = "0.3.6"
+version = "0.3.7"
 authors = ["moyy <myy412001799@gmail.com>"]
 edition = "2021"
 description = "Renderer for PI Engine"
@@ -34,7 +34,7 @@ futures = "0.3"
 smallvec            = "*"
 bitflags = "1.2"
 
-half = "*"
+half = "2.5"
 pi_hash = "0.1"
 pi_hal = {version = "0.3", registry = "yn"}
 pi_futures = "0.1"
