@@ -36,6 +36,7 @@ pub fn prepare_window(
     instance: &RenderInstance,
     width: u32,
     height: u32,
+    pixel_ratio: f32,
 ) -> std::io::Result<()> {
     let is_first = view.is_none();
     if is_first {
@@ -56,8 +57,8 @@ pub fn prepare_window(
 
     let config = wgpu::SurfaceConfiguration {
         format: TextureFormat::pi_render_default(),
-        width,
-        height,
+        width: (width as f32 * pixel_ratio) as u32,
+        height: (height as f32 * pixel_ratio) as u32,
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         present_mode: window.present_mode,
         alpha_mode: wgpu::CompositeAlphaMode::Auto,

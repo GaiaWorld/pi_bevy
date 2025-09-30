@@ -12,6 +12,7 @@ use pi_async_rt::prelude::*;
 use pi_render::rhi::texture::ScreenTexture;
 use pi_world::{filter::With, query::Query, single_res::{SingleRes, SingleResMut}, world::World};
 pub struct FrameSender(pub crossbeam_channel::Sender<()>);
+pub struct PixelRatio(pub f32);
 #[cfg(feature = "trace")]
 use tracing::Instrument;
 
@@ -44,6 +45,11 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     }
     // let primary_window = world.make_queryer::<&Window, With<PrimaryWindow>>();
 
+    let mut pixel_ratio = 1.0;
+    if let Some(s) = world.get_single_res::<PixelRatio>(){
+        // println!("========= run_frame_system");
+        pixel_ratio = s.0;
+    }
     let (width, height) = match primary_window.iter().nth(0) {
         Some(primary_window) => (
             primary_window.physical_width(),
@@ -91,7 +97,7 @@ pub(crate) fn run_frame_system<A: AsyncRuntime + AsyncRuntimeExt>(
     let task = async move {
         // ============ 1. 获取 窗口 可用纹理 ============
         // println!("prepare_window!! {:?}", (width, height));
-        prepare_window(window, first_surface, view, device, instance, width, height).unwrap();
+        prepare_window(window, first_surface, view, device, instance, width, height, pixel_ratio).unwrap();
         // ============ 2. 执行渲染图 ============
         // rg.build().unwrap();
 		// log::warn!("run before====================");
