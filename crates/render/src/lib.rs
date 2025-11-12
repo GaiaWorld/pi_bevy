@@ -7,6 +7,10 @@
 #[macro_use]
 extern crate lazy_static;
 
+use pi_render::font::FontId;
+use pi_render::font::FontSheet;
+use pi_render::font::Glyph;
+use pi_render::font::Size;
 use pi_world::world::World;
 use pi_world::query::Query;
 use pi_world::schedule::First;
@@ -48,6 +52,7 @@ pub struct Cmd<T: serde::Serialize> {
 
 
 use std::mem::transmute;
+use std::ops::Deref;
 use std::sync::atomic::AtomicBool;
 
 use derive_deref::{Deref, DerefMut};
@@ -373,4 +378,102 @@ pub fn _request_document(world: &mut World) -> Vec<Cmd<SpectorNode>> {
         result.push(cmd);
     }
     result
+}
+
+#[derive(Deref)]
+pub struct ShareFontSheet(pub pi_share::Share<pi_share::ShareCell<pi_render::font::FontSheet>>);
+
+#[cfg(target_arch = "wasm32")]
+unsafe impl Send for ShareFontSheet {}
+#[cfg(target_arch = "wasm32")]
+unsafe impl Sync for ShareFontSheet {}
+
+// impl FromWorld for ShareFontSheet {
+//     fn from_world(world: &mut World) -> Self {
+//         let texture_res_mgr = world.get_single_res::<ShareAssetMgr<TextureRes>>().unwrap();
+//         let device = world.get_single_res::<PiRenderDevice>().unwrap();
+// 		let queue = world.get_single_res::<PiRenderQueue>().unwrap();
+// 		let limits = device.limits();
+//         ShareFontSheet(Share::new(ShareCell::new(FontSheet::new(&device.0, &texture_res_mgr.0, &queue.0, limits.max_texture_dimension_2d, false))))
+//     }
+// }
+
+
+impl ShareFontSheet {
+    pub fn new(world: &mut World, font_type: pi_hal::font::font::FontType) -> Self {
+		world.init_single_res::<crate::resource::TextureKeyAlloter>();
+        let texture_res_mgr = world.get_single_res::<pi_bevy_asset::ShareAssetMgr<pi_render::rhi::asset::TextureRes>>().unwrap();
+		let alloter = world.get_single_res::<crate::resource::TextureKeyAlloter>().unwrap();
+		
+        let device = world.get_single_res::<PiRenderDevice>().unwrap();
+		let queue = world.get_single_res::<PiRenderQueue>().unwrap();
+		let limits = device.limits();
+        ShareFontSheet(pi_share::Share::new(pi_share::ShareCell::new(pi_render::font::FontSheet::new(&device.0, &texture_res_mgr.0, alloter.0.clone(),&queue.0, limits.max_texture_dimension_2d, font_type))))
+    }
+    pub fn char_calc(
+        fontsheet: &mut FontSheet,
+        fontid: FontId,
+        char: char,
+        scaleoffset: &mut [f32],
+        uvtilloff: &mut [f32],
+        line_height: f32,
+        fontsize: f32,
+        half_extend: f32, // 一半的扩展宽度（描边， 阴影， 外法光都需要额外扩展）
+        global_line_height: f32,
+        global_font_size: f32,
+        global_ascender: f32,
+    ) -> bool {
+        if let Some(glyphid) = fontsheet.glyph_id(fontid, char) {
+            let size = fontsheet.texture_size();
+            let glyph = fontsheet.font_mgr().table.sdf2_table.glyph(glyphid);
+            Self::_calc(scaleoffset, uvtilloff, line_height, fontsize, half_extend, glyph, global_line_height, global_font_size, global_ascender, size);
+            true
+        } else {
+            false
+        }
+    }
+    fn _calc(
+        scaleoffset: &mut [f32],
+        uvtilloff: &mut [f32],
+        line_height: f32,
+        fontsize: f32,
+        half_extend: f32, // 一半的扩展宽度（描边， 阴影， 外法光都需要额外扩展）
+        glyph: &Glyph,
+        global_line_height: f32,
+        global_font_size: f32,
+        global_ascender: f32,
+        size: Size<usize>,
+    ) {
+        let font_line_height = global_line_height * fontsize / global_font_size;
+        let stroke_width = half_extend * 2.0;
+
+        let plane_min_x = glyph.plane_min_x * fontsize - half_extend;
+        let plane_min_y = ((global_line_height - font_line_height) / 2.0)/*上下一半剩余行高的空间*/ + (global_ascender - glyph.plane_max_y) * fontsize - half_extend;
+        
+
+        let scale = fontsize / global_font_size;
+        let plane_width  = ((glyph.plane_max_x - glyph.plane_min_x) * fontsize + stroke_width) * 0.5;
+        let plane_height = ((glyph.plane_max_y - glyph.plane_min_y) * fontsize + stroke_width) * 0.5;
+
+        let plane_max_x = plane_min_x + plane_width;
+        let plane_max_y = plane_min_y + plane_height;
+
+        let half_stroke_uv = half_extend * scale;
+
+        // 否则， push aabb
+        scaleoffset[0] = plane_width ;
+        scaleoffset[1] = plane_height;
+        scaleoffset[2] = plane_min_x ;
+        scaleoffset[3] = plane_min_y ;
+
+        let u0 = glyph.x - half_stroke_uv;
+        let v0 = glyph.y - half_stroke_uv;
+        let us = glyph.width  + half_stroke_uv + half_stroke_uv;
+        let vs = glyph.height + half_stroke_uv + half_stroke_uv;
+
+        uvtilloff[0] = us / (size.width  as f32);
+        uvtilloff[1] = vs / (size.height as f32);
+        uvtilloff[2] = u0 / (size.width  as f32);
+        uvtilloff[3] = v0 / (size.height as f32);
+    }
 }
