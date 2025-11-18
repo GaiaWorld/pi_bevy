@@ -44,8 +44,8 @@ use pi_world::prelude::{App, Plugin};
 use tracing_log::LogTracer;
 #[cfg(feature = "tracing-chrome")]
 use tracing_subscriber::fmt::{format::DefaultFields, FormattedFields};
-use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
-use tracing_core::event::Event;
+use tracing_subscriber::{EnvFilter, filter::Directive, prelude::*, registry::Registry};
+use tracing_core::{LevelFilter, event::Event};
 
 /// Adds logging to Apps. This plugin is part of the `DefaultPlugins`. Adding
 /// this plugin will setup a collector appropriate to your target platform:
@@ -136,10 +136,14 @@ impl<T: Write + Send + Sync + 'static> Plugin for LogPlugin<T> {
         }
 
         let finished_subscriber;
-        let default_filter = { format!("{},{}", self.level, self.filter) };
-        let filter_layer = EnvFilter::try_from_default_env()
-            .or_else(|_| EnvFilter::try_new(&default_filter))
-            .unwrap();
+        
+        // let default_filter = { format!("{},{}", self.level, self.filter) };
+        // let filter_layer = EnvFilter::try_from_default_env()
+        //     .or_else(|_| EnvFilter::try_new(&default_filter))
+        //     .unwrap();
+
+        let filter_layer = EnvFilter::default().add_directive(Directive::from(LevelFilter::TRACE));
+    
 		let (filter_layer, reload_handle) = tracing_subscriber::reload::Layer::new(filter_layer);
         let subscriber = Registry::default().with(filter_layer);
 		app.world.insert_single_res(LogFilterHandle(reload_handle));
