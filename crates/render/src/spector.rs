@@ -47,7 +47,7 @@ struct MyChildProtocol;
 
 impl ChildProtocol<TcpSocket> for MyChildProtocol {
     fn protocol_name(&self) -> &str {
-        "echo"
+        ""
     }
 
     fn is_strict(&self) -> bool {
